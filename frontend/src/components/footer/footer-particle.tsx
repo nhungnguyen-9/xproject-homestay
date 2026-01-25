@@ -3,6 +3,7 @@ import { loadSlim } from "tsparticles-slim"
 import { useCallback } from "react"
 
 export const FooterParticles = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const particlesInit = useCallback(async (engine: any) => {
         await loadSlim(engine)
     }, [])
@@ -44,7 +45,7 @@ export const FooterParticles = () => {
                         enable: true,
                         speed: 0.45,
                         direction: "none",
-                        random: { enable: true, minimumValue: 0.15 },
+                        random: true,
                         straight: false,
                         outModes: { default: "bounce" },
                     },

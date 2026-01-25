@@ -37,7 +37,7 @@ export const HeartParticles = () => {
                         enable: true,
                         speed: 0.9,
                         direction: "top",
-                        random: { enable: true, minimumValue: 0.25 },
+                        random: true,
                         straight: false,
                         outModes: { default: "out", top: "destroy" }
                     }
