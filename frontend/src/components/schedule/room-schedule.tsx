@@ -91,6 +91,7 @@ interface DatePickerProps {
 }
 
 const DatePicker: React.FC<DatePickerProps> = ({ date, onChange }) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const formatDate = (d: Date): string => {
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
