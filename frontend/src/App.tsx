@@ -1,6 +1,8 @@
 import { Toaster } from "sonner"
 import { Header } from "./components/header/header"
 import { Footer } from "./components/footer/footer"
+// import RoomSchedule from "./components/schedule"
+// import { demoBookings, demoRooms } from "./data/demo-schedule"
 
 function App() {
   return (

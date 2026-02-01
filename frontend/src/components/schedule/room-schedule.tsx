@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import type {
     Room,
@@ -8,6 +8,7 @@ import type {
     FilterOption,
 } from '@/types/schedule';
 import { HelpCircle } from 'lucide-react';
+import { BookingModal } from '@/components/booking-calendar-form/booking-modal';
 
 // ==================== CONSTANTS ====================
 const HOUR_WIDTH = 120; // pixels per hour
@@ -194,7 +195,7 @@ const BookingBlock: React.FC<BookingBlockProps> = ({
     return (
         <div
             className={cn(
-                'absolute top-1 bottom-1 rounded cursor-pointer',
+                'absolute top-1 bottom-1 rounded cursor-pointer hover:cursor-not-allowed',
                 'bg-rose-400/90 hover:bg-rose-500 transition-colors',
                 'flex items-center overflow-hidden'
             )}
@@ -234,6 +235,7 @@ const RoomRow: React.FC<RoomRowProps> = ({
     startHour,
     endHour,
     onBookingClick,
+    onEmptySlotClick,
 }) => {
     const totalWidth = (endHour - startHour) * HOUR_WIDTH;
 
@@ -241,6 +243,33 @@ const RoomRow: React.FC<RoomRowProps> = ({
         standard: 'rounded-md m-1 bg-rose-400 text-white font-medium text-sm shrink-0',
         vip: 'rounded-md m-1 bg-rose-400 text-white font-medium text-sm shrink-0',
         supervip: 'rounded-md m-1 bg-rose-400 text-white font-medium text-sm shrink-0',
+    };
+
+    // Check if a time is within a booking
+    const isTimeBooked = (minutes: number): boolean => {
+        return bookings.some(booking => {
+            const bookingStart = timeToMinutes(booking.startTime);
+            const bookingEnd = timeToMinutes(booking.endTime);
+            return minutes >= bookingStart && minutes < bookingEnd;
+        });
+    };
+
+    // Handle click on timeline (not on booking)
+    const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+
+        // Convert pixels to minutes
+        const minutes = (x / HOUR_WIDTH) * 60 + startHour * 60;
+        const roundedMinutes = Math.floor(minutes / 30) * 30; // Round to nearest 30 min
+
+        // Check if this time slot is available
+        if (!isTimeBooked(roundedMinutes)) {
+            const hours = Math.floor(roundedMinutes / 60);
+            const mins = roundedMinutes % 60;
+            const timeString = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+            onEmptySlotClick?.(room.id, timeString);
+        }
     };
 
     return (
@@ -257,9 +286,12 @@ const RoomRow: React.FC<RoomRowProps> = ({
             </div>
 
             {/* Timeline slots */}
-            <div className="flex-1 relative bg-white">
+            <div
+                className="flex-1 relative bg-white cursor-pointer hover:bg-gray-50/50 transition-colors"
+                onClick={handleTimelineClick}
+            >
                 {/* Grid lines */}
-                <div className="absolute inset-0 flex">
+                <div className="absolute inset-0 flex pointer-events-none">
                     {Array.from({ length: (endHour - startHour) / 2 }).map((_, i) => (
                         <div
                             key={i}
@@ -327,6 +359,7 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
     onDateChange,
     onBookingClick,
     onEmptySlotClick,
+    onBookingCreate,
     startHour = 0,
     endHour = 22,
 }) => {
@@ -336,6 +369,17 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
         { value: 'vip', label: 'VIP', active: true },
         { value: 'supervip', label: 'SuperVip', active: true },
     ]);
+
+    // Booking modal state
+    const [bookingModalOpen, setBookingModalOpen] = useState(false);
+    const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+    const [selectedTime, setSelectedTime] = useState<string>('06:00');
+    const [localBookings, setLocalBookings] = useState<Booking[]>(bookings);
+
+    // Update local bookings when prop changes
+    useEffect(() => {
+        setLocalBookings(bookings);
+    }, [bookings]);
 
     // Set demo time to 02:00 (change this to new Date() for real time)
     const [currentTime, setCurrentTime] = useState(() => {
@@ -365,7 +409,7 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
 
     // Get bookings for each room
     const getBookingsForRoom = (roomId: string): Booking[] => {
-        return bookings.filter((b) => b.roomId === roomId);
+        return localBookings.filter((b) => b.roomId === roomId);
     };
 
     // Handle date change
@@ -380,6 +424,25 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
             prev.map((f) => (f.value === value ? { ...f, active: !f.active } : f))
         );
     };
+
+    // Handle empty slot click - open booking modal
+    const handleEmptySlotClick = useCallback((roomId: string, time: string) => {
+        const room = rooms.find(r => r.id === roomId);
+        setSelectedRoom(room || null);
+        setSelectedTime(time);
+        setBookingModalOpen(true);
+        onEmptySlotClick?.(roomId, time);
+    }, [rooms, onEmptySlotClick]);
+
+    // Handle booking creation
+    const handleBookingCreate = useCallback((newBooking: Omit<Booking, 'id'>) => {
+        const booking: Booking = {
+            ...newBooking,
+            id: `booking-${Date.now()}`,
+        };
+        setLocalBookings(prev => [...prev, booking]);
+        onBookingCreate?.(newBooking);
+    }, [onBookingCreate]);
 
     const totalWidth = (endHour - startHour) * HOUR_WIDTH + ROOM_LABEL_WIDTH;
 
@@ -463,7 +526,7 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                                     startHour={startHour}
                                     endHour={endHour}
                                     onBookingClick={onBookingClick}
-                                    onEmptySlotClick={onEmptySlotClick}
+                                    onEmptySlotClick={handleEmptySlotClick}
                                 />
                             ))}
 
@@ -492,6 +555,18 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                     </div>
                 </div> */}
             </div>
+
+            {/* Booking Modal */}
+            <BookingModal
+                open={bookingModalOpen}
+                onOpenChange={setBookingModalOpen}
+                room={selectedRoom}
+                rooms={rooms}
+                selectedDate={selectedDate}
+                selectedTime={selectedTime}
+                bookings={localBookings}
+                onBookingCreate={handleBookingCreate}
+            />
         </div>
     );
 };
