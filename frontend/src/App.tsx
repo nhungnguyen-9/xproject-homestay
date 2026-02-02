@@ -8,6 +8,8 @@ import { LocationPage } from "./components/locations/location-page"
 import { DestinationPage } from "./components/locations/destination-page"
 import { RoomDetailPage } from "./components/rooms/room-detail-page"
 import { destinationSuites } from "./data/destination-suites"
+// import RoomSchedule from "./components/schedule"
+// import { demoBookings, demoRooms } from "./data/demo-schedule"
 
 function App() {
   const [view, setView] = useState<"home" | "locations" | "destination" | "room">("home")
