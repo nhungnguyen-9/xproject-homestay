@@ -8,10 +8,21 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
 import { HeartParticles } from "@/components/header/header-particle"
+import { locationBranches } from "@/data/locations"
 
-export const Header = () => {
+export const Header = ({
+  onLogoClick,
+  onBranchClick
+}: {
+  onLogoClick?: () => void
+  onBranchClick?: (branchName: string) => void
+}) => {
     const [open, setOpen] = useState(false)
     const [mobileOpen, setMobileOpen] = useState(false)
+    const handleBranchSelect = (branch: string) => {
+        setOpen(false)
+        onBranchClick?.(branch)
+    }
 
     return (
         <div className="relative bg-[#f77170] text-white flex flex-row lg:flex-row items-center justify-between lg:justify-around p-3 lg:p-2 gap-4 lg:gap-0 overflow-visible lg:overflow-hidden">
@@ -24,10 +35,13 @@ export const Header = () => {
                     alt="logo"
                     className="rounded-full w-12 h-12 lg:w-16 lg:h-16"
                 />
-                <div>
+                <button
+                    onClick={onLogoClick}
+                    className="flex flex-col items-start text-left focus:outline-none"
+                >
                     <h1 className="font-bold text-xl">HomeStay</h1>
                     <p className="italic text-sm">Chốn lặng thinh - Vị đậm tình</p>
-                </div>
+                </button>
             </div>
 
             {/* Menu */}
@@ -47,10 +61,16 @@ export const Header = () => {
                         onMouseEnter={() => setOpen(true)}
                         onMouseLeave={() => setOpen(false)}
                     >
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem>Chi nhánh 1</DropdownMenuItem>
-                            <DropdownMenuItem>Chi nhánh 2</DropdownMenuItem>
-                        </DropdownMenuGroup>
+                            <DropdownMenuGroup>
+                                {locationBranches.map((branch) => (
+                                    <DropdownMenuItem
+                                        key={branch.name}
+                                        onSelect={() => handleBranchSelect(branch.name)}
+                                    >
+                                        {branch.name}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -82,7 +102,18 @@ export const Header = () => {
             {/* Mobile menu panel */}
             <div className={`${mobileOpen ? 'block' : 'hidden'} lg:hidden w-full bg-[#f77170] absolute top-full left-0 z-30`}>
                 <div className="flex flex-col items-center gap-3 py-3 font-semibold">
-                    <a className="hover:text-gray-200" href="">Chi nhánh</a>
+                    {locationBranches.map((branch) => (
+                        <button
+                            key={branch.name}
+                            className="hover:text-gray-200"
+                            onClick={() => {
+                                handleBranchSelect(branch.name)
+                                setMobileOpen(false)
+                            }}
+                        >
+                            {branch.name}
+                        </button>
+                    ))}
                     <a className="hover:text-gray-200" href="">Tra cứu Booking</a>
                     <a className="hover:text-gray-200" href="">Hợp tác / Nhượng quyền</a>
                     <a className="hover:text-gray-200" href="">Blog</a>
