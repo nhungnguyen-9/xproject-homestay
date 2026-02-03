@@ -29,7 +29,7 @@ const tileVariants: Variants = {
     scale: 0.9,
     y: 26,
     x: tile.xOffset,
-    filter: "blur(16px)"
+    filter: "blur(8px)"
   }),
   enter: (tile: IntroTile) => ({
     opacity: 1,
@@ -43,7 +43,7 @@ const tileVariants: Variants = {
     opacity: 0,
     scale: 0.95,
     y: -12,
-    filter: "blur(6px)",
+    filter: "blur(3px)",
     transition: { duration: 0.45, ease: "easeIn" }
   }
 }
@@ -142,8 +142,9 @@ export function HeroBanner() {
       backgroundImage: `url(${coverImage})`,
       backgroundPosition: "center",
       backgroundSize: "cover",
-      filter: "blur(34px)",
-      opacity: 0.36
+      backgroundRepeat: "no-repeat",
+      filter: "blur(0px)",
+      opacity: 0
     }),
     [coverImage]
   )
@@ -213,7 +214,8 @@ export function HeroBanner() {
                 <motion.img
                   src={tile.image}
                   alt="gallery preview"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover object-center"
+                  loading="eager"
                   draggable={false}
                 />
               </motion.div>
@@ -234,7 +236,8 @@ export function HeroBanner() {
             <motion.img
               src={coverImage}
               alt="featured stay"
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover object-center"
+              loading="eager"
               style={{
                 transformOrigin: `${heroOrigin.x} ${heroOrigin.y}`,
                 willChange: "transform, opacity"
@@ -261,7 +264,8 @@ export function HeroBanner() {
               <motion.img
                 src={coverImage}
                 alt="slide"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover object-center"
+                loading="eager"
                 style={{
                   transformOrigin: `${heroOrigin.x} ${heroOrigin.y}`,
                   willChange: "transform, opacity"

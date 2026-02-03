@@ -41,7 +41,7 @@ export function LocationPage({ onSelectLocation }: { onSelectLocation?: (locatio
               {locationBranches.map((location) => (
                 <div
                   key={location.name}
-                  className="min-w-[320px] max-w-[320px] cursor-pointer overflow-hidden rounded-[24px] bg-white shadow-[0_25px_90px_rgba(0,0,0,0.15)]"
+                  className="min-w-[320px] max-w-[320px] cursor-pointer overflow-hidden rounded-[24px] bg-white ]"
                   onClick={() => onSelectLocation?.(location)}
                 >
                   <div className="h-70 w-full bg-cover" style={{ backgroundImage: `url(${imageHome1})` }} />
