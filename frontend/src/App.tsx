@@ -4,8 +4,6 @@ import { Header } from "./components/header/header"
 import { Outlet } from "react-router";
 import MainHearts from "./components/common/MainHearts"
 import MainSnowfall from "./components/common/MainSnowfall"
-// import RoomSchedule from "./components/schedule"
-// import { demoBookings, demoRooms } from "./data/demo-schedule"
 
 function App() {
   return (
