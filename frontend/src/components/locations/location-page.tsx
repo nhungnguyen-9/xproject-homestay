@@ -21,11 +21,6 @@ export function LocationPage({ onSelectLocation }: { onSelectLocation?: (locatio
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 text-center">
           <p className="text-xs uppercase tracking-[0.6em] text-[#c48d73]">Điểm đến</p>
           <h2 className="text-4xl font-bold text-[#1c0b04]">Điểm đến</h2>
-          <p className="text-2xl font-semibold text-[#f63a78]">tại Tỉnh Vĩnh Long</p>
-          <button className="rounded-full bg-[#f76c8a] px-6 py-2 text-sm font-semibold uppercase tracking-[0.3em] text-white transition hover:brightness-110">
-            Chốn - Thủ Khoa Huân - Vĩnh Long
-          </button>
-          <p className="text-2xl font-bold text-[#f63a78]">Chốn - Thủ Khoa Huân - Vĩnh Long</p>
         </div>
         <div className="relative mx-auto mt-10 flex w-full max-w-full items-center px-6">
           <button
