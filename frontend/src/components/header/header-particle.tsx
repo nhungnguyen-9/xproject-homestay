@@ -21,7 +21,7 @@ export const HeartParticles = () => {
                 particles: {
                     number: {
                         value: 8,
-                        density: { enable: true, area: 800 }
+                        density: { enable: true, area: 1000 }
                     },
                     shape: {
                         type: "character",
@@ -30,9 +30,9 @@ export const HeartParticles = () => {
                             font: "Verdana",
                         },
                     },
-                    color: { value: ["#ff6b9d", "#ffc0cb", "#ffffff"] },
-                    opacity: { value: 0.7 },
-                    size: { value: { min: 12, max: 18 } },
+                    color: { value: ["#ff6b9d", "#ffc0cb", "#f  fffff"] },
+                    opacity: { value: 0.6 },
+                    size: { value: { min: 10, max: 14 } },
                     move: {
                         enable: true,
                         speed: 0.9,
@@ -43,8 +43,9 @@ export const HeartParticles = () => {
                     }
                 },
                 emitters: {
+                    // slower emitter so hearts appear less frequently
                     position: { x: 50, y: 100 },
-                    rate: { delay: 0.5, quantity: 1 },
+                    rate: { delay: 2.2, quantity: 1 },
                     size: { width: 120, height: 0 }
                 },
                 detectRetina: true,

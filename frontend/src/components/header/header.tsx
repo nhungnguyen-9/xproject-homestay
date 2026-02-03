@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { NavLink } from "react-router"
+import { Link, NavLink } from "react-router"
 import { HeartParticles } from "@/components/header/header-particle"
 
 export const Header = ({
@@ -34,20 +34,22 @@ export const Header = ({
 
                 <HeartParticles />
 
-                <div className="relative z-10 flex items-center gap-3">
-                    <img
-                        src="https://github.com/shadcn.png"
-                        alt="logo"
-                        className="rounded-full w-12 h-12 lg:w-16 lg:h-16"
-                    />
-                    <button
-                        onClick={onLogoClick}
-                        className="flex flex-col items-start text-left focus:outline-none"
-                    >
-                        <h1 className="font-bold text-xl">HomeStay</h1>
-                        <p className="italic text-sm">Chốn lặng thinh - Vị đậm tình</p>
-                    </button>
-                </div>
+                <Link to={"/"}>
+                    <div className="relative z-10 flex items-center gap-3">
+                        <img
+                            src="https://github.com/shadcn.png"
+                            alt="logo"
+                            className="rounded-full w-12 h-12 lg:w-16 lg:h-16"
+                        />
+                        <button
+                            onClick={onLogoClick}
+                            className="flex flex-col items-start text-left focus:outline-none"
+                        >
+                            <h1 className="font-bold text-xl">HomeStay</h1>
+                            <p className="italic text-sm">Chốn lặng thinh - Vị đậm tình</p>
+                        </button>
+                    </div>
+                </Link>
 
                 {/* Menu */}
                 <div className="relative z-10 hidden lg:flex items-center gap-12 font-semibold">
