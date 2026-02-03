@@ -1,3 +1,5 @@
+import pepsi from "@/assets/pepsi.png";
+
 // Room types
 export type RoomType = 'standard' | 'vip' | 'supervip';
 
@@ -122,43 +124,37 @@ export const FOOD_ITEMS: FoodItem[] = [
     id: '1',
     name: 'Pepsi',
     price: 11000,
-    image:
-      'https://choncinema.s3.amazonaws.com/images/0248bd1e-51c5-4b81-83e6-59fa6d6f25a1.jpg?AWSAccessKeyId=AKIA2HVQ5CYO2VN4QH46&Signature=76RLJH8f8VLs1x6sKggip3a0he4%3D&Expires=1769963990',
+    image: pepsi,
   },
   {
     id: '2',
     name: 'Mỳ Ly',
     price: 20000,
-    image:
-      'https://choncinema.s3.amazonaws.com/images/0248bd1e-51c5-4b81-83e6-59fa6d6f25a1.jpg?AWSAccessKeyId=AKIA2HVQ5CYO2VN4QH46&Signature=76RLJH8f8VLs1x6sKggip3a0he4%3D&Expires=1769963990',
+    image: pepsi,
   },
   {
     id: '3',
     name: 'Sting',
     price: 15000,
-    image:
-      'https://choncinema.s3.amazonaws.com/images/0248bd1e-51c5-4b81-83e6-59fa6d6f25a1.jpg?AWSAccessKeyId=AKIA2HVQ5CYO2VN4QH46&Signature=76RLJH8f8VLs1x6sKggip3a0he4%3D&Expires=1769963990',
+    image: pepsi,
   },
   {
     id: '4',
     name: 'Pepsi',
     price: 115000,
-    image:
-      'https://choncinema.s3.amazonaws.com/images/0248bd1e-51c5-4b81-83e6-59fa6d6f25a1.jpg?AWSAccessKeyId=AKIA2HVQ5CYO2VN4QH46&Signature=76RLJH8f8VLs1x6sKggip3a0he4%3D&Expires=1769963990',
+    image: pepsi,
   },
   {
     id: '5',
     name: 'Mỳ Ly',
     price: 20000,
-    image:
-      'https://choncinema.s3.amazonaws.com/images/0248bd1e-51c5-4b81-83e6-59fa6d6f25a1.jpg?AWSAccessKeyId=AKIA2HVQ5CYO2VN4QH46&Signature=76RLJH8f8VLs1x6sKggip3a0he4%3D&Expires=1769963990',
+    image: pepsi,
   },
   {
     id: '6',
     name: 'Sting',
     price: 15000,
-    image:
-      'https://choncinema.s3.amazonaws.com/images/0248bd1e-51c5-4b81-83e6-59fa6d6f25a1.jpg?AWSAccessKeyId=AKIA2HVQ5CYO2VN4QH46&Signature=76RLJH8f8VLs1x6sKggip3a0he4%3D&Expires=1769963990',
+    image: pepsi,
   },
 ];
 

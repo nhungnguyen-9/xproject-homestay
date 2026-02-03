@@ -2,6 +2,8 @@ import { Toaster } from "sonner"
 import { Footer } from "./components/footer/footer"
 import { Header } from "./components/header/header"
 import { Outlet } from "react-router";
+import MainHearts from "./components/common/MainHearts"
+import MainSnowfall from "./components/common/MainSnowfall"
 // import RoomSchedule from "./components/schedule"
 // import { demoBookings, demoRooms } from "./data/demo-schedule"
 
@@ -12,7 +14,9 @@ function App() {
         <Header
           onLogoClick={() => (window.location.hash = "#locations")}
         />
-        <main>
+        <main className="relative">
+          <MainHearts />
+          <MainSnowfall flakes={30} />
           <Outlet />
         </main>
         <Footer />
