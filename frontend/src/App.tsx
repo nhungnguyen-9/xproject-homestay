@@ -13,8 +13,8 @@ function App() {
           onLogoClick={() => (window.location.hash = "#locations")}
         />
         <main className="relative">
-          <MainHearts />
-          <MainSnowfall flakes={30} />
+          {/* <MainHearts />
+          <MainSnowfall flakes={30} /> */}
           <Outlet />
         </main>
         <Footer />
