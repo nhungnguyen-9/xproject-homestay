@@ -13,6 +13,7 @@ import {
     ChevronLeft,
     ChevronRight,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
     calculateDuration,
     timeToMinutes,
@@ -29,20 +30,23 @@ import {
 
 // ==================== PROPS ====================
 interface BookingModalProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    room: Room | null;
-    rooms: Room[];
-    selectedDate: Date;
-    selectedTime: string;
-    bookings: Booking[];
-    onBookingCreate?: (booking: Omit<Booking, "id">) => void;
+    open: boolean;                 // Trạng thái đóng/mở modal
+    onOpenChange: (open: boolean) => void; // Hàm xử lý khi thay đổi trạng thái mở
+    room: Room | null;             // Phòng đang được chọn để đặt
+    rooms: Room[];                 // Danh sách tất cả các phòng
+    selectedDate: Date;            // Ngày được chọn trên lịch
+    selectedTime: string;          // Giờ được chọn trên lịch
+    bookings: Booking[];           // Danh sách các đơn đặt phòng hiện có (để kiểm tra trùng lịch)
+    onBookingCreate?: (booking: Omit<Booking, "id">) => void; // Callback khi đặt phòng thành công
 }
 
-// ==================== SUB COMPONENTS ====================
-// Step components are now in separate files: Step1.tsx, Step2.tsx, Step3.tsx
-
-// ==================== MAIN COMPONENT ====================
+/**
+ * Thành phần chính: Modal Đặt Phòng (BookingModal)
+ * Quản lý quy trình đặt phòng đa bước:
+ * Bước 1: Chọn phòng & Thời gian & Dịch vụ
+ * Bước 2: Thông tin khách hàng & Giấy tờ
+ * Bước 3: Xác nhận & Điều khoản
+ */
 export const BookingModal: React.FC<BookingModalProps> = ({
     open,
     onOpenChange,
@@ -53,14 +57,19 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     bookings,
     onBookingCreate,
 }) => {
+    // Quản lý bước hiện tại
     const [currentStep, setCurrentStep] = useState(1);
+    // Quản lý lỗi hiển thị
     const [errors, setErrors] = useState<Record<string, string>>({});
+    // Trạng thái hiển thị modal thanh toán sau khi hoàn tất
     const [showPayment, setShowPayment] = useState(false);
+    // Lưu trữ dữ liệu form đã submit thành công
     const [submittedFormData, setSubmittedFormData] =
         useState<BookingFormData | null>(null);
+    // Trạng thái đóng/mở modal chọn món ăn/dịch vụ
     const [showFoodModal, setShowFoodModal] = useState(false);
 
-    // Initialize form data
+    // Khởi tạo dữ liệu form ban đầu dựa trên phòng và giờ được chọn từ lịch
     const initialFormData = useMemo((): BookingFormData => {
         const checkInHour = selectedTime.split(":")[0] || "06";
         const checkOutHour = String(
@@ -88,9 +97,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         };
     }, [room, rooms, selectedDate, selectedTime]);
 
+    // Trạng thái dữ liệu form hiện tại
     const [formData, setFormData] = useState<BookingFormData>(initialFormData);
 
-    // Reset form when modal opens
+    // Reset lại form mỗi khi mở modal
     React.useEffect(() => {
         if (open) {
             setFormData(initialFormData);
@@ -99,14 +109,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         }
     }, [open, initialFormData]);
 
-    // Update form when selected slot changes while modal is open
+    // Cập nhật lại form nếu người dùng đổi ô chọn trên lịch trong khi modal vẫn mở
     React.useEffect(() => {
         if (open) {
             setFormData(initialFormData);
         }
     }, [open, selectedDate, selectedTime, room, initialFormData]);
 
-    // Calculate duration and price
+    // Tính toán thời lượng lưu trú
     const duration = useMemo(() => {
         return calculateDuration(
             formData.checkInDate,
@@ -121,30 +131,32 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         formData.checkOutTime,
     ]);
 
+    // Tính toán tiền phòng tạm tính
     const price = useMemo(() => {
         const priceConfig = ROOM_PRICES[formData.roomType];
         if (formData.mode === "daily") {
-            // Calculate number of days
             const days = Math.ceil(duration / 24);
             return priceConfig.dailyRate * days;
         }
         if (formData.mode === "overnight") {
-            // Calculate number of nights
             const nights = Math.ceil(duration / 24);
             return priceConfig.overnightRate * nights;
         }
-        // Hourly rate
         return Math.ceil(duration) * priceConfig.hourlyRate;
     }, [formData.roomType, formData.mode, duration]);
 
+    // Tính tiền dịch vụ đi kèm
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);
     const foodTotal = selectedFoodItems.reduce(
         (sum, item) => sum + item.price * (item.qty || 0),
         0,
     );
+    // Tổng cộng cuối cùng
     const totalPrice = price + foodTotal;
 
-    // Validation
+    /**
+     * Kiểm tra dữ liệu Bước 1: Thời gian & Phòng
+     */
     const validateStep1 = useCallback((): boolean => {
         const newErrors: Record<string, string> = {};
 
@@ -152,7 +164,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             newErrors.duration = "Thời gian đặt phòng tối thiểu 30 phút";
         }
 
-        // Check for overlapping bookings
+        // Kiểm tra xem thời gian chọn có bị trùng với lịch đặt hiện có không
         const roomBookings = bookings.filter((b) => b.roomId === formData.roomId);
         const checkInMinutes = timeToMinutes(formData.checkInTime);
         const checkOutMinutes = timeToMinutes(formData.checkOutTime);
@@ -161,7 +173,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             const bookingStart = timeToMinutes(booking.startTime);
             const bookingEnd = timeToMinutes(booking.endTime);
 
-            // Check overlap (same day only for now)
             if (formData.checkInDate.toDateString() === selectedDate.toDateString()) {
                 if (
                     (checkInMinutes >= bookingStart && checkInMinutes < bookingEnd) ||
@@ -178,6 +189,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         return Object.keys(newErrors).length === 0;
     }, [formData, bookings, duration, selectedDate]);
 
+    /**
+     * Kiểm tra dữ liệu Bước 2: Thông tin khách hàng
+     */
     const validateStep2 = useCallback((): boolean => {
         const newErrors: Record<string, string> = {};
 
@@ -199,6 +213,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         return Object.keys(newErrors).length === 0;
     }, [formData]);
 
+    /**
+     * Kiểm tra dữ liệu Bước 3: Điều khoản
+     */
     const validateStep3 = useCallback((): boolean => {
         const newErrors: Record<string, string> = {};
 
@@ -210,14 +227,16 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         return Object.keys(newErrors).length === 0;
     }, [formData]);
 
-    // Handlers
+    /**
+     * Xử lý khi nhấn nút "Tiếp tục" hoặc "Đặt phòng"
+     */
     const handleNext = () => {
         if (currentStep === 1 && validateStep1()) {
             setCurrentStep(2);
         } else if (currentStep === 2 && validateStep2()) {
             setCurrentStep(3);
         } else if (currentStep === 3 && validateStep3()) {
-            // Create booking
+            // Chuẩn bị dữ liệu để gửi lên
             const newBooking: Omit<Booking, "id"> = {
                 roomId: formData.roomId,
                 startTime: formData.checkInTime,
@@ -230,13 +249,19 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 foodItems: selectedFoodItems,
                 totalPrice,
             };
+            // Gọi callback thông báo tạo thành công
             onBookingCreate?.(newBooking);
+            // Lưu dữ liệu để hiển thị ở modal thanh toán
             setSubmittedFormData({ ...formData });
+            // Đóng modal chính và mở modal thanh toán
             onOpenChange(false);
             setShowPayment(true);
         }
     };
 
+    /**
+     * Quay lại bước trước đó
+     */
     const handleBack = () => {
         if (currentStep > 1) {
             setCurrentStep(currentStep - 1);
@@ -244,6 +269,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         }
     };
 
+    /**
+     * Đóng modal
+     */
     const handleCancel = () => {
         onOpenChange(false);
     };
@@ -255,54 +283,81 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     className="relative max-w-6xl w-[95vw] max-h-[90vh] sm:max-h-[85vh] flex flex-col p-0 gap-0"
                     style={{ maxWidth: "1150px", width: "95vw" }}
                 >
+                    {/* Hiệu ứng tuyết rơi bên trong modal */}
                     {open && <Snowfall />}
-                    {/* Header */}
+                    
+                    {/* Tiêu đề Modal và Chỉ báo bước (Desktop) */}
                     <div className="relative flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 border-b">
                         <DialogTitle className="text-lg sm:text-2xl font-bold text-gray-800">
                             Đặt phòng
                         </DialogTitle>
 
-                        {/* centered indicator - hidden on mobile */}
                         <div className="hidden sm:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
                             <StepIndicator currentStep={currentStep} totalSteps={3} />
                         </div>
                     </div>
 
-                    {/* Mobile step indicator */}
+                    {/* Chỉ báo bước cho Mobile */}
                     <div className="sm:hidden px-3 py-2 border-b bg-gray-50 flex justify-center">
                         <StepIndicator currentStep={currentStep} totalSteps={3} />
                     </div>
 
-                    {/* Scrollable Content */}
+                    {/* Nội dung chính - AnimatePresence tạo hiệu ứng chuyển bước mượt */}
                     <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-3 sm:py-4">
-                        {currentStep === 1 && (
-                            <Step1
-                                formData={formData}
-                                setFormData={setFormData}
-                                rooms={rooms}
-                                bookings={bookings}
-                                selectedDate={selectedDate}
-                                price={price}
-                                onOpenFoodModal={() => setShowFoodModal(true)}
-                            />
-                        )}
-                        {currentStep === 2 && (
-                            <Step2
-                                formData={formData}
-                                setFormData={setFormData}
-                                price={price}
-                                duration={duration}
-                                errors={errors}
-                            />
-                        )}
-                        {currentStep === 3 && (
-                            <Step3
-                                formData={formData}
-                                price={price}
-                            />
-                        )}
+                        <AnimatePresence mode="wait">
+                            {currentStep === 1 && (
+                                <motion.div
+                                    key="step-1"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                >
+                                    <Step1
+                                        formData={formData}
+                                        setFormData={setFormData}
+                                        rooms={rooms}
+                                        bookings={bookings}
+                                        selectedDate={selectedDate}
+                                        price={price}
+                                        onOpenFoodModal={() => setShowFoodModal(true)}
+                                    />
+                                </motion.div>
+                            )}
+                            {currentStep === 2 && (
+                                <motion.div
+                                    key="step-2"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                >
+                                    <Step2
+                                        formData={formData}
+                                        setFormData={setFormData}
+                                        price={price}
+                                        duration={duration}
+                                        errors={errors}
+                                    />
+                                </motion.div>
+                            )}
+                            {currentStep === 3 && (
+                                <motion.div
+                                    key="step-3"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                >
+                                    <Step3
+                                        formData={formData}
+                                        price={price}
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
-                        {/* Error messages */}
+                        {/* Hiển thị thông báo lỗi (nếu có) */}
                         {(errors.duration || errors.time) && (
                             <div className="mt-3 p-3 bg-red-50 rounded-lg">
                                 {errors.duration && (
@@ -315,12 +370,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                         )}
                     </div>
 
-                    {/* Footer */}
+                    {/* Chân Modal: Nút điều khiển - touch area ≥ 44px */}
                     <div className="flex items-center justify-between sm:justify-end px-3 sm:px-5 py-3 sm:py-4 border-t gap-2">
                         <Button
                             variant="ghost"
                             onClick={handleCancel}
-                            className="text-gray-500 hover:text-gray-700 text-sm sm:text-base px-3 sm:px-4"
+                            className="min-h-[44px] text-gray-500 hover:text-gray-700 text-sm sm:text-base px-3 sm:px-4"
                         >
                             Huỷ
                         </Button>
@@ -329,16 +384,18 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                                 <Button
                                     variant="outline"
                                     onClick={handleBack}
-                                    className="gap-1 text-sm sm:text-base px-3 sm:px-4"
+                                    className="min-h-[44px] gap-1 text-sm sm:text-base px-3 sm:px-4"
                                 >
                                     <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
                                     <span className="hidden sm:inline">Quay lại</span>
                                     <span className="sm:hidden">Quay</span>
                                 </Button>
                             )}
+                            {/* Nút CTA chính - rose-400 nhacam primary */}
                             <Button
+                                variant="primary"
                                 onClick={handleNext}
-                                className="bg-rose-400 hover:bg-rose-500 text-white gap-1 min-w-24 sm:min-w-30 text-sm sm:text-base px-3 sm:px-4"
+                                className="min-h-[44px] gap-1 min-w-24 sm:min-w-30 text-sm sm:text-base px-3 sm:px-4"
                             >
                                 {currentStep === 3 ? (
                                     <>
@@ -356,12 +413,16 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Modal phụ chọn đồ ăn */}
             <FoodModal
                 open={showFoodModal}
                 onOpenChange={setShowFoodModal}
                 items={formData.foodItems}
                 onConfirm={(items) => setFormData((prev) => ({ ...prev, foodItems: items }))}
             />
+
+            {/* Modal hiển thị thông tin thanh toán (QR code, chuyển khoản) */}
             {submittedFormData && (
                 <PaymentModal
                     open={showPayment}

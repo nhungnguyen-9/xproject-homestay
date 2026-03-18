@@ -30,7 +30,7 @@ export const Header = ({
     return (
         <>
             {isScrolled && <div className="h-[72px] lg:h-[80px]" />}
-            <div className={`${isScrolled ? 'fixed top-0 left-0 right-0 shadow-xl backdrop-blur-sm bg-[#f77170]/95' : 'relative bg-[#f77170]'} text-white flex flex-row lg:flex-row items-center justify-between lg:justify-around p-3 lg:p-2 gap-4 lg:gap-0 overflow-visible lg:overflow-hidden transition-all duration-500 ease-in-out z-50`}>
+            <div className={`${isScrolled ? 'fixed top-0 left-0 right-0 shadow-xl backdrop-blur-sm bg-[#F87171]/95' : 'relative bg-[#F87171]'} text-white flex flex-row lg:flex-row items-center justify-between lg:justify-around p-3 lg:p-2 gap-4 lg:gap-0 overflow-visible lg:overflow-hidden transition-all duration-500 ease-in-out z-50`}>
 
                 <HeartParticles />
 
@@ -45,19 +45,19 @@ export const Header = ({
                             onClick={onLogoClick}
                             className="flex flex-col items-start text-left focus:outline-none"
                         >
-                            <h1 className="font-bold text-xl">HomeStay</h1>
-                            <p className="italic text-sm">Chốn lặng thinh - Vị đậm tình</p>
+                            <h1 className="font-bold text-xl text-white">HomeStay</h1>
+                            <p className="italic text-sm text-rose-100">Chốn lặng thinh - Vị đậm tình</p>
                         </button>
                     </div>
                 </Link>
 
                 {/* Menu */}
                 <div className="relative z-10 hidden lg:flex items-center gap-12 font-semibold">
-                    <NavLink className="hover:text-gray-200" to="/chi-nhanh">Chi nhánh</NavLink>
-                    <NavLink className="hover:text-gray-200" to="">Tra cứu Booking</NavLink>
-                    <NavLink className="hover:text-gray-200" to="">Hợp tác / Nhượng quyền</NavLink>
-                    <NavLink className="hover:text-gray-200" to="">Blog</NavLink>
-                    <NavLink className="hover:text-gray-200" to="">Liên hệ</NavLink>
+                    <NavLink className="hover:text-rose-100" to="/chi-nhanh">Chi nhánh</NavLink>
+                    <NavLink className="hover:text-rose-100" to="">Tra cứu Booking</NavLink>
+                    <NavLink className="hover:text-rose-100" to="">Hợp tác / Nhượng quyền</NavLink>
+                    <NavLink className="hover:text-rose-100" to="">Blog</NavLink>
+                    <NavLink className="hover:text-rose-100" to="">Liên hệ</NavLink>
                 </div>
 
                 <div className="relative z-20 lg:hidden">
@@ -80,16 +80,13 @@ export const Header = ({
                 </div>
 
                 {/* Mobile menu panel */}
-                <div className={`${mobileOpen ? 'block' : 'hidden'} lg:hidden w-full bg-[#f77170] absolute top-full left-0 z-30`}>
-                    {/* Mobile menu panel */}
-                    <div className={`${mobileOpen ? 'block' : 'hidden'} lg:hidden w-full bg-[#f77170] absolute top-full left-0 z-30`}>
-                        <div className="flex flex-col items-center gap-3 py-3 font-semibold">
-                            <NavLink className="hover:text-gray-200" to="/chi-nhanh">Chi nhánh</NavLink>
-                            <NavLink className="hover:text-gray-200" to="">Tra cứu Booking</NavLink>
-                            <NavLink className="hover:text-gray-200" to="">Hợp tác / Nhượng quyền</NavLink>
-                            <NavLink className="hover:text-gray-200" to="">Blog</NavLink>
-                            <NavLink className="hover:text-gray-200" to="">Liên hệ</NavLink>
-                        </div>
+                <div className={`${mobileOpen ? 'block' : 'hidden'} lg:hidden w-full bg-[#ef6666] absolute top-full left-0 z-30`}>
+                    <div className="flex flex-col items-center gap-3 py-3 font-semibold">
+                        <NavLink className="hover:text-rose-100" to="/chi-nhanh">Chi nhánh</NavLink>
+                        <NavLink className="hover:text-rose-100" to="">Tra cứu Booking</NavLink>
+                        <NavLink className="hover:text-rose-100" to="">Hợp tác / Nhượng quyền</NavLink>
+                        <NavLink className="hover:text-rose-100" to="">Blog</NavLink>
+                        <NavLink className="hover:text-rose-100" to="">Liên hệ</NavLink>
                     </div>
                 </div>
             </div>

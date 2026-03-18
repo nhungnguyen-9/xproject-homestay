@@ -1,63 +1,65 @@
 import pepsi from "@/assets/pepsi.png";
 
-// Room types
+// Các loại phòng có trong hệ thống
 export type RoomType = 'standard' | 'vip' | 'supervip';
 
+// Giao diện dữ liệu cho một phòng
 export interface Room {
-  id: string;
-  name: string;
-  type: RoomType;
+  id: string;      // Định danh duy nhất của phòng
+  name: string;    // Tên hiển thị của phòng
+  type: RoomType;  // Phân loại phòng
+  images?: string[]; // Mảng chứa tối đa 5 URL hình ảnh
 }
 
-// Booking status
+// Trạng thái của một đơn đặt phòng
 export type BookingStatus = 'confirmed' | 'pending' | 'checked-in' | 'checked-out';
 
-// Booking interface
+// Giao diện dữ liệu cho một đơn đặt phòng (Booking)
 export interface Booking {
-  id: string;
-  roomId: string;
-  startTime: string; // Format: "HH:mm"
-  endTime: string;   // Format: "HH:mm"
-  guestName?: string;
-  guestPhone?: string;
-  status: BookingStatus;
-  note?: string;
-  adults?: number;
-  foodItems?: FoodItem[];
-  totalPrice?: number;
+  id: string;          // Định danh duy nhất của đơn đặt phòng
+  roomId: string;      // ID của phòng được đặt
+  startTime: string;   // Thời gian bắt đầu (Định dạng: "HH:mm")
+  endTime: string;     // Thời gian kết thúc (Định dạng: "HH:mm")
+  guestName?: string;  // Tên khách hàng (tùy chọn)
+  guestPhone?: string; // Số điện thoại khách (tùy chọn)
+  status: BookingStatus; // Trạng thái hiện tại
+  note?: string;       // Ghi chú thêm
+  adults?: number;     // Số lượng người lớn
+  foodItems?: FoodItem[]; // Danh sách món ăn/dịch vụ đi kèm
+  totalPrice?: number; // Tổng giá tiền dự tính
 }
 
-// Schedule props
+// Thuộc tính truyền vào cho thành phần Schedule (Lịch trình)
 export interface ScheduleProps {
-  date: Date;
-  rooms: Room[];
-  bookings: Booking[];
-  onDateChange?: (date: Date) => void;
-  onBookingClick?: (booking: Booking) => void;
-  onEmptySlotClick?: (roomId: string, time: string) => void;
-  onBookingCreate?: (booking: Omit<Booking, 'id'>) => void;
-  startHour?: number;  // Default: 0
-  endHour?: number;    // Default: 24
+  date: Date;             // Ngày hiển thị lịch
+  rooms: Room[];          // Danh sách các phòng cần hiển thị
+  bookings: Booking[];    // Danh sách các lượt đặt phòng tương ứng
+  onDateChange?: (date: Date) => void; // Callback khi đổi ngày
+  onBookingClick?: (booking: Booking) => void; // Callback khi nhấn vào một booking hiện có
+  onEmptySlotClick?: (roomId: string, time: string) => void; // Callback khi nhấn vào ô trống
+  onBookingCreate?: (booking: Omit<Booking, 'id'>) => void; // Callback khi tạo booking mới
+  startHour?: number;  // Giờ bắt đầu hiển thị trên lịch (Mặc định: 0)
+  endHour?: number;    // Giờ kết thúc hiển thị trên lịch (Mặc định: 24)
 }
 
-// Filter options
+// Các tùy chọn bộ lọc cho lịch trình
 export interface FilterOption {
   value: RoomType | 'all';
   label: string;
   active: boolean;
 }
 
-// Time slot
+// Định nghĩa một khe thời gian (time slot) trên lịch
 export interface TimeSlot {
   hour: number;
   label: string;
   isHighlighted?: boolean;
 }
 
-// Booking type mode
+// Các chế độ đặt phòng được hỗ trợ
 export type BookingMode = 'hourly' | 'daily' | 'overnight';
 
-// Food/Combo items
+// Giao diện cho món ăn hoặc các combo dịch vụ
 export interface FoodItem {
   id: string;
   name: string;
@@ -67,7 +69,7 @@ export interface FoodItem {
   image?: string;
 }
 
-// Booking form data
+// Cấu trúc dữ liệu form khi thực hiện đặt phòng (Booking Form)
 export interface BookingFormData {
   roomId: string;
   roomType: RoomType;
@@ -80,23 +82,23 @@ export interface BookingFormData {
   adults: number;
   guestName: string;
   guestPhone: string;
-  idImages: File[];
-  foodItems: FoodItem[];
+  idImages: File[];      // Hình ảnh CCCD/Giấy tờ tùy thân
+  foodItems: FoodItem[];  // Danh sách món ăn đã chọn
   selectedComboIds?: string[];
   note: string;
   voucher: string;
-  acceptTerms: boolean;
+  acceptTerms: boolean;   // Đồng ý điều khoản
 }
 
-// Price config
+// Cấu trúc cấu hình giá cho từng loại phòng
 export interface PriceConfig {
-  hourlyRate: number;
-  dailyRate: number;
-  overnightRate: number;
-  extraHourRate: number;
+  hourlyRate: number;     // Giá theo giờ đầu
+  dailyRate: number;      // Giá theo ngày
+  overnightRate: number;  // Giá qua đêm
+  extraHourRate: number;  // Giá mỗi giờ thêm sau giờ đầu
 }
 
-// Room price config by type
+// Bảng giá chi tiết được định nghĩa cho từng loại phòng
 export const ROOM_PRICES: Record<RoomType, PriceConfig> = {
   standard: {
     hourlyRate: 169000,
@@ -118,7 +120,7 @@ export const ROOM_PRICES: Record<RoomType, PriceConfig> = {
   },
 };
 
-// Demo food items
+// Dữ liệu mẫu cho danh sách món ăn
 export const FOOD_ITEMS: FoodItem[] = [
   {
     id: '1',
@@ -158,7 +160,7 @@ export const FOOD_ITEMS: FoodItem[] = [
   },
 ];
 
-// Combo items (special combos shown separately)
+// Dữ liệu mẫu cho các gói Combo ưu đãi
 export const COMBO_ITEMS: FoodItem[] = [
   { id: 'c1', name: '1 MỲ LY + 1 XÚC SÍCH + 1 SUỐI', price: 25000 },
   { id: 'c2', name: '2 ÁO GIÁP', price: 20000 },
