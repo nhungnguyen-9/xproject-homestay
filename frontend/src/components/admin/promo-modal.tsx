@@ -1,8 +1,408 @@
-export function PromoModal() {
+import { useState, useEffect, useMemo } from 'react'
+import { z } from 'zod'
+import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { formatPrice } from '@/utils/helpers'
+import * as promoService from '@/services/promoService'
+import type { PromoCode } from '@/types/promo'
+import type { RoomType } from '@/types/schedule'
+
+interface PromoModalProps {
+  open: boolean
+  onClose: () => void
+  promo?: PromoCode
+  onSave: (data: Omit<PromoCode, 'id' | 'usedCount' | 'createdAt'>) => void
+}
+
+const ROOM_TYPE_OPTIONS: { value: RoomType; label: string }[] = [
+  { value: 'standard', label: 'Standard' },
+  { value: 'vip', label: 'VIP' },
+  { value: 'supervip', label: 'SuperVIP' },
+]
+
+function formatShortDate(dateStr: string): string {
+  if (!dateStr) return '...'
+  const parts = dateStr.split('-')
+  if (parts.length < 3) return dateStr
+  return `${parts[2]}/${parts[1]}`
+}
+
+export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
+  const isEdit = !!promo
+
+  const [code, setCode] = useState('')
+  const [discountType, setDiscountType] = useState<'percent' | 'fixed'>('percent')
+  const [discountValue, setDiscountValue] = useState<number | ''>('')
+  const [maxUses, setMaxUses] = useState<number | ''>('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [applicableRoomTypes, setApplicableRoomTypes] = useState<RoomType[]>([])
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (open) {
+      if (promo) {
+        setCode(promo.code)
+        setDiscountType(promo.discountType)
+        setDiscountValue(promo.discountValue)
+        setMaxUses(promo.maxUses)
+        setStartDate(promo.startDate)
+        setEndDate(promo.endDate)
+        setApplicableRoomTypes([...promo.applicableRoomTypes])
+      } else {
+        setCode('')
+        setDiscountType('percent')
+        setDiscountValue('')
+        setMaxUses('')
+        setStartDate('')
+        setEndDate('')
+        setApplicableRoomTypes([])
+      }
+      setErrors({})
+    }
+  }, [open, promo])
+
+  const promoSchema = useMemo(() => {
+    return z.object({
+      code: z
+        .string()
+        .min(3, 'Mã phải có ít nhất 3 ký tự')
+        .max(20, 'Mã tối đa 20 ký tự')
+        .regex(/^[A-Z0-9]{3,20}$/, 'Chỉ chấp nhận chữ in hoa (A-Z) và số (0-9)'),
+      discountType: z.enum(['percent', 'fixed']),
+      discountValue: z.number(),
+      maxUses: z.number().int().min(1, 'Tối thiểu 1').max(99999, 'Tối đa 99,999'),
+      startDate: z.string().min(1, 'Bắt buộc'),
+      endDate: z.string().min(1, 'Bắt buộc'),
+      applicableRoomTypes: z.array(z.enum(['standard', 'vip', 'supervip'])),
+      status: z.enum(['active', 'expired', 'disabled']),
+    })
+  }, [])
+
+  function toggleRoomType(rt: RoomType) {
+    setApplicableRoomTypes((prev) => {
+      if (prev.includes(rt)) {
+        return prev.filter((t) => t !== rt)
+      }
+      return [...prev, rt]
+    })
+  }
+
+  function selectAll() {
+    setApplicableRoomTypes([])
+  }
+
+  const isAllSelected = applicableRoomTypes.length === 0
+
+  const remaining = useMemo(() => {
+    const max = typeof maxUses === 'number' ? maxUses : 0
+    const used = promo?.usedCount ?? 0
+    return Math.max(0, max - used)
+  }, [maxUses, promo])
+
+  const roomLabel = useMemo(() => {
+    if (applicableRoomTypes.length === 0) return 'tất cả phòng'
+    return applicableRoomTypes
+      .map((rt) => ROOM_TYPE_OPTIONS.find((o) => o.value === rt)?.label ?? rt)
+      .join(', ')
+  }, [applicableRoomTypes])
+
+  const discountLabel = useMemo(() => {
+    if (discountValue === '' || discountValue === 0) return '...'
+    if (discountType === 'percent') return `${discountValue}%`
+    return `${formatPrice(discountValue)}đ`
+  }, [discountType, discountValue])
+
+  function handleSubmit() {
+    const rawData = {
+      code: code.toUpperCase(),
+      discountType,
+      discountValue: typeof discountValue === 'number' ? discountValue : 0,
+      maxUses: typeof maxUses === 'number' ? maxUses : 0,
+      startDate,
+      endDate,
+      applicableRoomTypes,
+      status: 'active' as const,
+    }
+
+    // Custom validation
+    const newErrors: Record<string, string> = {}
+
+    // Validate with Zod
+    const result = promoSchema.safeParse(rawData)
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const key = issue.path[0] as string
+        if (!newErrors[key]) {
+          newErrors[key] = issue.message
+        }
+      }
+    }
+
+    // Additional range validations for discount value
+    if (discountType === 'percent') {
+      const val = typeof discountValue === 'number' ? discountValue : 0
+      if (val < 1 || val > 100) {
+        newErrors.discountValue = 'Phần trăm phải từ 1 đến 100'
+      }
+    } else {
+      const val = typeof discountValue === 'number' ? discountValue : 0
+      if (val < 1000 || val > 10000000) {
+        newErrors.discountValue = 'Số tiền phải từ 1,000 đến 10,000,000'
+      }
+    }
+
+    // End date > start date
+    if (startDate && endDate && endDate <= startDate) {
+      newErrors.endDate = 'Ngày kết thúc phải sau ngày bắt đầu'
+    }
+
+    // Unique code check
+    const existing = promoService.getByCode(rawData.code)
+    if (existing && (!promo || existing.id !== promo.id)) {
+      newErrors.code = 'Mã khuyến mãi đã tồn tại'
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
+    setErrors({})
+    onSave(rawData)
+    toast.success(isEdit ? 'Đã cập nhật mã khuyến mãi' : 'Đã tạo mã khuyến mãi mới')
+    onClose()
+  }
+
   return (
-    <div className="p-6">
-      <h2 className="text-lg font-semibold">Promo Modal</h2>
-      <p className="text-slate-500">Coming soon...</p>
-    </div>
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {isEdit ? 'Chỉnh sửa mã khuyến mãi' : 'Tạo mã khuyến mãi mới'}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Code */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Mã khuyến mãi
+            </label>
+            <input
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              placeholder="VD: SUMMER20"
+              className={cn(
+                'w-full rounded-md border px-3 py-2 text-sm font-mono uppercase tracking-wider',
+                errors.code ? 'border-red-400 ring-1 ring-red-400' : 'border-slate-300'
+              )}
+            />
+            {errors.code && (
+              <p className="text-xs text-red-500 mt-1">{errors.code}</p>
+            )}
+          </div>
+
+          {/* Discount type toggle */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Loại giảm giá
+            </label>
+            <div className="flex rounded-md border border-slate-300 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setDiscountType('percent')}
+                className={cn(
+                  'flex-1 px-4 py-2 text-sm font-medium transition-colors',
+                  discountType === 'percent'
+                    ? 'bg-[#F87171] text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-50'
+                )}
+              >
+                %
+              </button>
+              <button
+                type="button"
+                onClick={() => setDiscountType('fixed')}
+                className={cn(
+                  'flex-1 px-4 py-2 text-sm font-medium transition-colors border-l border-slate-300',
+                  discountType === 'fixed'
+                    ? 'bg-[#F87171] text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-50'
+                )}
+              >
+                VND
+              </button>
+            </div>
+          </div>
+
+          {/* Discount value */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {discountType === 'percent' ? 'Giá trị (%)' : 'Giá trị (VND)'}
+            </label>
+            <input
+              type="number"
+              value={discountValue}
+              onChange={(e) =>
+                setDiscountValue(e.target.value === '' ? '' : Number(e.target.value))
+              }
+              placeholder={discountType === 'percent' ? '1 - 100' : '1,000 - 10,000,000'}
+              min={discountType === 'percent' ? 1 : 1000}
+              max={discountType === 'percent' ? 100 : 10000000}
+              className={cn(
+                'w-full rounded-md border px-3 py-2 text-sm',
+                errors.discountValue
+                  ? 'border-red-400 ring-1 ring-red-400'
+                  : 'border-slate-300'
+              )}
+            />
+            {errors.discountValue && (
+              <p className="text-xs text-red-500 mt-1">{errors.discountValue}</p>
+            )}
+          </div>
+
+          {/* Max uses */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Số lần sử dụng tối đa
+            </label>
+            <input
+              type="number"
+              value={maxUses}
+              onChange={(e) =>
+                setMaxUses(e.target.value === '' ? '' : Number(e.target.value))
+              }
+              placeholder="1 - 99,999"
+              min={1}
+              max={99999}
+              className={cn(
+                'w-full rounded-md border px-3 py-2 text-sm',
+                errors.maxUses ? 'border-red-400 ring-1 ring-red-400' : 'border-slate-300'
+              )}
+            />
+            {errors.maxUses && (
+              <p className="text-xs text-red-500 mt-1">{errors.maxUses}</p>
+            )}
+          </div>
+
+          {/* Date range */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Ngày bắt đầu
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className={cn(
+                  'w-full rounded-md border px-3 py-2 text-sm',
+                  errors.startDate
+                    ? 'border-red-400 ring-1 ring-red-400'
+                    : 'border-slate-300'
+                )}
+              />
+              {errors.startDate && (
+                <p className="text-xs text-red-500 mt-1">{errors.startDate}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Ngày kết thúc
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className={cn(
+                  'w-full rounded-md border px-3 py-2 text-sm',
+                  errors.endDate
+                    ? 'border-red-400 ring-1 ring-red-400'
+                    : 'border-slate-300'
+                )}
+              />
+              {errors.endDate && (
+                <p className="text-xs text-red-500 mt-1">{errors.endDate}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Room type chips */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Loại phòng áp dụng
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={selectAll}
+                className={cn(
+                  'rounded-full px-3 py-1 text-xs font-medium border transition-colors',
+                  isAllSelected
+                    ? 'bg-[#F87171] text-white border-[#F87171]'
+                    : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                )}
+              >
+                Tất cả
+              </button>
+              {ROOM_TYPE_OPTIONS.map((opt) => {
+                const isSelected =
+                  !isAllSelected && applicableRoomTypes.includes(opt.value)
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => toggleRoomType(opt.value)}
+                    className={cn(
+                      'rounded-full px-3 py-1 text-xs font-medium border transition-colors',
+                      isSelected
+                        ? 'bg-[#F87171] text-white border-[#F87171]'
+                        : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Live preview */}
+          <div className="rounded-lg bg-green-50 border border-green-200 p-3">
+            <p className="text-sm text-green-800">
+              <span className="font-semibold">
+                Ma {code || '...'}{' '}
+              </span>
+              giam {discountLabel} cho {roomLabel}.
+              {' '}Hieu luc {formatShortDate(startDate)} &ndash;{' '}
+              {formatShortDate(endDate)}. Con{' '}
+              {remaining}/{typeof maxUses === 'number' ? maxUses : '...'} lan.
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Hủy
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            className="bg-[#F87171] hover:bg-[#ef4444] text-white"
+          >
+            {isEdit ? 'Lưu thay đổi' : 'Tạo mã'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
