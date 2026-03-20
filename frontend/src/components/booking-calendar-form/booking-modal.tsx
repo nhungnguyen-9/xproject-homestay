@@ -248,6 +248,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 adults: formData.adults,
                 foodItems: selectedFoodItems,
                 totalPrice,
+                date: formData.checkInDate.toISOString().split('T')[0],
+                category: 'guest' as const,
             };
             // Gọi callback thông báo tạo thành công
             onBookingCreate?.(newBooking);

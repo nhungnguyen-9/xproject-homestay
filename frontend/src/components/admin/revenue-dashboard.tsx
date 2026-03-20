@@ -57,8 +57,8 @@ function getPeriodDateRange(period: Period): { start: string; end: string } {
   return { start: formatDate(monthStart), end: formatDate(monthEnd) }
 }
 
-function formatDateLabel(dateStr: string): string {
-  const d = new Date(dateStr)
+function formatDateLabel(dateStr: unknown): string {
+  const d = new Date(String(dateStr))
   return `${d.getDate()}/${d.getMonth() + 1}`
 }
 
@@ -235,8 +235,8 @@ export function RevenueDashboard() {
                 width={90}
               />
               <Tooltip
-                formatter={(value: number) => [
-                  `${formatPrice(value)}đ`,
+                formatter={(value: unknown) => [
+                  `${formatPrice(Number(value))}đ`,
                   'Doanh thu',
                 ]}
                 labelFormatter={formatDateLabel}
