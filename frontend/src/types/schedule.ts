@@ -10,21 +10,31 @@ export interface Room {
 }
 
 // Booking status
-export type BookingStatus = 'confirmed' | 'pending' | 'checked-in' | 'checked-out';
+export type BookingStatus = 'confirmed' | 'pending' | 'checked-in' | 'checked-out' | 'cancelled';
+
+// Internal booking tags
+export type InternalTag = 'cleaning' | 'maintenance' | 'locked' | 'custom';
+export type BookingCategory = 'guest' | 'internal';
 
 // Booking interface
 export interface Booking {
   id: string;
   roomId: string;
-  startTime: string; // Format: "HH:mm"
-  endTime: string;   // Format: "HH:mm"
+  date: string;              // ISO date "YYYY-MM-DD"
+  startTime: string;         // Format: "HH:mm"
+  endTime: string;           // Format: "HH:mm"
   guestName?: string;
   guestPhone?: string;
   status: BookingStatus;
   note?: string;
   adults?: number;
   foodItems?: FoodItem[];
-  totalPrice?: number;
+  totalPrice: number;        // Required. Internal bookings: 0.
+  voucher?: string;          // Promo code string
+  category: BookingCategory;
+  internalTag?: InternalTag;
+  internalNote?: string;
+  createdBy?: string;
 }
 
 // Schedule props
