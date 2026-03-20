@@ -17,6 +17,16 @@ import { PromoManager } from './components/admin/promo-manager.tsx';
 import { TelegramConfig } from './components/admin/telegram-config.tsx';
 import { RevenueDashboard } from './components/admin/revenue-dashboard.tsx';
 import { RoomManagement } from './components/admin/room-management.tsx';
+import * as bookingService from './services/bookingService';
+import * as customerService from './services/customerService';
+import * as promoService from './services/promoService';
+import * as telegramService from './services/telegramService';
+
+// Initialize services (seed localStorage with demo data on first load)
+bookingService.init();
+customerService.init();
+promoService.init();
+telegramService.init();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
