@@ -1,0 +1,222 @@
+<h2>Module 5: Theo dõi doanh thu</h2>
+<p class="subtitle">Tổng doanh thu, tỷ lệ lấp đầy, biểu đồ xu hướng, top khách hàng</p>
+
+<!-- Stats Cards -->
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">Dashboard Doanh thu — Tích hợp vào /admin (trang chính)</div>
+    <div class="mockup-body" style="padding: 20px;">
+
+      <!-- Period Selector -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="margin: 0; font-size: 16px;">Tổng quan doanh thu</h3>
+        <div style="display: flex; gap: 0; border: 1px solid #E2E8F0; border-radius: 6px; overflow: hidden;">
+          <div style="padding: 6px 16px; background: white; color: #64748B; font-size: 12px; border-right: 1px solid #E2E8F0; cursor: pointer;">Hôm nay</div>
+          <div style="padding: 6px 16px; background: #F87171; color: white; font-size: 12px; font-weight: 600; border-right: 1px solid #E2E8F0;">Tuần này</div>
+          <div style="padding: 6px 16px; background: white; color: #64748B; font-size: 12px; cursor: pointer;">Tháng này</div>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;">
+        <div style="background: #FEF2F2; border-radius: 10px; padding: 16px;">
+          <div style="font-size: 11px; color: #64748B; margin-bottom: 6px;">Tổng doanh thu</div>
+          <div style="font-size: 24px; font-weight: 700; color: #F87171;">12,450,000đ</div>
+          <div style="font-size: 11px; color: #22C55E; margin-top: 4px;">↑ 18% so với tuần trước</div>
+        </div>
+        <div style="background: #F0FDF4; border-radius: 10px; padding: 16px;">
+          <div style="font-size: 11px; color: #64748B; margin-bottom: 6px;">Tổng booking</div>
+          <div style="font-size: 24px; font-weight: 700; color: #166534;">27</div>
+          <div style="font-size: 11px; color: #22C55E; margin-top: 4px;">↑ 5 so với tuần trước</div>
+        </div>
+        <div style="background: #EFF6FF; border-radius: 10px; padding: 16px;">
+          <div style="font-size: 11px; color: #64748B; margin-bottom: 6px;">Tỷ lệ lấp đầy</div>
+          <div style="font-size: 24px; font-weight: 700; color: #1D4ED8;">68%</div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px;">
+            <div style="flex: 1; height: 6px; background: #DBEAFE; border-radius: 3px; overflow: hidden;">
+              <div style="width: 68%; height: 100%; background: #3B82F6; border-radius: 3px;"></div>
+            </div>
+          </div>
+        </div>
+        <div style="background: #F5F3FF; border-radius: 10px; padding: 16px;">
+          <div style="font-size: 11px; color: #64748B; margin-bottom: 6px;">Trung bình / booking</div>
+          <div style="font-size: 24px; font-weight: 700; color: #7C3AED;">461,000đ</div>
+          <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">~ so với tuần trước</div>
+        </div>
+      </div>
+
+      <!-- Revenue Chart -->
+      <div style="border: 1px solid #E2E8F0; border-radius: 10px; padding: 20px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div style="font-size: 14px; font-weight: 600; color: #334155;">Xu hướng doanh thu</div>
+          <div style="font-size: 11px; color: #94A3B8;">14/03 – 20/03/2026</div>
+        </div>
+        <!-- Simulated line chart -->
+        <div style="position: relative; height: 180px; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-left: 50px;">
+          <!-- Y axis labels -->
+          <div style="position: absolute; left: -50px; top: -4px; font-size: 10px; color: #94A3B8;">3.0M</div>
+          <div style="position: absolute; left: -50px; top: 43px; font-size: 10px; color: #94A3B8;">2.0M</div>
+          <div style="position: absolute; left: -50px; top: 90px; font-size: 10px; color: #94A3B8;">1.0M</div>
+          <div style="position: absolute; left: -50px; top: 137px; font-size: 10px; color: #94A3B8;">0.5M</div>
+          <!-- Grid lines -->
+          <div style="position: absolute; top: 45px; left: 0; right: 0; border-top: 1px dashed #F1F5F9;"></div>
+          <div style="position: absolute; top: 90px; left: 0; right: 0; border-top: 1px dashed #F1F5F9;"></div>
+          <div style="position: absolute; top: 135px; left: 0; right: 0; border-top: 1px dashed #F1F5F9;"></div>
+          <!-- Chart area with SVG-like path using CSS -->
+          <svg viewBox="0 0 700 180" style="width: 100%; height: 100%;" preserveAspectRatio="none">
+            <!-- Area fill -->
+            <path d="M0,120 L100,100 L200,80 L300,60 L400,90 L500,40 L600,30 L700,20 L700,180 L0,180 Z" fill="url(#gradient)" opacity="0.3"/>
+            <!-- Line -->
+            <path d="M0,120 L100,100 L200,80 L300,60 L400,90 L500,40 L600,30 L700,20" fill="none" stroke="#F87171" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Dots -->
+            <circle cx="0" cy="120" r="4" fill="#F87171"/>
+            <circle cx="100" cy="100" r="4" fill="#F87171"/>
+            <circle cx="200" cy="80" r="4" fill="#F87171"/>
+            <circle cx="300" cy="60" r="4" fill="#F87171"/>
+            <circle cx="400" cy="90" r="4" fill="#F87171"/>
+            <circle cx="500" cy="40" r="4" fill="#F87171"/>
+            <circle cx="600" cy="30" r="4" fill="#F87171"/>
+            <circle cx="700" cy="20" r="5" fill="white" stroke="#F87171" stroke-width="2.5"/>
+            <defs>
+              <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#F87171" stop-opacity="0.4"/>
+                <stop offset="100%" stop-color="#F87171" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <!-- X axis labels -->
+          <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 10px; color: #94A3B8;">
+            <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span><span style="font-weight: 600; color: #F87171;">Hôm nay</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Occupancy by room -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <!-- Occupancy bars -->
+        <div style="border: 1px solid #E2E8F0; border-radius: 10px; padding: 20px;">
+          <div style="font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 16px;">Tỷ lệ lấp đầy theo phòng</div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                <span style="font-weight: 600;">G01</span><span style="color: #64748B;">85%</span>
+              </div>
+              <div style="height: 8px; background: #F1F5F9; border-radius: 4px; overflow: hidden;">
+                <div style="width: 85%; height: 100%; background: #22C55E; border-radius: 4px;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                <span style="font-weight: 600;">P102</span><span style="color: #64748B;">72%</span>
+              </div>
+              <div style="height: 8px; background: #F1F5F9; border-radius: 4px; overflow: hidden;">
+                <div style="width: 72%; height: 100%; background: #3B82F6; border-radius: 4px;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                <span style="font-weight: 600;">P103</span><span style="color: #64748B;">58%</span>
+              </div>
+              <div style="height: 8px; background: #F1F5F9; border-radius: 4px; overflow: hidden;">
+                <div style="width: 58%; height: 100%; background: #3B82F6; border-radius: 4px;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                <span style="font-weight: 600;">P104</span> <span style="font-size: 10px; background: #FEF3C7; color: #92400E; padding: 0px 4px; border-radius: 3px;">VIP</span><span style="color: #64748B; margin-left: auto;">90%</span>
+              </div>
+              <div style="height: 8px; background: #F1F5F9; border-radius: 4px; overflow: hidden;">
+                <div style="width: 90%; height: 100%; background: #F87171; border-radius: 4px;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                <span style="font-weight: 600;">P105</span> <span style="font-size: 10px; background: #FEF3C7; color: #92400E; padding: 0px 4px; border-radius: 3px;">VIP</span><span style="color: #64748B; margin-left: auto;">45%</span>
+              </div>
+              <div style="height: 8px; background: #F1F5F9; border-radius: 4px; overflow: hidden;">
+                <div style="width: 45%; height: 100%; background: #EAB308; border-radius: 4px;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                <span style="font-weight: 600;">P106</span> <span style="font-size: 10px; background: #FEE2E2; color: #991B1B; padding: 0px 4px; border-radius: 3px;">SVIP</span><span style="color: #64748B; margin-left: auto;">62%</span>
+              </div>
+              <div style="height: 8px; background: #F1F5F9; border-radius: 4px; overflow: hidden;">
+                <div style="width: 62%; height: 100%; background: #8B5CF6; border-radius: 4px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top customers -->
+        <div style="border: 1px solid #E2E8F0; border-radius: 10px; padding: 20px;">
+          <div style="font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 16px;">Top khách hàng chi tiêu</div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: #FEF3C7; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #92400E;">1</div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; font-weight: 600;">Lê Văn C</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #F87171;">5,400,000đ</span>
+                </div>
+                <div style="font-size: 11px; color: #94A3B8;">12 lần đặt</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: #F1F5F9; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #64748B;">2</div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; font-weight: 600;">Nguyễn Văn A</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #F87171;">3,600,000đ</span>
+                </div>
+                <div style="font-size: 11px; color: #94A3B8;">8 lần đặt</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: #F1F5F9; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #64748B;">3</div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; font-weight: 600;">Phạm Thị D</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #F87171;">2,250,000đ</span>
+                </div>
+                <div style="font-size: 11px; color: #94A3B8;">5 lần đặt</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: #F1F5F9; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #64748B;">4</div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; font-weight: 600;">Trần Thị B</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #F87171;">1,350,000đ</span>
+                </div>
+                <div style="font-size: 11px; color: #94A3B8;">3 lần đặt</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: #F1F5F9; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #64748B;">5</div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; font-weight: 600;">Hoàng E</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #F87171;">900,000đ</span>
+                </div>
+                <div style="font-size: 11px; color: #94A3B8;">2 lần đặt</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Implementation note -->
+<div class="section" style="margin-top: 24px;">
+  <h3>Kỹ thuật biểu đồ</h3>
+  <div style="font-size: 13px; line-height: 2; background: #F8FAFC; padding: 16px; border-radius: 8px;">
+    <strong>Line chart:</strong> Dùng <code style="background: #E2E8F0; padding: 1px 6px; border-radius: 3px;">recharts</code> (lightweight, React-native) — LineChart + Area gradient<br>
+    <strong>Progress bars:</strong> CSS thuần (div width %)<br>
+    <strong>Tính toán:</strong> revenueService tính từ bookingService data → group by date/room/customer<br>
+    <strong>So sánh %:</strong> So sánh period hiện tại vs period trước (tuần này vs tuần trước)<br>
+    <strong>Occupancy:</strong> (tổng giờ đã booking / tổng giờ khả dụng) × 100 — loại trừ internal booking
+  </div>
+</div>

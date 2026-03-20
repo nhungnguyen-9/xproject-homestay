@@ -1,0 +1,177 @@
+<h2>Module 1: Lịch đặt phòng (v2)</h2>
+<p class="subtitle">Thêm Internal Booking — Dọn phòng, Bảo trì, v.v.</p>
+
+<!-- Internal Booking Types -->
+<div class="section">
+  <h3>Loại booking nội bộ (Internal Tags)</h3>
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+    <div style="display: flex; align-items: center; gap: 8px; background: #F3E8FF; border: 1px solid #DDD6FE; border-radius: 6px; padding: 8px 14px; font-size: 13px;">
+      <span style="font-size: 16px;">🧹</span>
+      <div><strong>Dọn phòng</strong><br><span style="color: #7C3AED; font-size: 11px;">Mặc định 30 phút</span></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 6px; padding: 8px 14px; font-size: 13px;">
+      <span style="font-size: 16px;">🔧</span>
+      <div><strong>Bảo trì</strong><br><span style="color: #92400E; font-size: 11px;">Tùy chỉnh thời gian</span></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; background: #FCE7F3; border: 1px solid #FBCFE8; border-radius: 6px; padding: 8px 14px; font-size: 13px;">
+      <span style="font-size: 16px;">🚫</span>
+      <div><strong>Khóa phòng</strong><br><span style="color: #BE185D; font-size: 11px;">Không cho đặt</span></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; background: #F1F5F9; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 14px; font-size: 13px;">
+      <span style="font-size: 16px;">📝</span>
+      <div><strong>Tùy chỉnh</strong><br><span style="color: #64748B; font-size: 11px;">Admin tự đặt tên</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Grid with internal bookings -->
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">Admin nhìn thấy — Chi tiết đầy đủ</div>
+    <div class="mockup-body" style="padding: 0; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: #F1F5F9;">
+            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #E2E8F0; min-width: 100px;">Phòng</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 55px; text-align: center;">06:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 55px; text-align: center;">08:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 55px; text-align: center;">10:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 55px; text-align: center;">12:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 55px; text-align: center;">14:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 55px; text-align: center;">16:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 55px; text-align: center;">18:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 55px; text-align: center;">20:00</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Room G01 with cleaning -->
+          <tr>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9; font-weight: 600;">
+              G01 <span style="font-size: 10px; color: #94A3B8; font-weight: normal;">Standard</span>
+            </td>
+            <td colspan="2" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #DCFCE7; border-left: 3px solid #22C55E; border-radius: 4px; padding: 4px 8px; font-size: 11px;">
+                ✓ Nguyễn Văn A<br><span style="color: #64748B;">06:00–10:00</span>
+              </div>
+            </td>
+            <!-- CLEANING BLOCK - admin view -->
+            <td style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #F3E8FF; border-left: 3px solid #8B5CF6; border-radius: 4px; padding: 4px 8px; font-size: 11px; background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(139,92,246,0.08) 5px, rgba(139,92,246,0.08) 10px);">
+                🧹 <strong>Dọn phòng</strong><br><span style="color: #7C3AED;">10:00–10:30</span>
+              </div>
+            </td>
+            <td colspan="2" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #FEF9C3; border-left: 3px solid #EAB308; border-radius: 4px; padding: 4px 8px; font-size: 11px;">
+                ⏳ Trần Thị B<br><span style="color: #64748B;">12:00–16:00</span>
+              </div>
+            </td>
+            <td colspan="3" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #F1F5F9; border-radius: 4px; padding: 8px; text-align: center; color: #94A3B8; font-size: 16px;">+</div>
+            </td>
+          </tr>
+          <!-- Room P102 with maintenance -->
+          <tr>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9; font-weight: 600;">
+              P102 <span style="font-size: 10px; color: #94A3B8; font-weight: normal;">Standard</span>
+            </td>
+            <td colspan="4" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #FEF3C7; border-left: 3px solid #F59E0B; border-radius: 4px; padding: 4px 8px; font-size: 11px; background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(245,158,11,0.08) 5px, rgba(245,158,11,0.08) 10px);">
+                🔧 <strong>Bảo trì — Sửa điều hòa</strong><br><span style="color: #92400E;">06:00–14:00</span>
+              </div>
+            </td>
+            <td colspan="4" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #DCFCE7; border-left: 3px solid #22C55E; border-radius: 4px; padding: 4px 8px; font-size: 11px;">
+                ✓ Phạm D<br><span style="color: #64748B;">14:00–20:00</span>
+              </div>
+            </td>
+          </tr>
+          <!-- Room P104 locked -->
+          <tr>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9; font-weight: 600;">
+              P104 <span style="font-size: 10px; background: #FEF3C7; color: #92400E; padding: 1px 6px; border-radius: 4px; font-weight: normal;">VIP</span>
+            </td>
+            <td colspan="8" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #FCE7F3; border-left: 3px solid #EC4899; border-radius: 4px; padding: 4px 8px; font-size: 11px; background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(236,72,153,0.08) 5px, rgba(236,72,153,0.08) 10px);">
+                🚫 <strong>Khóa phòng — Đang trang trí lại</strong><br><span style="color: #BE185D;">Cả ngày</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- User view comparison -->
+<div class="section" style="margin-top: 24px;">
+  <div class="split">
+    <div class="mockup" style="flex: 1;">
+      <div class="mockup-header" style="background: #EFF6FF;">👤 User nhìn thấy (hover)</div>
+      <div class="mockup-body" style="padding: 16px;">
+        <div style="font-size: 12px; line-height: 1.8;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <div style="background: #DCFCE7; border-radius: 4px; padding: 4px 10px; font-size: 11px;">✓ Đã đặt</div>
+            <span style="color: #64748B;">06:00–10:00</span>
+          </div>
+          <!-- Internal block - user sees blocked -->
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <div style="background: #F1F5F9; border-radius: 4px; padding: 4px 10px; font-size: 11px; color: #94A3B8;">
+              ━━ Không khả dụng ━━
+            </div>
+            <span style="color: #94A3B8;">10:00–10:30</span>
+          </div>
+          <!-- Tooltip mockup -->
+          <div style="background: #1E293B; color: #E2E8F0; padding: 8px 12px; border-radius: 6px; font-size: 11px; display: inline-block; margin-top: 4px;">
+            ⚠️ Khung giờ này không thể đặt phòng
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mockup" style="flex: 1;">
+      <div class="mockup-header" style="background: #FEF2F2;">🔑 Admin nhìn thấy (hover)</div>
+      <div class="mockup-body" style="padding: 16px;">
+        <div style="font-size: 12px; line-height: 1.8;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <div style="background: #DCFCE7; border-radius: 4px; padding: 4px 10px; font-size: 11px;">✓ Nguyễn Văn A</div>
+            <span style="color: #64748B;">06:00–10:00</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <div style="background: #F3E8FF; border-radius: 4px; padding: 4px 10px; font-size: 11px;">🧹 Dọn phòng</div>
+            <span style="color: #7C3AED;">10:00–10:30</span>
+          </div>
+          <!-- Admin tooltip -->
+          <div style="background: #1E293B; color: #E2E8F0; padding: 10px 14px; border-radius: 6px; font-size: 11px; display: inline-block; margin-top: 4px; line-height: 1.6;">
+            🧹 <strong>Dọn phòng</strong><br>
+            Thời gian: 30 phút<br>
+            Tạo bởi: Admin<br>
+            <span style="color: #94A3B8;">Click để sửa / xóa</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Data Model -->
+<div class="section" style="margin-top: 24px;">
+  <h3>Data Model — Booking mở rộng</h3>
+  <div style="font-family: monospace; font-size: 12px; line-height: 1.8; background: #1E293B; color: #E2E8F0; padding: 20px; border-radius: 8px;">
+    <span style="color: #7C3AED;">interface</span> <span style="color: #F87171;">Booking</span> {<br>
+    &nbsp;&nbsp;...<span style="color: #64748B;">// existing fields</span><br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">category</span>: <span style="color: #FBBF24;">'guest'</span> | <span style="color: #FBBF24;">'internal'</span>;<br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">internalTag?</span>: <span style="color: #FBBF24;">'cleaning'</span> | <span style="color: #FBBF24;">'maintenance'</span> | <span style="color: #FBBF24;">'locked'</span> | <span style="color: #FBBF24;">'custom'</span>;<br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">internalNote?</span>: <span style="color: #3B82F6;">string</span>; <span style="color: #64748B;">// "Sửa điều hòa", "Đang trang trí"</span><br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">createdBy?</span>: <span style="color: #3B82F6;">string</span>; <span style="color: #64748B;">// admin who created</span><br>
+    }
+  </div>
+</div>
+
+<!-- Quick-add for internal -->
+<div class="section" style="margin-top: 24px;">
+  <h3>Quick Actions — Tạo booking nội bộ</h3>
+  <div style="font-size: 13px; line-height: 2; background: #F8FAFC; padding: 16px; border-radius: 8px;">
+    <strong>Cách 1:</strong> Click ô trống (+) → chọn tab "Nội bộ" trong modal → chọn tag → điền thời gian<br>
+    <strong>Cách 2:</strong> Right-click booking khách → "Thêm dọn phòng sau" → auto tạo 30p sau checkout<br>
+    <strong>Dọn phòng nhanh:</strong> Khi check-out khách → hỏi "Thêm 30p dọn phòng?" → 1 click tạo
+  </div>
+</div>

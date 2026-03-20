@@ -1,0 +1,211 @@
+<h2>Module 3: Quản lý mã khuyến mãi</h2>
+<p class="subtitle">Tạo, sửa, xóa mã giảm giá — theo %, VND, loại phòng, hạn dùng</p>
+
+<!-- Promo List -->
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">Danh sách mã khuyến mãi</div>
+    <div class="mockup-body" style="padding: 0;">
+      <!-- Toolbar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #E2E8F0;">
+        <div style="display: flex; gap: 8px;">
+          <div style="padding: 6px 14px; background: #F87171; color: white; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">+ Tạo mã mới</div>
+          <div class="mock-input" style="padding: 7px 12px; font-size: 12px; width: 130px; background: #F8FAFC;">▾ Tất cả</div>
+        </div>
+        <div style="display: flex; gap: 12px; font-size: 12px; color: #64748B;">
+          <span>Đang hoạt động: <strong style="color: #22C55E;">3</strong></span>
+          <span>Hết hạn: <strong style="color: #94A3B8;">2</strong></span>
+        </div>
+      </div>
+      <!-- Table -->
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: #F8FAFC;">
+            <th style="padding: 10px 16px; text-align: left; color: #64748B;">Mã</th>
+            <th style="padding: 10px 12px; text-align: left; color: #64748B;">Loại giảm</th>
+            <th style="padding: 10px 12px; text-align: left; color: #64748B;">Áp dụng</th>
+            <th style="padding: 10px 12px; text-align: center; color: #64748B;">Đã dùng</th>
+            <th style="padding: 10px 12px; text-align: left; color: #64748B;">Hạn</th>
+            <th style="padding: 10px 12px; text-align: center; color: #64748B;">Trạng thái</th>
+            <th style="padding: 10px 12px; text-align: center; color: #64748B;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Active promo % -->
+          <tr>
+            <td style="padding: 10px 16px; border-bottom: 1px solid #F1F5F9;">
+              <span style="font-family: monospace; font-weight: 700; background: #EFF6FF; color: #1D4ED8; padding: 3px 10px; border-radius: 4px; font-size: 13px;">SUMMER20</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9;">
+              <span style="color: #F87171; font-weight: 600;">-20%</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9;">
+              <span style="background: #F1F5F9; padding: 2px 6px; border-radius: 3px; font-size: 11px;">Tất cả phòng</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: center;">
+              <span style="font-weight: 600;">5</span><span style="color: #94A3B8;"> / 50</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; color: #64748B;">31/03/2026</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: center;">
+              <span style="background: #DCFCE7; color: #166534; padding: 2px 10px; border-radius: 10px; font-size: 11px;">Hoạt động</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: center;">
+              <span style="cursor: pointer; color: #64748B;">✏️</span>
+              <span style="cursor: pointer; color: #EF4444; margin-left: 8px;">🗑</span>
+            </td>
+          </tr>
+          <!-- Active promo VND -->
+          <tr>
+            <td style="padding: 10px 16px; border-bottom: 1px solid #F1F5F9;">
+              <span style="font-family: monospace; font-weight: 700; background: #EFF6FF; color: #1D4ED8; padding: 3px 10px; border-radius: 4px; font-size: 13px;">VIP50K</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9;">
+              <span style="color: #F87171; font-weight: 600;">-50,000đ</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9;">
+              <span style="background: #FEF3C7; color: #92400E; padding: 2px 6px; border-radius: 3px; font-size: 11px;">VIP</span>
+              <span style="background: #FEE2E2; color: #991B1B; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-left: 4px;">SuperVIP</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: center;">
+              <span style="font-weight: 600;">12</span><span style="color: #94A3B8;"> / 20</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; color: #64748B;">15/04/2026</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: center;">
+              <span style="background: #DCFCE7; color: #166534; padding: 2px 10px; border-radius: 10px; font-size: 11px;">Hoạt động</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: center;">
+              <span style="cursor: pointer; color: #64748B;">✏️</span>
+              <span style="cursor: pointer; color: #EF4444; margin-left: 8px;">🗑</span>
+            </td>
+          </tr>
+          <!-- Expired promo -->
+          <tr style="opacity: 0.5;">
+            <td style="padding: 10px 16px; border-bottom: 1px solid #F1F5F9;">
+              <span style="font-family: monospace; font-weight: 700; background: #F1F5F9; color: #94A3B8; padding: 3px 10px; border-radius: 4px; font-size: 13px;">TETHOLIDAY</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9;">
+              <span style="color: #94A3B8; font-weight: 600;">-15%</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9;">
+              <span style="background: #F1F5F9; padding: 2px 6px; border-radius: 3px; font-size: 11px;">Tất cả phòng</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: center;">
+              <span style="font-weight: 600;">50</span><span style="color: #94A3B8;"> / 50</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; color: #EF4444;">28/02/2026</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: center;">
+              <span style="background: #F1F5F9; color: #94A3B8; padding: 2px 10px; border-radius: 10px; font-size: 11px;">Hết hạn</span>
+            </td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #F1F5F9; text-align: center;">
+              <span style="cursor: pointer; color: #EF4444;">🗑</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="section" style="margin-top: 24px;">
+  <div class="mockup">
+    <div class="mockup-header">Tạo / Sửa mã khuyến mãi</div>
+    <div class="mockup-body" style="padding: 24px; max-width: 520px;">
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Mã khuyến mãi</label>
+        <div class="mock-input" style="padding: 8px 12px; font-family: monospace; font-weight: 600; letter-spacing: 1px;">SUMMER20</div>
+        <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">Chỉ chữ IN HOA và số, không dấu, không khoảng trắng</div>
+      </div>
+
+      <!-- Discount type toggle -->
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 8px;">Loại giảm giá</label>
+        <div style="display: flex; gap: 0; border: 1px solid #E2E8F0; border-radius: 6px; overflow: hidden; width: fit-content;">
+          <div style="padding: 8px 20px; background: #F87171; color: white; font-size: 12px; font-weight: 600;">Phần trăm (%)</div>
+          <div style="padding: 8px 20px; background: white; color: #64748B; font-size: 12px; border-left: 1px solid #E2E8F0;">Cố định (VND)</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div>
+          <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Giá trị giảm</label>
+          <div class="mock-input" style="padding: 8px 12px;">20 <span style="color: #94A3B8;">%</span></div>
+        </div>
+        <div>
+          <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Giới hạn lần dùng</label>
+          <div class="mock-input" style="padding: 8px 12px;">50</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div>
+          <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Ngày bắt đầu</label>
+          <div class="mock-input" style="padding: 8px 12px;">01/03/2026</div>
+        </div>
+        <div>
+          <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Ngày hết hạn</label>
+          <div class="mock-input" style="padding: 8px 12px;">31/03/2026</div>
+        </div>
+      </div>
+
+      <!-- Room type filter -->
+      <div style="margin-bottom: 20px;">
+        <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 8px;">Áp dụng cho loại phòng</label>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <div style="padding: 6px 14px; background: #F87171; color: white; border-radius: 20px; font-size: 12px; cursor: pointer;">✓ Tất cả</div>
+          <div style="padding: 6px 14px; background: white; border: 1px solid #E2E8F0; border-radius: 20px; font-size: 12px; cursor: pointer; color: #64748B;">Standard</div>
+          <div style="padding: 6px 14px; background: white; border: 1px solid #E2E8F0; border-radius: 20px; font-size: 12px; cursor: pointer; color: #64748B;">VIP</div>
+          <div style="padding: 6px 14px; background: white; border: 1px solid #E2E8F0; border-radius: 20px; font-size: 12px; cursor: pointer; color: #64748B;">SuperVIP</div>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 14px; margin-bottom: 20px;">
+        <div style="font-size: 11px; color: #166534; font-weight: 600; margin-bottom: 6px;">Xem trước</div>
+        <div style="font-size: 13px; color: #334155;">
+          Mã <strong>SUMMER20</strong> giảm <strong>20%</strong> cho <strong>tất cả phòng</strong>.<br>
+          Có hiệu lực 01/03 – 31/03/2026. Còn lại: <strong>45/50</strong> lần dùng.
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button class="mock-button" style="background: #F1F5F9; color: #334155; border: 1px solid #E2E8F0;">Hủy</button>
+        <button class="mock-button" style="background: #F87171; color: white; border: none;">Lưu mã</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Data Model -->
+<div class="section" style="margin-top: 24px;">
+  <h3>Data Model</h3>
+  <div style="font-family: monospace; font-size: 12px; line-height: 1.8; background: #1E293B; color: #E2E8F0; padding: 20px; border-radius: 8px;">
+    <span style="color: #7C3AED;">interface</span> <span style="color: #F87171;">PromoCode</span> {<br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">id</span>: <span style="color: #3B82F6;">string</span>;<br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">code</span>: <span style="color: #3B82F6;">string</span>; <span style="color: #64748B;">// SUMMER20, VIP50K...</span><br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">discountType</span>: <span style="color: #FBBF24;">'percent'</span> | <span style="color: #FBBF24;">'fixed'</span>;<br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">discountValue</span>: <span style="color: #3B82F6;">number</span>; <span style="color: #64748B;">// 20 (%) hoặc 50000 (VND)</span><br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">maxUses</span>: <span style="color: #3B82F6;">number</span>;<br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">usedCount</span>: <span style="color: #3B82F6;">number</span>;<br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">startDate</span>: <span style="color: #3B82F6;">string</span>;<br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">endDate</span>: <span style="color: #3B82F6;">string</span>;<br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">roomTypes</span>: <span style="color: #F87171;">RoomType</span>[] | <span style="color: #FBBF24;">'all'</span>;<br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">status</span>: <span style="color: #FBBF24;">'active'</span> | <span style="color: #FBBF24;">'expired'</span> | <span style="color: #FBBF24;">'disabled'</span>;<br>
+    &nbsp;&nbsp;<span style="color: #22C55E;">createdAt</span>: <span style="color: #3B82F6;">string</span>;<br>
+    }<br><br>
+    <span style="color: #64748B;">// status tự động chuyển 'expired' khi endDate < now hoặc usedCount >= maxUses</span>
+  </div>
+</div>
+
+<!-- Validation rules -->
+<div class="section" style="margin-top: 24px;">
+  <h3>Validation (Zod)</h3>
+  <div style="font-size: 13px; line-height: 2; background: #F8FAFC; padding: 16px; border-radius: 8px;">
+    <strong>Mã:</strong> 3-20 ký tự, chỉ A-Z 0-9, unique (không trùng mã đã có)<br>
+    <strong>Giảm %:</strong> 1–100<br>
+    <strong>Giảm VND:</strong> 1,000 – 10,000,000<br>
+    <strong>Giới hạn lần:</strong> 1 – 99,999<br>
+    <strong>Ngày hết hạn:</strong> phải sau ngày bắt đầu<br>
+    <strong>Áp dụng booking:</strong> Khi user nhập mã → validate mã + kiểm tra loại phòng + kiểm tra còn lượt + kiểm tra hạn
+  </div>
+</div>

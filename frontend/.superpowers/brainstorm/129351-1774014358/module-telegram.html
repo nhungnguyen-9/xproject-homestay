@@ -1,0 +1,173 @@
+<h2>Module 4: Thông báo Telegram</h2>
+<p class="subtitle">Cấu hình bot, template tin nhắn, mô phỏng gửi khi có booking</p>
+
+<!-- Config Section -->
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">Cấu hình Telegram Bot</div>
+    <div class="mockup-body" style="padding: 24px; max-width: 560px;">
+      <!-- Connection status -->
+      <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; margin-bottom: 20px;">
+        <div style="width: 10px; height: 10px; border-radius: 50%; background: #22C55E;"></div>
+        <span style="font-size: 13px; color: #166534; font-weight: 500;">Đã kết nối — @NhaCamBot</span>
+        <span style="margin-left: auto; font-size: 11px; color: #64748B;">Lưu vào localStorage</span>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Bot Token</label>
+        <div class="mock-input" style="padding: 8px 12px; font-family: monospace; font-size: 11px;">7123456789:AAF••••••••••••••••••••••••••••</div>
+        <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">Lấy từ @BotFather trên Telegram</div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Chat ID nhận thông báo</label>
+        <div class="mock-input" style="padding: 8px 12px; font-family: monospace;">-1001234567890</div>
+        <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">ID của group hoặc cá nhân nhận notification</div>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <button class="mock-button" style="background: #F87171; color: white; border: none;">Lưu cấu hình</button>
+        <button class="mock-button" style="background: white; border: 1px solid #E2E8F0; color: #334155;">Gửi tin test</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Message Template -->
+<div class="section" style="margin-top: 24px;">
+  <div class="split">
+    <!-- Template editor -->
+    <div class="mockup" style="flex: 1;">
+      <div class="mockup-header">Template tin nhắn</div>
+      <div class="mockup-body" style="padding: 20px;">
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 8px;">Nội dung template</label>
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px; font-family: monospace; font-size: 12px; line-height: 1.8; min-height: 160px;">
+            🏠 <strong>Booking mới!</strong><br><br>
+            👤 Khách: <span style="background: #DBEAFE; color: #1D4ED8; padding: 1px 6px; border-radius: 3px;">{{guestName}}</span><br>
+            📞 SĐT: <span style="background: #DBEAFE; color: #1D4ED8; padding: 1px 6px; border-radius: 3px;">{{guestPhone}}</span><br>
+            🚪 Phòng: <span style="background: #DBEAFE; color: #1D4ED8; padding: 1px 6px; border-radius: 3px;">{{roomName}}</span><br>
+            🕐 Giờ: <span style="background: #DBEAFE; color: #1D4ED8; padding: 1px 6px; border-radius: 3px;">{{startTime}}</span> – <span style="background: #DBEAFE; color: #1D4ED8; padding: 1px 6px; border-radius: 3px;">{{endTime}}</span><br>
+            📅 Ngày: <span style="background: #DBEAFE; color: #1D4ED8; padding: 1px 6px; border-radius: 3px;">{{date}}</span><br>
+            💰 Giá: <span style="background: #DBEAFE; color: #1D4ED8; padding: 1px 6px; border-radius: 3px;">{{totalPrice}}</span><br>
+            🏷️ Mã KM: <span style="background: #DBEAFE; color: #1D4ED8; padding: 1px 6px; border-radius: 3px;">{{promoCode}}</span>
+          </div>
+        </div>
+        <!-- Variable chips -->
+        <div style="font-size: 11px; color: #64748B; margin-bottom: 6px;">Click để chèn biến:</div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <span style="background: #EFF6FF; color: #1D4ED8; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-family: monospace;">{{guestName}}</span>
+          <span style="background: #EFF6FF; color: #1D4ED8; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-family: monospace;">{{guestPhone}}</span>
+          <span style="background: #EFF6FF; color: #1D4ED8; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-family: monospace;">{{roomName}}</span>
+          <span style="background: #EFF6FF; color: #1D4ED8; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-family: monospace;">{{startTime}}</span>
+          <span style="background: #EFF6FF; color: #1D4ED8; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-family: monospace;">{{endTime}}</span>
+          <span style="background: #EFF6FF; color: #1D4ED8; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-family: monospace;">{{date}}</span>
+          <span style="background: #EFF6FF; color: #1D4ED8; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-family: monospace;">{{totalPrice}}</span>
+          <span style="background: #EFF6FF; color: #1D4ED8; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-family: monospace;">{{promoCode}}</span>
+          <span style="background: #EFF6FF; color: #1D4ED8; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-family: monospace;">{{status}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="mockup" style="flex: 1;">
+      <div class="mockup-header" style="background: #1E293B; color: #E2E8F0;">Preview — Telegram</div>
+      <div class="mockup-body" style="background: #0E1621; padding: 20px; min-height: 280px;">
+        <!-- Telegram message bubble -->
+        <div style="background: #182533; border-radius: 0 12px 12px 12px; padding: 12px 16px; max-width: 320px; color: #E2E8F0; font-size: 13px; line-height: 1.8;">
+          🏠 <strong>Booking mới!</strong><br><br>
+          👤 Khách: <strong>Nguyễn Văn A</strong><br>
+          📞 SĐT: 0901 234 567<br>
+          🚪 Phòng: <strong>G01</strong> (Standard)<br>
+          🕐 Giờ: 14:00 – 18:00<br>
+          📅 Ngày: 20/03/2026<br>
+          💰 Giá: <strong>676,000đ</strong><br>
+          🏷️ Mã KM: —
+          <div style="text-align: right; font-size: 10px; color: #64748B; margin-top: 6px;">
+            NhaCamBot · 14:02
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Events -->
+<div class="section" style="margin-top: 24px;">
+  <h3>Sự kiện gửi thông báo</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <div style="background: #F8FAFC; border-radius: 8px; padding: 14px;">
+      <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #334155;">Tự động gửi khi:</div>
+      <div style="font-size: 12px; line-height: 2; color: #64748B;">
+        ✅ Có booking mới (guest)<br>
+        ✅ Booking được xác nhận<br>
+        ✅ Khách check-in
+      </div>
+    </div>
+    <div style="background: #F8FAFC; border-radius: 8px; padding: 14px;">
+      <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #334155;">Không gửi khi:</div>
+      <div style="font-size: 12px; line-height: 2; color: #64748B;">
+        ✗ Booking nội bộ (dọn phòng, bảo trì)<br>
+        ✗ Hủy booking<br>
+        ✗ Check-out
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Log -->
+<div class="section" style="margin-top: 24px;">
+  <div class="mockup">
+    <div class="mockup-header">Lịch sử thông báo (mô phỏng)</div>
+    <div class="mockup-body" style="padding: 0;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: #F8FAFC;">
+            <th style="padding: 8px 16px; text-align: left; color: #64748B;">Thời gian</th>
+            <th style="padding: 8px 12px; text-align: left; color: #64748B;">Sự kiện</th>
+            <th style="padding: 8px 12px; text-align: left; color: #64748B;">Khách</th>
+            <th style="padding: 8px 12px; text-align: center; color: #64748B;">Trạng thái gửi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding: 8px 16px; border-bottom: 1px solid #F1F5F9; color: #64748B;">20/03 14:02</td>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9;">Booking mới</td>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9; font-weight: 600;">Nguyễn Văn A — G01</td>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9; text-align: center;">
+              <span style="background: #DCFCE7; color: #166534; padding: 2px 8px; border-radius: 10px; font-size: 11px;">Đã gửi ✓</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 16px; border-bottom: 1px solid #F1F5F9; color: #64748B;">20/03 13:45</td>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9;">Check-in</td>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9; font-weight: 600;">Lê Văn C — P102</td>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9; text-align: center;">
+              <span style="background: #DCFCE7; color: #166534; padding: 2px 8px; border-radius: 10px; font-size: 11px;">Đã gửi ✓</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 16px; border-bottom: 1px solid #F1F5F9; color: #64748B;">20/03 10:30</td>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9;">Booking mới</td>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9; font-weight: 600;">Trần Thị B — G01</td>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9; text-align: center;">
+              <span style="background: #FEF9C3; color: #92400E; padding: 2px 8px; border-radius: 10px; font-size: 11px;">Mô phỏng</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- How simulation works -->
+<div class="section" style="margin-top: 24px;">
+  <h3>Cách hoạt động (Frontend-only)</h3>
+  <div style="font-size: 13px; line-height: 2; background: #F8FAFC; padding: 16px; border-radius: 8px;">
+    <strong>Lưu config:</strong> Bot token + chat ID → localStorage (ẩn token khi hiển thị)<br>
+    <strong>Khi tạo booking:</strong> bookingService.create() → gọi telegramService.notify() → log vào lịch sử<br>
+    <strong>Mô phỏng:</strong> Không gọi API Telegram thật — chỉ render preview + log "Đã gửi" vào bảng lịch sử<br>
+    <strong>Gửi test:</strong> Nút "Gửi tin test" → hiện toast + thêm entry vào log<br>
+    <strong>Khi có backend:</strong> telegramService.notify() → gọi API server → server gọi Telegram Bot API thật
+  </div>
+</div>

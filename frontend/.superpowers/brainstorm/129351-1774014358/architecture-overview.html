@@ -1,0 +1,107 @@
+<h2>Kiến trúc tổng quan — Admin Dashboard</h2>
+<p class="subtitle">Data Service Layer + 5 Module</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">Architecture Overview</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8; padding: 24px;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="background: #F87171; color: white; padding: 10px 24px; border-radius: 8px; display: inline-block; font-weight: bold;">
+          Admin UI Pages
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px;">
+        <div style="background: #FEE2E2; border: 1px solid #FECACA; border-radius: 6px; padding: 10px; text-align: center; font-size: 11px;">
+          <strong>Lịch phòng</strong><br>CRUD Booking<br>Grid View
+        </div>
+        <div style="background: #FEE2E2; border: 1px solid #FECACA; border-radius: 6px; padding: 10px; text-align: center; font-size: 11px;">
+          <strong>Khách hàng</strong><br>Profile<br>Lịch sử
+        </div>
+        <div style="background: #FEE2E2; border: 1px solid #FECACA; border-radius: 6px; padding: 10px; text-align: center; font-size: 11px;">
+          <strong>Khuyến mãi</strong><br>CRUD Promo<br>Loại phòng
+        </div>
+        <div style="background: #FEE2E2; border: 1px solid #FECACA; border-radius: 6px; padding: 10px; text-align: center; font-size: 11px;">
+          <strong>Telegram</strong><br>Config Bot<br>Preview
+        </div>
+        <div style="background: #FEE2E2; border: 1px solid #FECACA; border-radius: 6px; padding: 10px; text-align: center; font-size: 11px;">
+          <strong>Doanh thu</strong><br>Charts<br>Stats
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 12px; color: #64748B;">▼ gọi qua services ▼</div>
+
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px;">
+        <div style="background: #DBEAFE; border: 1px solid #BFDBFE; border-radius: 6px; padding: 10px; text-align: center; font-size: 11px;">
+          <strong>bookingService</strong><br>.create() .update()<br>.delete() .list()
+        </div>
+        <div style="background: #DBEAFE; border: 1px solid #BFDBFE; border-radius: 6px; padding: 10px; text-align: center; font-size: 11px;">
+          <strong>customerService</strong><br>.getById()<br>.getHistory()
+        </div>
+        <div style="background: #DBEAFE; border: 1px solid #BFDBFE; border-radius: 6px; padding: 10px; text-align: center; font-size: 11px;">
+          <strong>promoService</strong><br>.create() .validate()<br>.listActive()
+        </div>
+        <div style="background: #DBEAFE; border: 1px solid #BFDBFE; border-radius: 6px; padding: 10px; text-align: center; font-size: 11px;">
+          <strong>telegramService</strong><br>.saveConfig()<br>.simulateSend()
+        </div>
+        <div style="background: #DBEAFE; border: 1px solid #BFDBFE; border-radius: 6px; padding: 10px; text-align: center; font-size: 11px;">
+          <strong>revenueService</strong><br>.getByPeriod()<br>.getOccupancy()
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 12px; color: #64748B;">▼ persist ▼</div>
+
+      <div style="text-align: center;">
+        <div style="background: #F0FDF4; border: 1px solid #BBF7D0; padding: 12px 32px; border-radius: 8px; display: inline-block;">
+          <strong>localStorage</strong> + mock seed data<br>
+          <span style="font-size: 11px; color: #64748B;">→ Swap thành API calls khi có backend</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Cấu trúc thư mục mới</h3>
+  <div style="font-family: monospace; font-size: 13px; line-height: 1.9; background: #1E293B; color: #E2E8F0; padding: 20px; border-radius: 8px;">
+    <span style="color: #94A3B8;">src/</span><br>
+    ├── <span style="color: #F87171;">services/</span><br>
+    │   ├── bookingService.ts<br>
+    │   ├── customerService.ts<br>
+    │   ├── promoService.ts<br>
+    │   ├── telegramService.ts<br>
+    │   ├── revenueService.ts<br>
+    │   └── authService.ts <span style="color: #64748B;">← role Admin/Staff</span><br>
+    ├── <span style="color: #F87171;">types/</span><br>
+    │   ├── schedule.ts <span style="color: #64748B;">← existing</span><br>
+    │   ├── customer.ts <span style="color: #22C55E;">← new</span><br>
+    │   ├── promo.ts <span style="color: #22C55E;">← new</span><br>
+    │   └── auth.ts <span style="color: #22C55E;">← new</span><br>
+    ├── <span style="color: #F87171;">components/admin/</span><br>
+    │   ├── room-management.tsx <span style="color: #64748B;">← existing</span><br>
+    │   ├── booking-schedule.tsx <span style="color: #22C55E;">← new (grid CRUD)</span><br>
+    │   ├── customer-list.tsx <span style="color: #22C55E;">← new</span><br>
+    │   ├── customer-detail.tsx <span style="color: #22C55E;">← new</span><br>
+    │   ├── promo-manager.tsx <span style="color: #22C55E;">← new</span><br>
+    │   ├── telegram-config.tsx <span style="color: #22C55E;">← new</span><br>
+    │   └── revenue-dashboard.tsx <span style="color: #22C55E;">← new</span><br>
+    └── <span style="color: #F87171;">data/</span><br>
+        ├── demo-schedule.ts <span style="color: #64748B;">← existing</span><br>
+        ├── demo-customers.ts <span style="color: #22C55E;">← new seed</span><br>
+        └── demo-promos.ts <span style="color: #22C55E;">← new seed</span>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Routing mới</h3>
+  <div style="font-family: monospace; font-size: 13px; line-height: 1.8; background: #1E293B; color: #E2E8F0; padding: 20px; border-radius: 8px;">
+    /admin <span style="color: #64748B;">.............</span> Dashboard (stats + doanh thu)<br>
+    /admin/bookings <span style="color: #64748B;">.....</span> Lịch phòng (grid CRUD)<br>
+    /admin/customers <span style="color: #64748B;">....</span> Danh sách khách hàng<br>
+    /admin/customers/:id <span style="color: #64748B;"></span> Chi tiết khách<br>
+    /admin/promos <span style="color: #64748B;">.......</span> Quản lý mã khuyến mãi<br>
+    /admin/telegram <span style="color: #64748B;">.....</span> Cấu hình Telegram<br>
+    /admin/settings <span style="color: #64748B;">.....</span> Cài đặt chung<br>
+    /admin/management <span style="color: #64748B;">..</span> Quản lý hình ảnh
+  </div>
+</div>
