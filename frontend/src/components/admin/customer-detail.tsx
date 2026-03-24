@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import {
   ArrowLeft,
@@ -22,14 +22,14 @@ import type { BadgeVariant } from '@/components/ui/badge'
 
 // Avatar background colors - same as customer-list
 const AVATAR_COLORS = [
-  'bg-blue-100 text-blue-700',
-  'bg-green-100 text-green-700',
-  'bg-rose-100 text-rose-700',
-  'bg-purple-100 text-purple-700',
-  'bg-amber-100 text-amber-700',
-  'bg-cyan-100 text-cyan-700',
-  'bg-pink-100 text-pink-700',
-  'bg-indigo-100 text-indigo-700',
+  'bg-chart-1/10 text-chart-1',
+  'bg-chart-2/10 text-chart-2',
+  'bg-chart-3/10 text-chart-3',
+  'bg-chart-4/10 text-chart-4',
+  'bg-chart-5/10 text-chart-5',
+  'bg-primary/10 text-primary',
+  'bg-status-info/10 text-status-info',
+  'bg-status-warning/10 text-status-warning',
 ]
 
 function getInitials(name: string): string {
@@ -71,14 +71,14 @@ function getRoomTypeBadge(roomId: string) {
   const type = getRoomType(roomId)
   if (type === 'supervip') {
     return (
-      <span className="ml-1.5 inline-flex items-center rounded-full bg-purple-50 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 border border-purple-200">
+      <span className="ml-1.5 inline-flex items-center rounded-full bg-room-supervip-bg px-1.5 py-0.5 text-[10px] font-semibold text-room-supervip border border-room-supervip/20">
         SVIP
       </span>
     )
   }
   if (type === 'vip') {
     return (
-      <span className="ml-1.5 inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200">
+      <span className="ml-1.5 inline-flex items-center rounded-full bg-status-warning-muted px-1.5 py-0.5 text-[10px] font-semibold text-status-warning-foreground border border-status-warning/20">
         VIP
       </span>
     )
@@ -110,25 +110,19 @@ interface RoomFrequency {
 export function CustomerDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [customer, setCustomer] = useState<CustomerWithStats | null>(null)
-  const [bookings, setBookings] = useState<Booking[]>([])
-  const [isEditingNote, setIsEditingNote] = useState(false)
-  const [noteValue, setNoteValue] = useState('')
-  const [notFound, setNotFound] = useState(false)
 
-  // Load customer and bookings
-  useEffect(() => {
-    if (!id) return
+  // Use state with initializers to avoid cascading renders
+  // key={id} in parent ensures fresh state on ID change
+  const [customer, setCustomer] = useState<CustomerWithStats | null>(() => {
+    if (!id) return null
     const raw = customerService.getById(id)
-    if (!raw) {
-      setNotFound(true)
-      return
-    }
-    const withStats = customerService.getWithStats(raw)
-    setCustomer(withStats)
-    setNoteValue(withStats.note ?? '')
+    return raw ? customerService.getWithStats(raw) : null
+  })
 
-    // Get bookings matching this customer's phone
+  const [bookings] = useState<Booking[]>(() => {
+    if (!id) return []
+    const raw = customerService.getById(id)
+    if (!raw) return []
     const allBookings = bookingService.getAll()
     const normalizedPhone = customerService.normalizePhone(raw.phone)
     const matched = allBookings.filter(
@@ -139,8 +133,11 @@ export function CustomerDetail() {
     )
     // Sort by date descending
     matched.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-    setBookings(matched)
-  }, [id])
+    return matched
+  })
+
+  const [isEditingNote, setIsEditingNote] = useState(false)
+  const [noteValue, setNoteValue] = useState(customer?.note ?? '')
 
   // Top 3 most booked rooms
   const topRooms = useMemo<RoomFrequency[]>(() => {
@@ -171,21 +168,24 @@ export function CustomerDetail() {
     setIsEditingNote(false)
   }
 
-  if (notFound) {
-    return (
-      <div className="space-y-4">
-        <button
-          onClick={() => navigate('/admin/customers')}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
-        >
-          <ArrowLeft size={16} />
-          Quay lai
-        </button>
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <p className="text-slate-500 text-sm">Khong tim thay khach hang.</p>
+  if (!customer && id) {
+    const raw = customerService.getById(id)
+    if (!raw) {
+      return (
+        <div className="space-y-4">
+          <button
+            onClick={() => navigate('/admin/customers')}
+            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+          >
+            <ArrowLeft size={16} />
+            Quay lai
+          </button>
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <p className="text-slate-500 text-sm">Khong tim thay khach hang.</p>
+          </div>
         </div>
-      </div>
-    )
+      )
+    }
   }
 
   if (!customer) {
@@ -197,7 +197,7 @@ export function CustomerDetail() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {/* Back button */}
       <button
         onClick={() => navigate('/admin/customers')}
@@ -208,7 +208,7 @@ export function CustomerDetail() {
       </button>
 
       {/* Header: avatar, name, phone, email, edit note button */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-border bg-card p-5">
         <div className="flex items-center gap-4">
           <div
             className={cn(
@@ -231,7 +231,7 @@ export function CustomerDetail() {
         {!isEditingNote && (
           <button
             onClick={() => setIsEditingNote(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors self-start"
+            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground hover:bg-accent transition-colors self-start"
           >
             <Pencil size={14} />
             Sua ghi chu
@@ -242,14 +242,14 @@ export function CustomerDetail() {
       {/* 4 Stat cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total spent */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-          <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50">
-              <DollarSign size={14} className="text-[#F87171]" />
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-primary/5">
+              <DollarSign size={14} className="text-primary" />
             </div>
             Tong chi tieu
           </div>
-          <p className="text-xl font-bold text-[#F87171]">
+          <p className="text-xl font-bold text-primary">
             {customer.totalSpent > 0
               ? `${formatPrice(customer.totalSpent)}d`
               : '0d'}
@@ -257,10 +257,10 @@ export function CustomerDetail() {
         </div>
 
         {/* Visit count */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-          <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50">
-              <Calendar size={14} className="text-blue-500" />
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-status-info-muted">
+              <Calendar size={14} className="text-status-info" />
             </div>
             So lan dat
           </div>
@@ -268,10 +268,10 @@ export function CustomerDetail() {
         </div>
 
         {/* Last visit */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-          <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-50">
-              <Clock size={14} className="text-green-500" />
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-status-success-muted">
+              <Clock size={14} className="text-status-success" />
             </div>
             Lan cuoi den
           </div>
@@ -281,10 +281,10 @@ export function CustomerDetail() {
         </div>
 
         {/* Note (editable) */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-          <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
-              <StickyNote size={14} className="text-amber-500" />
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-status-warning-muted">
+              <StickyNote size={14} className="text-status-warning" />
             </div>
             Ghi chu
           </div>
@@ -295,19 +295,19 @@ export function CustomerDetail() {
                 onChange={(e) => setNoteValue(e.target.value)}
                 placeholder="Nhap ghi chu..."
                 rows={3}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-[#F87171] focus:outline-none focus:ring-1 focus:ring-[#F87171]/30 resize-none"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 resize-none"
               />
               <div className="flex gap-2">
                 <button
                   onClick={handleSaveNote}
-                  className="flex items-center gap-1 rounded-lg bg-[#F87171] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#EF4444] transition-colors"
+                  className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   <Save size={12} />
                   Luu
                 </button>
                 <button
                   onClick={handleCancelNote}
-                  className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent transition-colors"
                 >
                   <X size={12} />
                   Huy
@@ -326,7 +326,7 @@ export function CustomerDetail() {
 
       {/* Top rooms section */}
       {topRooms.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+        <div className="rounded-xl border border-border bg-card p-5">
           <h3 className="text-sm font-semibold text-slate-700 mb-3">
             Phong hay dat nhat
           </h3>
@@ -337,16 +337,16 @@ export function CustomerDetail() {
                 className={cn(
                   'flex items-center gap-2 rounded-lg border px-3 py-2',
                   idx === 0
-                    ? 'border-amber-200 bg-amber-50'
-                    : 'border-[#E2E8F0] bg-slate-50/50',
+                    ? 'border-status-warning/30 bg-status-warning-muted'
+                    : 'border-border bg-muted/30',
                 )}
               >
                 <span
                   className={cn(
-                    'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
+                    'flex size-6 items-center justify-center rounded-full text-xs font-bold',
                     idx === 0
-                      ? 'bg-amber-200 text-amber-800'
-                      : 'bg-slate-200 text-slate-600',
+                      ? 'bg-status-warning/20 text-status-warning-foreground'
+                      : 'bg-muted text-muted-foreground',
                   )}
                 >
                   {idx + 1}
@@ -365,8 +365,8 @@ export function CustomerDetail() {
       )}
 
       {/* Booking history table */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
-        <div className="px-5 py-4 border-b border-[#E2E8F0]">
+      <div className="rounded-xl border border-border bg-card">
+        <div className="px-5 py-4 border-b border-border">
           <h3 className="text-sm font-semibold text-slate-700">
             Lich su dat phong
             <span className="ml-2 text-slate-400 font-normal">
@@ -386,7 +386,7 @@ export function CustomerDetail() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#E2E8F0] bg-slate-50/50">
+                <tr className="border-b border-border bg-muted/30">
                   <th className="px-4 py-3 text-left font-medium text-slate-500">
                     Ngay
                   </th>
@@ -411,7 +411,7 @@ export function CustomerDetail() {
                 {bookings.map((booking) => (
                   <tr
                     key={booking.id}
-                    className="border-b border-[#E2E8F0] last:border-b-0"
+                    className="border-b border-border last:border-b-0"
                   >
                     {/* Date */}
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
@@ -438,7 +438,7 @@ export function CustomerDetail() {
                           <span className="text-xs text-slate-400 line-through">
                             {formatPrice(booking.totalPrice)}d
                           </span>
-                          <span className="font-medium text-[#F87171]">
+                          <span className="font-medium text-primary">
                             {formatPrice(booking.totalPrice)}d
                           </span>
                         </div>
@@ -459,7 +459,7 @@ export function CustomerDetail() {
                     {/* Promo code badge */}
                     <td className="px-4 py-3 text-center">
                       {booking.voucher ? (
-                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200 font-mono">
+                        <span className="inline-flex items-center rounded-full bg-status-success-muted px-2 py-0.5 text-[10px] font-semibold text-status-success-foreground border border-status-success/20 font-mono">
                           {booking.voucher}
                         </span>
                       ) : (

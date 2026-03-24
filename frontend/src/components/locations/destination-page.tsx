@@ -40,7 +40,7 @@ export function DestinationPage({ locationName }: { locationName?: string }) {
       <div className="mx-auto w-full max-w-8xl px-6 pt-4">
         <div className="rounded-[12px] bg-[#fffbfc] p-4 shadow-md mb-6">
           <div className="flex items-start gap-4">
-            <span className="mt-1 h-3 w-3 rounded-full bg-rose-500" aria-hidden />
+            <span className="mt-1 h-3 w-3 rounded-full bg-primary" aria-hidden />
             <div>
               <h3 className="text-lg font-semibold">Chốn - Thủ Khoa Huân - {displayLocationName}</h3>
               <p className="mt-1 text-sm text-[#6c4a38]">{branch?.address ?? "Địa chỉ không có"}</p>

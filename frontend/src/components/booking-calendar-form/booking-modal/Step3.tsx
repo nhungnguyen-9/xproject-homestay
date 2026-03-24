@@ -38,9 +38,9 @@ export const Step3: React.FC<Step3Props> = ({ formData, price }) => {
                     <h5 className="font-semibold mb-2">Nội Dung Chuyển Khoản</h5>
                     <p className="text-sm text-gray-700 mb-3">Bước 1: Mở app ngân hàng/ ví, chọn Quét mã QR hoặc chuyển khoản thủ công.</p>
                     <p className="text-sm text-gray-700 mb-3">Bước 2: Ghi nội dung chuyển khoản: <strong>{transferContent}</strong></p>
-                    <div className="text-sm text-gray-600 bg-amber-50 rounded-lg p-3">
+                    <div className="text-sm text-muted-foreground bg-status-warning-muted rounded-lg p-3">
                         <p className="mb-1">Số tiền cần thanh toán:</p>
-                        <p className="text-lg font-bold text-rose-600">{formatPrice(totalPrice)} VNĐ</p>
+                        <p className="text-lg font-bold text-primary">{formatPrice(totalPrice)} VNĐ</p>
                     </div>
                     <div className="mt-4">
                         <p className="text-sm text-gray-600">Hoặc quét mã QR bên cạnh để thanh toán nhanh.</p>
@@ -51,12 +51,12 @@ export const Step3: React.FC<Step3Props> = ({ formData, price }) => {
                     <div className="w-48 h-48 bg-white shadow-inner rounded-md flex items-center justify-center">
                         <img src={qrUrl} alt="QR code" className="max-w-full max-h-full" />
                     </div>
-                    <a href={qrUrl} download={`qr-${formData.roomName}.png`} className="mt-3 inline-block px-4 py-2 text-sm bg-blue-600 text-white rounded-md">Tải ảnh QR</a>
+                    <a href={qrUrl} download={`qr-${formData.roomName}.png`} className="mt-3 inline-block px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md">Tải ảnh QR</a>
                     <p className="text-xs text-gray-500 mt-2">Quét để thanh toán nhanh</p>
                 </div>
             </div>
 
-            <div className="text-md text-gray-500 bg-amber-50 rounded-lg p-3 flex items-start gap-2">
+            <div className="text-md text-muted-foreground bg-status-warning-muted rounded-lg p-3 flex items-start gap-2">
                 <span className="text-amber-500">⏱️</span>
                 <span>
                     Vui lòng thanh toán trong vòng <strong>5 phút</strong> sau khi đặt

@@ -35,7 +35,7 @@ export const Header = ({
                 <HeartParticles />
 
                 <Link to={"/"}>
-                    <div className="relative z-10 flex items-center gap-3">
+                    <div className="relative flex items-center gap-3">
                         <img
                             src="https://github.com/shadcn.png"
                             alt="logo"
@@ -52,7 +52,7 @@ export const Header = ({
                 </Link>
 
                 {/* Menu */}
-                <div className="relative z-10 hidden lg:flex items-center gap-12 font-semibold">
+                <div className="relative hidden lg:flex items-center gap-12 font-semibold">
                     <NavLink className="hover:text-rose-100" to="/chi-nhanh">Chi nhánh</NavLink>
                     <NavLink className="hover:text-rose-100" to="">Tra cứu Booking</NavLink>
                     <NavLink className="hover:text-rose-100" to="">Hợp tác / Nhượng quyền</NavLink>
@@ -60,7 +60,7 @@ export const Header = ({
                     <NavLink className="hover:text-rose-100" to="">Liên hệ</NavLink>
                 </div>
 
-                <div className="relative z-20 lg:hidden">
+                <div className="relative z-10 lg:hidden">
                     <button
                         aria-label="Toggle menu"
                         aria-expanded={mobileOpen}

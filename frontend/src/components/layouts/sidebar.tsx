@@ -48,7 +48,7 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
       {mobileOpen && (
         <button
           aria-label="Dong menu dieu huong"
-          className="fixed inset-0 z-30 bg-slate-900/20 lg:hidden"
+          className="fixed inset-0 bg-foreground/20 lg:hidden"
           onClick={onCloseMobile}
         />
       )}
@@ -56,7 +56,7 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
       <aside
         className={cn(
           // Layout va transition
-          "fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r border-[#E2E8F0] bg-[#F8FAFC]",
+          "fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r border-sidebar-border bg-sidebar",
           "transition-[width,transform] duration-300 ease-in-out lg:static lg:z-auto",
           // Chieu rong theo trang thai o desktop
           isOpen ? "w-[220px]" : "w-16",
@@ -66,23 +66,23 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
       >
       {/* Logo khu vuc tren */}
       <div className={cn(
-        "flex h-14 items-center border-b border-[#E2E8F0] px-3",
+        "flex h-14 items-center border-b border-sidebar-border px-3",
         isOpen ? "gap-3" : "justify-center"
       )}>
         {/* Logo icon nha cam */}
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F87171]">
-          <span className="text-white font-bold text-sm">NC</span>
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary">
+          <span className="text-primary-foreground font-bold text-sm">NC</span>
         </div>
         {/* Ten thuong hieu - an khi collapse */}
         {isOpen && (
-          <span className="font-semibold text-[#334155] text-sm truncate">
+          <span className="font-semibold text-sidebar-foreground text-sm truncate">
             Nha Cam Admin
           </span>
         )}
       </div>
 
       {/* Danh sach menu - filtered by role */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
+      <nav className="flex-1 overflow-y-auto py-3 px-2 flex flex-col gap-1">
         {visibleItems.map(({ label, icon: Icon, to }) => (
           <NavLink
             key={to}
@@ -94,9 +94,9 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
               "transition-colors duration-150",
               isActive
                 // Active: nen rose nhat, text rose-400
-                ? "bg-[#F87171]/10 text-[#F87171]"
-                // Mac dinh: slate-600, hover nen slate-50
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-800",
+                ? "bg-sidebar-accent text-sidebar-primary"
+                // Mac dinh: muted-foreground, hover nen accent
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
               !isOpen && "justify-center"
             )}
             title={!isOpen ? label : undefined}
@@ -109,13 +109,13 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
       </nav>
 
       {/* Nut toggle expand/collapse o cuoi */}
-      <div className="border-t border-[#E2E8F0] p-2">
+      <div className="border-t border-sidebar-border p-2">
         <button
           onClick={onToggle}
           aria-label={isOpen ? "Thu nho sidebar" : "Mo rong sidebar"}
           className={cn(
-            "flex w-full items-center rounded-lg px-2.5 py-2.5 text-slate-500",
-            "hover:bg-slate-50 hover:text-slate-700 transition-colors",
+            "flex w-full items-center rounded-lg px-2.5 py-2.5 text-muted-foreground",
+            "hover:bg-accent hover:text-accent-foreground transition-colors",
             !isOpen && "justify-center"
           )}
         >

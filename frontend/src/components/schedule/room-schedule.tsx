@@ -64,17 +64,17 @@ const FilterButton: React.FC<FilterButtonProps> = ({
     const variantStyles = {
         standard: active
             ? 'text-white'
-            : 'bg-white text-black border-rose-300 hover:border-rose-200',
+            : 'bg-card text-foreground border-primary/30 hover:border-primary/20',
         vip: active
             ? 'text-white'
-            : 'bg-white text-black border-rose-300 hover:border-rose-200',
+            : 'bg-card text-foreground border-primary/30 hover:border-primary/20',
         supervip: active
             ? 'text-white'
-            : 'bg-white text-black border-rose-300 hover:border-rose-200',
+            : 'bg-card text-foreground border-primary/30 hover:border-primary/20',
     };
 
     const activeGradientStyle = active
-        ? { background: 'linear-gradient(135deg, #FF5A5F, #FFB199)' }
+        ? { background: 'linear-gradient(135deg, var(--primary), #FFB199)' }
         : undefined;
 
     return (
@@ -107,7 +107,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ date, onChange }) => {
     };
 
     return (
-        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 lg:px-3 py-1.5 lg:py-2">
+        <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-2 lg:px-3 py-1.5 lg:py-2">
             <span className="text-black text-xs lg:text-sm font-semibold whitespace-nowrap">Chọn ngày:</span>
             <div className="flex items-center gap-2">
                 {/* <Calendar className="w-4 h-4 text-rose-500" /> */}
@@ -150,7 +150,7 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
 
     return (
         <div
-            className="flex bg-gray-50 border-b border-gray-200"
+            className="flex bg-muted/50 border-b border-border"
             style={{ height: HEADER_HEIGHT }}
         >
             {/* Room label column */}
@@ -169,7 +169,7 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
                     return (
                         <div
                             key={hour}
-                            className={`flex flex-col items-center justify-center border-l border-gray-200 text-sm text-black gap-0.5 ${isLastColumn ? 'border-r' : ''}`}
+                            className={`flex flex-col items-center justify-center border-l border-border text-sm text-black gap-0.5 ${isLastColumn ? 'border-r' : ''}`}
                             style={{ width: HOUR_WIDTH * 2 }}
                         >
                             {/* Time row - always at same position */}
@@ -257,9 +257,9 @@ const RoomRow: React.FC<RoomRowProps> = ({
     const totalWidth = (endHour - startHour) * HOUR_WIDTH;
 
     const roomTypeColors = {
-        standard: 'rounded-md m-1 bg-rose-400 text-white font-medium text-sm shrink-0',
-        vip: 'rounded-md m-1 bg-rose-400 text-white font-medium text-sm shrink-0',
-        supervip: 'rounded-md m-1 bg-rose-400 text-white font-medium text-sm shrink-0',
+        standard: 'rounded-md m-1 bg-room-standard text-primary-foreground font-medium text-sm shrink-0',
+        vip: 'rounded-md m-1 bg-room-vip text-primary-foreground font-medium text-sm shrink-0',
+        supervip: 'rounded-md m-1 bg-room-supervip text-primary-foreground font-medium text-sm shrink-0',
     };
 
     // Check if a time is within a booking
@@ -290,7 +290,7 @@ const RoomRow: React.FC<RoomRowProps> = ({
     };
 
     return (
-        <div className="flex border-b border-gray-200" style={{ height: ROW_HEIGHT }}>
+        <div className="flex border-b border-border" style={{ height: ROW_HEIGHT }}>
             {/* Room label */}
             <div
                 className={cn(
@@ -310,7 +310,7 @@ const RoomRow: React.FC<RoomRowProps> = ({
 
             {/* Timeline slots */}
             <div
-                className="flex-1 relative bg-white cursor-pointer hover:bg-gray-50/50 transition-colors"
+                className="flex-1 relative bg-card cursor-pointer hover:bg-accent/50 transition-colors"
                 onClick={handleTimelineClick}
             >
                 {/* Grid lines */}
@@ -318,13 +318,13 @@ const RoomRow: React.FC<RoomRowProps> = ({
                     {Array.from({ length: (endHour - startHour) / 2 }).map((_, i) => (
                         <div
                             key={i}
-                            className="absolute top-0 bottom-0 border-l border-gray-100"
+                            className="absolute top-0 bottom-0 border-l border-border/50"
                             style={{ left: `${i * HOUR_WIDTH * 2}px` }}
                         />
                     ))}
                     {/* Last border on the right */}
                     <div
-                        className="absolute top-0 bottom-0 border-r border-gray-100"
+                        className="absolute top-0 bottom-0 border-r border-border/50"
                         style={{ right: 0 }}
                     />
                 </div>
@@ -486,14 +486,14 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
 
     return (
         <div className="max-w-7xl mx-auto">
-            <div className='w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden text-center mb-4 lg:mb-8'>
+            <div className='w-full bg-card rounded-xl shadow-sm border border-border overflow-hidden text-center mb-4 lg:mb-8'>
                 <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 lg:gap-6 p-2 sm:p-3 lg:p-4 border-t border-gray-200">
                     <div className="flex items-center gap-1 sm:gap-2">
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded bg-rose-400" />
+                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded bg-primary" />
                         <span className="text-[10px] sm:text-xs lg:text-sm text-gray-600">Đã đặt</span>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2">
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded bg-white border border-gray-200" />
+                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded bg-white border border-border" />
                         <span className="text-[10px] sm:text-xs lg:text-sm text-gray-600">Trống</span>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2">
@@ -503,18 +503,18 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                 </div>
                 <div className='text-center text-blue-500 w-full px-2 sm:px-4 text-[11px] sm:text-xs lg:text-sm'>
                     <span className='font-bold'>💡 Hướng dẫn:</span>
-                    <span> Kéo trên timeline để xem phòng trống. Nhấn vào khung thời gian trống <span className="inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded bg-white border border-gray-200 align-middle mx-0.5" /> để bắt đầu đặt phòng</span>
+                    <span> Kéo trên timeline để xem phòng trống. Nhấn vào khung thời gian trống <span className="inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded bg-white border border-border align-middle mx-0.5" /> để bắt đầu đặt phòng</span>
                 </div>
                 <p className='text-amber-500 font-semibold mx-1 my-1.5 sm:my-2 text-[11px] sm:text-xs lg:text-sm'>⏰ Phí thêm giờ: 40k/giờ</p>
             </div>
-            <div className="w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="w-full bg-card rounded-xl shadow-sm border border-border overflow-hidden">
                 {/* Header Controls */}
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-3 lg:p-4 border-b border-gray-200">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-3 lg:p-4 border-b border-border">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
                         {/* Help Button */}
                         <button
                             className="flex items-center gap-2 px-3 lg:px-4 py-2 text-white rounded-lg transition-transform"
-                            style={{ background: 'linear-gradient(135deg, #FF5A5F, #FF7A6E)' }}
+                            style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary-hover))' }}
                         >
 
                             <span className="text-xs lg:text-sm font-medium">🎯 Hướng dẫn</span>
@@ -561,7 +561,7 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                         <div className="relative">
                             {/* Empty row for CurrentTimeIndicator */}
                             <div
-                                className="flex bg-white border-b border-gray-100 relative"
+                                className="flex bg-card border-b border-border/50 relative"
                                 style={{ height: INDICATOR_ROW_HEIGHT }}
                             >
                                 <div style={{ width: ROOM_LABEL_WIDTH }} className="shrink-0" />
@@ -571,13 +571,13 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                                         {Array.from({ length: (endHour - startHour) / 2 }).map((_, i) => (
                                             <div
                                                 key={i}
-                                                className="absolute top-0 bottom-0 border-l border-gray-100"
+                                                className="absolute top-0 bottom-0 border-l border-border/50"
                                                 style={{ left: `${i * HOUR_WIDTH * 2}px` }}
                                             />
                                         ))}
                                         {/* Last border on the right */}
                                         <div
-                                            className="absolute top-0 bottom-0 border-r border-gray-100"
+                                            className="absolute top-0 bottom-0 border-r border-border/50"
                                             style={{ right: 0 }}
                                         />
                                     </div>

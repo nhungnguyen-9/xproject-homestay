@@ -41,10 +41,10 @@ export function BookingTable({ bookings, rooms, title = "Danh sách Booking" }: 
     amount ? `${amount.toLocaleString("vi-VN")}₫` : "—"
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-sm overflow-hidden">
+    <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
       {/* Header bảng */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-[#E2E8F0]">
-        <h2 className="font-semibold text-[#334155] text-base">{title}</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-border">
+        <h2 className="font-semibold text-secondary text-base">{title}</h2>
 
         {/* Bộ lọc trạng thái */}
         <div className="flex flex-wrap gap-2">
@@ -55,8 +55,8 @@ export function BookingTable({ bookings, rooms, title = "Danh sách Booking" }: 
               className={[
                 "rounded-full px-3 py-1 text-xs font-medium transition-colors",
                 statusFilter === status
-                  ? "bg-[#F87171] text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
               ].join(" ")}
             >
               {status === "all" ? "Tất cả" : BOOKING_STATUS_LABELS[status] ?? status}
@@ -69,7 +69,7 @@ export function BookingTable({ bookings, rooms, title = "Danh sách Booking" }: 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[600px] text-sm">
           <thead>
-            <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+            <tr className="border-b border-border bg-card">
               {["Phòng", "Giờ vào", "Giờ ra", "Khách", "Trạng thái", "Tổng tiền"].map(col => (
                 <th
                   key={col}
@@ -94,11 +94,11 @@ export function BookingTable({ bookings, rooms, title = "Danh sách Booking" }: 
                 return (
                   <tr
                     key={booking.id}
-                    className="hover:bg-[#F8FAFC] transition-colors"
+                    className="hover:bg-card transition-colors"
                   >
                     {/* Tên phòng + loại phòng */}
                     <td className="px-4 py-3">
-                      <div className="font-medium text-[#334155]">
+                      <div className="font-medium text-secondary">
                         {room?.name ?? booking.roomId}
                       </div>
                       {room && (
@@ -131,7 +131,7 @@ export function BookingTable({ bookings, rooms, title = "Danh sách Booking" }: 
                     </td>
 
                     {/* Tổng tiền */}
-                    <td className="px-4 py-3 font-medium text-[#334155]">
+                    <td className="px-4 py-3 font-medium text-secondary">
                       {formatCurrency(booking.totalPrice)}
                     </td>
                   </tr>
@@ -143,7 +143,7 @@ export function BookingTable({ bookings, rooms, title = "Danh sách Booking" }: 
       </div>
 
       {/* Footer: tổng số bản ghi */}
-      <div className="px-5 py-3 border-t border-[#E2E8F0] bg-[#F8FAFC]">
+      <div className="px-5 py-3 border-t border-border bg-card">
         <p className="text-xs text-slate-400">
           Hiển thị <span className="font-semibold text-slate-600">{filtered.length}</span> / {bookings.length} đơn đặt phòng
         </p>

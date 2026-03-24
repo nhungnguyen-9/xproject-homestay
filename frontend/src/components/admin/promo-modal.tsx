@@ -38,37 +38,20 @@ function formatShortDate(dateStr: string): string {
 export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
   const isEdit = !!promo
 
-  const [code, setCode] = useState('')
-  const [discountType, setDiscountType] = useState<'percent' | 'fixed'>('percent')
-  const [discountValue, setDiscountValue] = useState<number | ''>('')
-  const [maxUses, setMaxUses] = useState<number | ''>('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [applicableRoomTypes, setApplicableRoomTypes] = useState<RoomType[]>([])
+  const [code, setCode] = useState(promo?.code || '')
+  const [discountType, setDiscountType] = useState<'percent' | 'fixed'>(
+    promo?.discountType || 'percent',
+  )
+  const [discountValue, setDiscountValue] = useState<number | ''>(
+    promo?.discountValue ?? '',
+  )
+  const [maxUses, setMaxUses] = useState<number | ''>(promo?.maxUses ?? '')
+  const [startDate, setStartDate] = useState(promo?.startDate || '')
+  const [endDate, setEndDate] = useState(promo?.endDate || '')
+  const [applicableRoomTypes, setApplicableRoomTypes] = useState<RoomType[]>(
+    promo ? [...promo.applicableRoomTypes] : [],
+  )
   const [errors, setErrors] = useState<Record<string, string>>({})
-
-  useEffect(() => {
-    if (open) {
-      if (promo) {
-        setCode(promo.code)
-        setDiscountType(promo.discountType)
-        setDiscountValue(promo.discountValue)
-        setMaxUses(promo.maxUses)
-        setStartDate(promo.startDate)
-        setEndDate(promo.endDate)
-        setApplicableRoomTypes([...promo.applicableRoomTypes])
-      } else {
-        setCode('')
-        setDiscountType('percent')
-        setDiscountValue('')
-        setMaxUses('')
-        setStartDate('')
-        setEndDate('')
-        setApplicableRoomTypes([])
-      }
-      setErrors({})
-    }
-  }, [open, promo])
 
   const promoSchema = useMemo(() => {
     return z.object({
@@ -191,10 +174,10 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {/* Code */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Mã khuyến mãi
             </label>
             <input
@@ -204,28 +187,28 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
               placeholder="VD: SUMMER20"
               className={cn(
                 'w-full rounded-md border px-3 py-2 text-sm font-mono uppercase tracking-wider',
-                errors.code ? 'border-red-400 ring-1 ring-red-400' : 'border-slate-300'
+                errors.code ? 'border-destructive ring-1 ring-destructive' : 'border-border'
               )}
             />
             {errors.code && (
-              <p className="text-xs text-red-500 mt-1">{errors.code}</p>
+              <p className="text-xs text-destructive mt-1">{errors.code}</p>
             )}
           </div>
 
           {/* Discount type toggle */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Loại giảm giá
             </label>
-            <div className="flex rounded-md border border-slate-300 overflow-hidden">
+            <div className="flex rounded-md border border-border overflow-hidden">
               <button
                 type="button"
                 onClick={() => setDiscountType('percent')}
                 className={cn(
                   'flex-1 px-4 py-2 text-sm font-medium transition-colors',
                   discountType === 'percent'
-                    ? 'bg-[#F87171] text-white'
-                    : 'bg-white text-slate-600 hover:bg-slate-50'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                 )}
               >
                 %
@@ -234,10 +217,10 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
                 type="button"
                 onClick={() => setDiscountType('fixed')}
                 className={cn(
-                  'flex-1 px-4 py-2 text-sm font-medium transition-colors border-l border-slate-300',
+                  'flex-1 px-4 py-2 text-sm font-medium transition-colors border-l border-border',
                   discountType === 'fixed'
-                    ? 'bg-[#F87171] text-white'
-                    : 'bg-white text-slate-600 hover:bg-slate-50'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                 )}
               >
                 VND
@@ -247,7 +230,7 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
 
           {/* Discount value */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               {discountType === 'percent' ? 'Giá trị (%)' : 'Giá trị (VND)'}
             </label>
             <input
@@ -262,18 +245,18 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
               className={cn(
                 'w-full rounded-md border px-3 py-2 text-sm',
                 errors.discountValue
-                  ? 'border-red-400 ring-1 ring-red-400'
-                  : 'border-slate-300'
+                  ? 'border-destructive ring-1 ring-destructive'
+                  : 'border-border'
               )}
             />
             {errors.discountValue && (
-              <p className="text-xs text-red-500 mt-1">{errors.discountValue}</p>
+              <p className="text-xs text-destructive mt-1">{errors.discountValue}</p>
             )}
           </div>
 
           {/* Max uses */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Số lần sử dụng tối đa
             </label>
             <input
@@ -287,18 +270,18 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
               max={99999}
               className={cn(
                 'w-full rounded-md border px-3 py-2 text-sm',
-                errors.maxUses ? 'border-red-400 ring-1 ring-red-400' : 'border-slate-300'
+                errors.maxUses ? 'border-destructive ring-1 ring-destructive' : 'border-border'
               )}
             />
             {errors.maxUses && (
-              <p className="text-xs text-red-500 mt-1">{errors.maxUses}</p>
+              <p className="text-xs text-destructive mt-1">{errors.maxUses}</p>
             )}
           </div>
 
           {/* Date range */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 Ngày bắt đầu
               </label>
               <input
@@ -308,16 +291,16 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
                 className={cn(
                   'w-full rounded-md border px-3 py-2 text-sm',
                   errors.startDate
-                    ? 'border-red-400 ring-1 ring-red-400'
-                    : 'border-slate-300'
+                    ? 'border-destructive ring-1 ring-destructive'
+                    : 'border-border'
                 )}
               />
               {errors.startDate && (
-                <p className="text-xs text-red-500 mt-1">{errors.startDate}</p>
+                <p className="text-xs text-destructive mt-1">{errors.startDate}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 Ngày kết thúc
               </label>
               <input
@@ -327,19 +310,19 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
                 className={cn(
                   'w-full rounded-md border px-3 py-2 text-sm',
                   errors.endDate
-                    ? 'border-red-400 ring-1 ring-red-400'
-                    : 'border-slate-300'
+                    ? 'border-destructive ring-1 ring-destructive'
+                    : 'border-border'
                 )}
               />
               {errors.endDate && (
-                <p className="text-xs text-red-500 mt-1">{errors.endDate}</p>
+                <p className="text-xs text-destructive mt-1">{errors.endDate}</p>
               )}
             </div>
           </div>
 
           {/* Room type chips */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Loại phòng áp dụng
             </label>
             <div className="flex flex-wrap gap-2">
@@ -349,8 +332,8 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
                 className={cn(
                   'rounded-full px-3 py-1 text-xs font-medium border transition-colors',
                   isAllSelected
-                    ? 'bg-[#F87171] text-white border-[#F87171]'
-                    : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground'
                 )}
               >
                 Tất cả
@@ -366,8 +349,8 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
                     className={cn(
                       'rounded-full px-3 py-1 text-xs font-medium border transition-colors',
                       isSelected
-                        ? 'bg-[#F87171] text-white border-[#F87171]'
-                        : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground'
                     )}
                   >
                     {opt.label}
@@ -378,8 +361,8 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
           </div>
 
           {/* Live preview */}
-          <div className="rounded-lg bg-green-50 border border-green-200 p-3">
-            <p className="text-sm text-green-800">
+          <div className="rounded-lg bg-status-success-muted border border-status-success/20 p-3">
+            <p className="text-sm text-status-success-foreground">
               <span className="font-semibold">
                 Ma {code || '...'}{' '}
               </span>
@@ -397,7 +380,7 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
           </Button>
           <Button
             onClick={handleSubmit}
-            className="bg-[#F87171] hover:bg-[#ef4444] text-white"
+            variant="primary"
           >
             {isEdit ? 'Lưu thay đổi' : 'Tạo mã'}
           </Button>

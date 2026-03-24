@@ -33,13 +33,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     return (
         <div className="space-y-3">
             <div
-                className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-rose-400 hover:bg-green-50/30 transition-all duration-200"
+                className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary hover:bg-status-success-muted/30 transition-all duration-200"
                 onClick={() => inputRef.current?.click()}
             >
                 <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                 <p className="text-sm text-gray-600">
                     Kéo thả ảnh vào đây hoặc{" "}
-                    <span className="text-rose-400 font-medium hover:underline">
+                    <span className="text-primary font-medium hover:underline">
                         chọn file
                     </span>
                 </p>
@@ -64,7 +64,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                             />
                             <button
                                 onClick={() => removeImage(index)}
-                                className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center"
+                                className="absolute -top-2 -right-2 size-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
                                 type="button"
                             >
                                 <X className="w-3 h-3" />

@@ -37,7 +37,7 @@ export const Home = () => {
                                     className={`rounded-full px-5 py-2 text-sm font-semibold transition-all hover:scale-105 shadow-sm
                                         ${isActive 
                                             ? 'bg-nhacam-primary text-white hover:bg-nhacam-primary-hover shadow-md' 
-                                            : 'bg-white text-nhacam-secondary hover:bg-gray-50'
+                                            : 'bg-card text-secondary hover:bg-accent'
                                         }`}
                                 >
                                     {filter}

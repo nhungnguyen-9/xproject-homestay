@@ -2,7 +2,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { BookingFormData } from "@/types/schedule";
 import { COMBO_ITEMS } from "@/types/schedule";
@@ -63,7 +63,7 @@ export const Step2: React.FC<Step2Props> = ({
                             value={formData.guestName}
                             onChange={(e) => updateFormData({ guestName: e.target.value })}
                             className={cn(
-                                errors.guestName && "border-red-300 focus:ring-red-500",
+                                errors.guestName && "border-destructive focus:ring-destructive",
                             )}
                         />
                         {errors.guestName && (
@@ -79,7 +79,7 @@ export const Step2: React.FC<Step2Props> = ({
                             value={formData.guestPhone}
                             onChange={(e) => updateFormData({ guestPhone: e.target.value })}
                             className={cn(
-                                errors.guestPhone && "border-red-300 focus:ring-red-500",
+                                errors.guestPhone && "border-destructive focus:ring-destructive",
                             )}
                         />
                         {errors.guestPhone && (
@@ -109,7 +109,7 @@ export const Step2: React.FC<Step2Props> = ({
             </div>
 
             {/* Booking Summary Card */}
-            <div className="bg-gray-100 rounded-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
+            <div className="bg-muted rounded-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
                 <h4 className="font-semibold text-black text-base sm:text-lg">Thông tin đặt phòng</h4>
 
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-3 text-xs sm:text-sm">
@@ -171,7 +171,7 @@ export const Step2: React.FC<Step2Props> = ({
                     )}
                     <div className="flex justify-between text-lg pt-2 border-t">
                         <span className="font-semibold">Tổng thanh toán</span>
-                        <span className="font-bold text-rose-600 text-xl">
+                        <span className="font-bold text-primary text-xl">
                             {formatPrice(totalPrice)} VNĐ
                         </span>
                     </div>
@@ -192,7 +192,7 @@ export const Step2: React.FC<Step2Props> = ({
                         placeholder="Nhập ghi chú..."
                         value={formData.note}
                         onChange={(e) => updateFormData({ note: e.target.value })}
-                        className={cn(errors.note && "border-red-300 focus:ring-red-500")}
+                        className={cn(errors.note && "border-destructive focus:ring-destructive")}
                     />
                 </div>
 
@@ -214,7 +214,7 @@ export const Step2: React.FC<Step2Props> = ({
                     />
                     <div>
                         <label className="text-sm">
-                            <button type="button" onClick={() => setShowTerms(true)} className="text-rose-600 underline cursor-pointer">
+                            <button type="button" onClick={() => setShowTerms(true)} className="text-primary underline cursor-pointer">
                                 Chấp nhận điều khoản
                             </button>{' '}đặt phòng &amp; chính sách bảo mật thông tin của Chốn Cinehome <span className="text-red-500">*</span>
                         </label>
@@ -226,9 +226,9 @@ export const Step2: React.FC<Step2Props> = ({
                 {/* Terms modal */}
                 <Dialog open={showTerms} onOpenChange={setShowTerms}>
                     <DialogContent className="max-w-3xl">
-                        <div className="text-center">
-                            <h3 className="text-lg font-bold">Nội quy Homestay</h3>
-                        </div>
+                        <DialogHeader>
+                            <DialogTitle className="text-center text-lg font-bold">Nội quy Homestay</DialogTitle>
+                        </DialogHeader>
                         <div className="mt-4 max-h-86 overflow-y-auto text-md leading-7 pr-2">
                             <ol className="list-decimal list-inside space-y-2">
                                 <li>Xuất trình CCCD/hộ chiếu khi nhận phòng.</li>
@@ -245,7 +245,7 @@ export const Step2: React.FC<Step2Props> = ({
                         <div className="mt-4 text-center">
                             <button
                                 type="button"
-                                className="px-4 py-2 bg-rose-600 text-white rounded-md"
+                                className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
                                 onClick={() => {
                                     updateFormData({ acceptTerms: true });
                                     setShowTerms(false);

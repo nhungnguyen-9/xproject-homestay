@@ -29,9 +29,9 @@ const PERIOD_LABELS: { value: Period; label: string }[] = [
 ]
 
 const ROOM_TYPE_COLORS: Record<string, string> = {
-  standard: '#22C55E',
-  vip: '#F87171',
-  supervip: '#8B5CF6',
+  standard: 'var(--color-room-standard)',
+  vip: 'var(--color-room-vip)',
+  supervip: 'var(--color-room-supervip)',
 }
 
 function getPeriodDateRange(period: Period): { start: string; end: string } {
@@ -71,12 +71,6 @@ function formatDisplayDate(dateStr: string): string {
 }
 
 export function RevenueDashboard() {
-  const role = authService.getRole()
-
-  if (role === 'staff') {
-    return <Navigate to="/admin/bookings" />
-  }
-
   const [period, setPeriod] = useState<Period>('week')
 
   const summary: RevenueSummary = useMemo(
@@ -101,10 +95,16 @@ export function RevenueDashboard() {
     [period],
   )
 
+  const role = authService.getRole()
+
+  if (role === 'staff') {
+    return <Navigate to="/admin/bookings" />
+  }
+
   const hasDailyData = dailyData.some((d) => d.revenue > 0)
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="flex flex-col gap-6 p-6">
       {/* Period Selector */}
       <div className="flex items-center gap-2">
         {PERIOD_LABELS.map((p) => (
@@ -114,8 +114,8 @@ export function RevenueDashboard() {
             className={cn(
               'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
               period === p.value
-                ? 'bg-[#F87171] text-white'
-                : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50',
+                ? 'bg-primary text-primary-foreground'
+                : 'border border-border bg-card text-muted-foreground hover:bg-accent',
             )}
           >
             {p.label}
@@ -126,76 +126,76 @@ export function RevenueDashboard() {
       {/* 4 Stat Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total Revenue */}
-        <div className="rounded-xl bg-[#FEF2F2] p-5">
-          <p className="text-sm font-medium text-rose-700">
+        <div className="rounded-xl bg-primary/5 p-5">
+          <p className="text-sm font-medium text-primary">
             Tổng doanh thu
           </p>
-          <p className="mt-2 text-2xl font-bold text-rose-900">
+          <p className="mt-2 text-2xl font-bold text-primary">
             {formatPrice(summary.totalRevenue)}đ
           </p>
           <div className="mt-1 flex items-center gap-1 text-sm">
             {summary.revenueDelta >= 0 ? (
-              <span className="font-medium text-green-600">
+              <span className="font-medium text-status-success-foreground">
                 ↑ {summary.revenueDelta}%
               </span>
             ) : (
-              <span className="font-medium text-red-600">
+              <span className="font-medium text-status-error-foreground">
                 ↓ {Math.abs(summary.revenueDelta)}%
               </span>
             )}
-            <span className="text-rose-600">so với kỳ trước</span>
+            <span className="text-muted-foreground">so với kỳ trước</span>
           </div>
         </div>
 
         {/* Total Bookings */}
-        <div className="rounded-xl bg-[#F0FDF4] p-5">
-          <p className="text-sm font-medium text-green-700">
+        <div className="rounded-xl bg-status-success-muted p-5">
+          <p className="text-sm font-medium text-status-success-foreground">
             Tổng booking
           </p>
-          <p className="mt-2 text-2xl font-bold text-green-900">
+          <p className="mt-2 text-2xl font-bold text-status-success-foreground">
             {summary.totalBookings}
           </p>
           <div className="mt-1 flex items-center gap-1 text-sm">
             {summary.bookingsDelta >= 0 ? (
-              <span className="font-medium text-green-600">
+              <span className="font-medium text-status-success-foreground">
                 ↑ {summary.bookingsDelta}
               </span>
             ) : (
-              <span className="font-medium text-red-600">
+              <span className="font-medium text-status-error-foreground">
                 ↓ {Math.abs(summary.bookingsDelta)}
               </span>
             )}
-            <span className="text-green-600">so với kỳ trước</span>
+            <span className="text-status-success-foreground">so với kỳ trước</span>
           </div>
         </div>
 
         {/* Occupancy Rate */}
-        <div className="rounded-xl bg-[#EFF6FF] p-5">
-          <p className="text-sm font-medium text-blue-700">
+        <div className="rounded-xl bg-status-info-muted p-5">
+          <p className="text-sm font-medium text-status-info-foreground">
             Tỷ lệ lấp đầy
           </p>
-          <p className="mt-2 text-2xl font-bold text-blue-900">
+          <p className="mt-2 text-2xl font-bold text-status-info-foreground">
             {summary.occupancyRate}%
           </p>
-          <div className="mt-2 h-[6px] w-full overflow-hidden rounded-full bg-blue-200">
+          <div className="mt-2 h-[6px] w-full overflow-hidden rounded-full bg-status-info/20">
             <div
-              className="h-full rounded-full bg-blue-500 transition-all"
+              className="h-full rounded-full bg-status-info transition-all"
               style={{ width: `${Math.min(summary.occupancyRate, 100)}%` }}
             />
           </div>
         </div>
 
         {/* Average per Booking */}
-        <div className="rounded-xl bg-[#F5F3FF] p-5">
-          <p className="text-sm font-medium text-purple-700">TB / booking</p>
-          <p className="mt-2 text-2xl font-bold text-purple-900">
+        <div className="rounded-xl bg-status-warning-muted p-5">
+          <p className="text-sm font-medium text-status-warning-foreground">TB / booking</p>
+          <p className="mt-2 text-2xl font-bold text-status-warning-foreground">
             {formatPrice(summary.avgPerBooking)}đ
           </p>
         </div>
       </div>
 
       {/* Revenue Trend Chart */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+      <div className="rounded-xl border border-border bg-card p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-bold text-slate-800">
             Xu hướng doanh thu
@@ -217,21 +217,21 @@ export function RevenueDashboard() {
                   x2="0"
                   y2="1"
                 >
-                  <stop offset="5%" stopColor="#F87171" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#F87171" stopOpacity={0.05} />
+                  <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDateLabel}
-                tick={{ fontSize: 12, fill: '#64748B' }}
-                axisLine={{ stroke: '#E2E8F0' }}
+                tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }}
+                axisLine={{ stroke: 'var(--color-border)' }}
               />
               <YAxis
                 tickFormatter={(v: number) => `${formatPrice(v)}`}
-                tick={{ fontSize: 12, fill: '#64748B' }}
-                axisLine={{ stroke: '#E2E8F0' }}
+                tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }}
+                axisLine={{ stroke: 'var(--color-border)' }}
                 width={90}
               />
               <Tooltip
@@ -242,18 +242,18 @@ export function RevenueDashboard() {
                 labelFormatter={formatDateLabel}
                 contentStyle={{
                   borderRadius: '8px',
-                  border: '1px solid #E2E8F0',
+                  border: '1px solid var(--color-border)',
                   fontSize: '13px',
                 }}
               />
               <Area
                 type="monotone"
                 dataKey="revenue"
-                stroke="#F87171"
+                stroke="var(--color-primary)"
                 strokeWidth={2}
                 fill="url(#revenueGradient)"
-                dot={{ r: 4, fill: '#F87171', strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: '#F87171' }}
+                dot={{ r: 4, fill: 'var(--color-primary)', strokeWidth: 0 }}
+                activeDot={{ r: 6, fill: 'var(--color-primary)' }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -267,7 +267,7 @@ export function RevenueDashboard() {
       {/* Bottom Section: Occupancy by Room + Top Customers */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Occupancy by Room */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-7">
+        <div className="rounded-xl border border-border bg-card p-7">
           <h3 className="mb-5 text-[18px] font-bold text-slate-800">
             Tỷ lệ lấp đầy theo phòng
           </h3>
@@ -282,7 +282,7 @@ export function RevenueDashboard() {
                     {room.occupancyPercent}%
                   </span>
                 </div>
-                <div className="h-3 w-full overflow-hidden rounded-full bg-gray-100">
+                <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
@@ -298,7 +298,7 @@ export function RevenueDashboard() {
         </div>
 
         {/* Top Customers */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-7">
+        <div className="rounded-xl border border-border bg-card p-7">
           <h3 className="mb-5 text-[18px] font-bold text-slate-800">
             Top khách hàng chi tiêu
           </h3>
@@ -313,16 +313,16 @@ export function RevenueDashboard() {
                     key={`${customer.name}-${index}`}
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-4 py-3',
-                      isTop ? 'bg-[#FFFBEB]' : 'bg-[#F8FAFC]',
+                      isTop ? 'bg-status-warning-muted' : 'bg-muted/50',
                     )}
                   >
                     {/* Rank circle */}
                     <div
                       className={cn(
-                        'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold',
+                        'flex size-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold',
                         isTop
-                          ? 'bg-[#FEF3C7] text-[#92400E]'
-                          : 'bg-gray-200 text-gray-600',
+                          ? 'bg-status-warning/20 text-status-warning-foreground'
+                          : 'bg-muted text-muted-foreground',
                       )}
                     >
                       {rank}
@@ -333,13 +333,13 @@ export function RevenueDashboard() {
                       <p className="truncate text-[15px] font-bold text-slate-800">
                         {customer.name}
                       </p>
-                      <p className="text-[13px] text-gray-500">
+                      <p className="text-[13px] text-muted-foreground">
                         {customer.visitCount} lần đặt
                       </p>
                     </div>
 
                     {/* Amount */}
-                    <p className="flex-shrink-0 text-[16px] font-extrabold text-[#F87171]">
+                    <p className="flex-shrink-0 text-[16px] font-extrabold text-primary">
                       {formatPrice(customer.totalSpent)}đ
                     </p>
                   </div>

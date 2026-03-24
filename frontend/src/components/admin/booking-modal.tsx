@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import {
@@ -133,26 +133,6 @@ export function BookingModal({
 
   // Delete confirmation
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-
-  // Reset form when booking or open changes
-  useEffect(() => {
-    if (open) {
-      setActiveTab(booking?.category === 'internal' ? 'internal' : 'guest')
-      setRoomId(booking?.roomId || prefillRoomId || demoRooms[0].id)
-      setDate(booking?.date || prefillDate || new Date().toISOString().split('T')[0])
-      setStartTime(booking?.startTime || prefillStartTime || '08:00')
-      setEndTime(booking?.endTime || prefillEndTime || '10:00')
-      setGuestName(booking?.guestName || '')
-      setGuestPhone(booking?.guestPhone || '')
-      setStatus(booking?.status || 'pending')
-      setVoucher(booking?.voucher || '')
-      setNote(booking?.note || '')
-      setInternalTag(booking?.internalTag || 'cleaning')
-      setInternalNote(booking?.internalNote || '')
-      setErrors({})
-      setVoucherStatus(null)
-    }
-  }, [open, booking, prefillRoomId, prefillDate, prefillStartTime, prefillEndTime])
 
   const validateVoucher = useCallback(() => {
     if (!voucher.trim()) {
@@ -350,7 +330,7 @@ export function BookingModal({
                     className="mt-1"
                   />
                   {errors.startTime && (
-                    <p className="text-xs text-red-500 mt-0.5">{errors.startTime}</p>
+                    <p className="text-xs text-status-error-foreground mt-0.5">{errors.startTime}</p>
                   )}
                 </div>
                 <div>
@@ -363,14 +343,14 @@ export function BookingModal({
                     className="mt-1"
                   />
                   {errors.endTime && (
-                    <p className="text-xs text-red-500 mt-0.5">{errors.endTime}</p>
+                    <p className="text-xs text-status-error-foreground mt-0.5">{errors.endTime}</p>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Guest tab */}
-            <TabsContent value="guest" className="mt-3 space-y-3">
+            <TabsContent value="guest" className="mt-3 flex flex-col gap-3">
               <div>
                 <Label htmlFor="guestName">Ten khach hang</Label>
                 <Input
@@ -381,7 +361,7 @@ export function BookingModal({
                   className="mt-1"
                 />
                 {errors.guestName && (
-                  <p className="text-xs text-red-500 mt-0.5">{errors.guestName}</p>
+                  <p className="text-xs text-status-error-foreground mt-0.5">{errors.guestName}</p>
                 )}
               </div>
 
@@ -395,7 +375,7 @@ export function BookingModal({
                   className="mt-1"
                 />
                 {errors.guestPhone && (
-                  <p className="text-xs text-red-500 mt-0.5">{errors.guestPhone}</p>
+                  <p className="text-xs text-status-error-foreground mt-0.5">{errors.guestPhone}</p>
                 )}
               </div>
 
@@ -445,7 +425,7 @@ export function BookingModal({
                   <p
                     className={cn(
                       'text-xs mt-1',
-                      voucherStatus.valid ? 'text-green-600' : 'text-red-500'
+                      voucherStatus.valid ? 'text-status-success-foreground' : 'text-status-error-foreground'
                     )}
                   >
                     {voucherStatus.valid ? '✓' : '✗'} {voucherStatus.message}
@@ -467,7 +447,7 @@ export function BookingModal({
             </TabsContent>
 
             {/* Internal tab */}
-            <TabsContent value="internal" className="mt-3 space-y-3">
+            <TabsContent value="internal" className="mt-3 flex flex-col gap-3">
               <div>
                 <Label>Loai noi bo</Label>
                 <div className="grid grid-cols-2 gap-2 mt-1">
@@ -479,8 +459,8 @@ export function BookingModal({
                       className={cn(
                         'flex items-center gap-2 rounded-lg border p-2.5 text-sm transition-colors',
                         internalTag === tag.value
-                          ? 'border-[#F87171] bg-red-50 text-red-700'
-                          : 'border-[#E2E8F0] hover:border-slate-300'
+                          ? 'border-primary bg-status-error-muted text-status-error-foreground'
+                          : 'border-border hover:border-muted-foreground'
                       )}
                     >
                       <span className="text-base">{tag.icon}</span>
@@ -508,7 +488,7 @@ export function BookingModal({
             {isEdit && isAdmin && onDelete && (
               <Button
                 variant="outline"
-                className="mr-auto text-red-600 border-red-200 hover:bg-red-50"
+                className="mr-auto text-destructive border-destructive/20 hover:bg-destructive/5"
                 onClick={() => setShowDeleteConfirm(true)}
               >
                 Xoa
@@ -519,7 +499,7 @@ export function BookingModal({
             </Button>
             <Button
               onClick={handleSave}
-              className="bg-[#F87171] hover:bg-[#EF4444] text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isEdit ? 'Cap nhat' : 'Tao moi'}
             </Button>
@@ -540,7 +520,7 @@ export function BookingModal({
             <AlertDialogCancel>Huy</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-destructive hover:bg-destructive/90 text-white"
             >
               Xoa
             </AlertDialogAction>

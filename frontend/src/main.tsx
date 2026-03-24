@@ -12,7 +12,7 @@ import { AdminLayout } from './components/layouts/AdminLayout.tsx';
 import { AdminSettingsPage } from './components/layouts/admin-pages.tsx';
 import { BookingSchedule } from './components/admin/booking-schedule.tsx';
 import { CustomerList } from './components/admin/customer-list.tsx';
-import { CustomerDetail } from './components/admin/customer-detail.tsx';
+import CustomerDetailRoute from './components/admin/CustomerDetailRoute.tsx';
 import { PromoManager } from './components/admin/promo-manager.tsx';
 import { TelegramConfig } from './components/admin/telegram-config.tsx';
 import { RevenueDashboard } from './components/admin/revenue-dashboard.tsx';
@@ -45,7 +45,7 @@ createRoot(document.getElementById('root')!).render(
           <Route index element={<RevenueDashboard />} />
           <Route path="bookings" element={<BookingSchedule />} />
           <Route path="customers" element={<CustomerList />} />
-          <Route path="customers/:id" element={<CustomerDetail />} />
+          <Route path="customers/:id" element={<CustomerDetailRoute />} />
           <Route path="promos" element={<PromoManager />} />
           <Route path="telegram" element={<TelegramConfig />} />
           <Route path="settings" element={<AdminSettingsPage />} />

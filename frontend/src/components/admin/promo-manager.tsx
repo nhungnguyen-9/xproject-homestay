@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -31,14 +31,9 @@ const STATUS_BADGE: Record<
   PromoCode['status'],
   { label: string; className: string }
 > = {
-  active: { label: 'Hoạt động', className: 'bg-green-100 text-green-700' },
-  expired: { label: 'Hết hạn', className: 'bg-slate-100 text-slate-500' },
-  disabled: { label: 'Vô hiệu', className: 'bg-red-100 text-red-600' },
-}
-
-function formatRoomTypes(types: RoomType[]): string {
-  if (types.length === 0) return 'Tất cả'
-  return types.map((t) => ROOM_LABEL[t] ?? t).join(' ')
+  active: { label: 'Hoạt động', className: 'bg-status-success-muted text-status-success-foreground' },
+  expired: { label: 'Hết hạn', className: 'bg-muted text-muted-foreground' },
+  disabled: { label: 'Vô hiệu', className: 'bg-status-error-muted text-status-error-foreground' },
 }
 
 function formatDateShort(dateStr: string): string {
@@ -49,7 +44,10 @@ function formatDateShort(dateStr: string): string {
 }
 
 export function PromoManager() {
-  const [promos, setPromos] = useState<PromoCode[]>([])
+  const [promos, setPromos] = useState<PromoCode[]>(() => {
+    promoService.refreshStatuses()
+    return promoService.getAll()
+  })
   const [filter, setFilter] = useState<FilterStatus>('all')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingPromo, setEditingPromo] = useState<PromoCode | undefined>(undefined)
@@ -58,11 +56,6 @@ export function PromoManager() {
   function loadPromos() {
     setPromos(promoService.getAll())
   }
-
-  useEffect(() => {
-    promoService.refreshStatuses()
-    loadPromos()
-  }, [])
 
   const filtered = useMemo(() => {
     if (filter === 'all') return promos
@@ -115,7 +108,7 @@ export function PromoManager() {
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as FilterStatus)}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm bg-white"
+            className="rounded-md border border-border px-3 py-1.5 text-sm bg-card"
           >
             <option value="all">Tất cả</option>
             <option value="active">Hoạt động</option>
@@ -124,7 +117,7 @@ export function PromoManager() {
           </select>
           <Button
             onClick={handleCreate}
-            className="bg-[#F87171] hover:bg-[#ef4444] text-white"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <Plus className="size-4" />
             Tạo mã mới
@@ -134,7 +127,7 @@ export function PromoManager() {
 
       {/* Summary */}
       <p className="text-sm text-slate-500 mb-4">
-        Hoạt động: <span className="font-medium text-green-600">{activeCount}</span>
+        Hoạt động: <span className="font-medium text-status-success-foreground">{activeCount}</span>
         {' '}&middot;{' '}
         Hết hạn: <span className="font-medium text-slate-500">{expiredCount}</span>
       </p>
@@ -149,10 +142,10 @@ export function PromoManager() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-slate-50 text-left text-slate-600">
+              <tr className="bg-muted/50 text-left text-muted-foreground">
                 <th className="px-4 py-3 font-medium">Mã</th>
                 <th className="px-4 py-3 font-medium">Giảm giá</th>
                 <th className="px-4 py-3 font-medium">Loại phòng</th>
@@ -162,7 +155,7 @@ export function PromoManager() {
                 <th className="px-4 py-3 font-medium text-right">Hành động</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border">
               {filtered.map((promo) => {
                 const isExpired = promo.status === 'expired'
                 const badge = STATUS_BADGE[promo.status]
@@ -170,13 +163,13 @@ export function PromoManager() {
                   <tr
                     key={promo.id}
                     className={cn(
-                      'hover:bg-slate-50 transition-colors',
+                      'hover:bg-muted/30 transition-colors',
                       isExpired && 'opacity-50'
                     )}
                   >
                     {/* Code */}
                     <td className="px-4 py-3">
-                      <span className="inline-block rounded bg-blue-50 px-2 py-0.5 font-mono text-xs font-semibold text-blue-700 tracking-wide">
+                      <span className="inline-block rounded bg-status-info-muted px-2 py-0.5 font-mono text-xs font-semibold text-status-info-foreground tracking-wide">
                         {promo.code}
                       </span>
                     </td>
@@ -192,14 +185,14 @@ export function PromoManager() {
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {promo.applicableRoomTypes.length === 0 ? (
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                             Tất cả
                           </span>
                         ) : (
                           promo.applicableRoomTypes.map((rt) => (
                             <span
                               key={rt}
-                              className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600"
+                              className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
                             >
                               {ROOM_LABEL[rt] ?? rt}
                             </span>
@@ -247,7 +240,7 @@ export function PromoManager() {
                           size="icon-xs"
                           onClick={() => setDeleteTarget(promo)}
                           title="Xóa"
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/5"
                         >
                           <Trash2 className="size-3.5" />
                         </Button>
@@ -263,8 +256,12 @@ export function PromoManager() {
 
       {/* Promo Modal */}
       <PromoModal
+        key={editingPromo?.id || (modalOpen ? 'new' : 'idle')}
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false)
+          setEditingPromo(undefined)
+        }}
         promo={editingPromo}
         onSave={handleSave}
       />
@@ -287,7 +284,7 @@ export function PromoManager() {
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
               Xóa
             </AlertDialogAction>

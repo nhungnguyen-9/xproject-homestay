@@ -214,8 +214,8 @@ export const Step1: React.FC<Step1Props> = ({
                                     className={cn(
                                         "px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all shadow-sm",
                                         formData.mode === mode.value
-                                            ? "bg-rose-400 text-white"
-                                            : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50",
+                                            ? "bg-primary text-primary-foreground"
+                                            : "bg-card text-muted-foreground border border-border hover:bg-accent",
                                     )}
                                 >
                                     {mode.label}
@@ -377,7 +377,7 @@ export const Step1: React.FC<Step1Props> = ({
 
                         <div className="flex justify-between items-center pt-2 border-t">
                             <span className="text-sm font-medium text-gray-700">Dự kiến: {displayDuration()}</span>
-                            <span className="text-base font-bold text-rose-500">{formatPrice(price)}</span>
+                            <span className="text-base font-bold text-primary">{formatPrice(price)}</span>
                         </div>
                     </div>
 
@@ -515,7 +515,7 @@ export const Step1: React.FC<Step1Props> = ({
                             </div>
                         </div>
                         <div className="col-span-2 text-right">
-                            <div className="text-sm xl:text-base font-bold text-rose-500">
+                            <div className="text-sm xl:text-base font-bold text-primary">
                                 {formatPrice(price)}
                             </div>
                         </div>
@@ -539,7 +539,7 @@ export const Step1: React.FC<Step1Props> = ({
                     </div>
                     <button
                         type="button"
-                        className="flex items-center justify-center sm:justify-start gap-2 bg-orange-500 text-white px-3 sm:px-4 py-2 rounded-md shadow hover:bg-orange-600 transition-colors whitespace-nowrap text-sm sm:text-base w-full sm:w-auto"
+                        className="flex items-center justify-center sm:justify-start gap-2 bg-status-warning text-status-warning-foreground px-3 sm:px-4 py-2 rounded-md shadow hover:bg-status-warning/90 transition-colors whitespace-nowrap text-sm sm:text-base w-full sm:w-auto"
                         onClick={() => onOpenFoodModal && onOpenFoodModal()}
                     >
                         <ShoppingCart className="w-4 h-4" />
@@ -565,24 +565,24 @@ export const Step1: React.FC<Step1Props> = ({
                                     }}
                                     className={cn(
                                         "w-full text-left flex items-center justify-between py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg border-2 cursor-pointer transition-all duration-200",
-                                        isSelected ? "border-rose-500 bg-rose-50/50" : "border-gray-100 hover:border-gray-200 bg-white",
+                                        isSelected ? "border-primary bg-primary/5" : "border-border/50 hover:border-border bg-card",
                                     )}
                                 >
                                     <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                                         <div className={cn(
                                             "w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0",
-                                            isSelected ? "border-rose-400 bg-rose-400" : "border-gray-300"
+                                            isSelected ? "border-primary bg-primary" : "border-border"
                                         )}>
                                             {isSelected && <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" strokeWidth={3} />}
                                         </div>
                                         <span className={cn(
                                             "text-xs sm:text-sm font-medium transition-colors truncate",
-                                            isSelected ? "text-rose-500" : "text-gray-700"
+                                            isSelected ? "text-primary" : "text-gray-700"
                                         )}>{combo.name}</span>
                                     </div>
                                     <span className={cn(
                                         "text-xs sm:text-sm font-semibold ml-2 flex-shrink-0",
-                                        isSelected ? "text-rose-500" : "text-gray-500"
+                                        isSelected ? "text-primary" : "text-gray-500"
                                     )}>{formatPrice(combo.price)} VNĐ</span>
                                 </button>
                             );
@@ -610,7 +610,7 @@ export const Step1: React.FC<Step1Props> = ({
                         <div className="flex justify-end pt-2 sm:pt-3 mt-2 sm:mt-3 border-t">
                             <span className="text-xs sm:text-sm">
                                 Tổng:{" "}
-                                <span className="font-bold text-rose-500">
+                                <span className="font-bold text-primary">
                                     {formatPrice(foodTotal)} VND
                                 </span>
                             </span>

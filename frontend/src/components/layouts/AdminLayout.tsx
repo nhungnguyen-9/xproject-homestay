@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ChevronDown } from "lucide-react"
 
 interface AdminLayoutProps {
@@ -33,7 +34,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
+    <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar dieu huong */}
       <Sidebar
         isOpen={sidebarOpen || mobileSidebarOpen}
@@ -45,12 +46,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Vung noi dung chinh */}
       <main className="flex-1 overflow-y-auto">
         {/* Header bar cua admin */}
-        <div className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-white px-6 shadow-sm">
+        <div className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-card px-6 shadow-sm">
           {/* Nut toggle sidebar tren mobile */}
           <button
             aria-label="Toggle sidebar"
             onClick={() => setMobileSidebarOpen(v => !v)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 transition-colors lg:hidden"
+            className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent transition-colors lg:hidden"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -64,46 +65,48 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-sm transition-colors hover:bg-slate-50">
+                <button className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-sm transition-colors hover:bg-accent">
                   <span
                     className={
                       role === 'admin'
-                        ? "inline-flex items-center rounded-full bg-[#F87171]/10 px-2 py-0.5 text-xs font-semibold text-[#F87171]"
-                        : "inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700"
+                        ? "inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary"
+                        : "inline-flex items-center rounded-full bg-status-info-muted px-2 py-0.5 text-xs font-semibold text-status-info-foreground"
                     }
                   >
                     {role === 'admin' ? 'Admin' : 'Staff'}
                   </span>
-                  <ChevronDown size={14} className="text-slate-400" />
+                  <ChevronDown size={14} className="text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={() => handleRoleChange('admin')}
-                  className={role === 'admin' ? 'bg-slate-50' : ''}
+                  className={role === 'admin' ? 'bg-accent' : ''}
                 >
-                  <span className="inline-flex items-center rounded-full bg-[#F87171]/10 px-2 py-0.5 text-xs font-semibold text-[#F87171]">
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                     Admin
                   </span>
-                  <span className="ml-2 text-sm text-slate-600">Quan tri vien</span>
+                  <span className="ml-2 text-sm text-muted-foreground">Quan tri vien</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleRoleChange('staff')}
-                  className={role === 'staff' ? 'bg-slate-50' : ''}
+                  className={role === 'staff' ? 'bg-accent' : ''}
                 >
-                  <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                  <span className="inline-flex items-center rounded-full bg-status-info-muted px-2 py-0.5 text-xs font-semibold text-status-info-foreground">
                     Staff
                   </span>
-                  <span className="ml-2 text-sm text-slate-600">Nhan vien</span>
+                  <span className="ml-2 text-sm text-muted-foreground">Nhan vien</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
             {/* Avatar */}
-            <span className="text-sm text-slate-600">{role === 'admin' ? 'Admin' : 'Staff'}</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F87171] text-white text-sm font-semibold">
-              {role === 'admin' ? 'A' : 'S'}
-            </div>
+            <span className="text-sm text-muted-foreground">{role === 'admin' ? 'Admin' : 'Staff'}</span>
+            <Avatar className="size-8">
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                {role === 'admin' ? 'AD' : 'ST'}
+              </AvatarFallback>
+            </Avatar>
           </div>
         </div>
 

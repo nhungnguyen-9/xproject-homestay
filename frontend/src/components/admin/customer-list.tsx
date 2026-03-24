@@ -8,14 +8,14 @@ import type { CustomerWithStats } from '@/types/customer'
 
 // Avatar background colors - generated from name hash
 const AVATAR_COLORS = [
-  'bg-blue-100 text-blue-700',
-  'bg-green-100 text-green-700',
-  'bg-rose-100 text-rose-700',
-  'bg-purple-100 text-purple-700',
-  'bg-amber-100 text-amber-700',
-  'bg-cyan-100 text-cyan-700',
-  'bg-pink-100 text-pink-700',
-  'bg-indigo-100 text-indigo-700',
+  'bg-chart-1/10 text-chart-1',
+  'bg-chart-2/10 text-chart-2',
+  'bg-chart-3/10 text-chart-3',
+  'bg-chart-4/10 text-chart-4',
+  'bg-chart-5/10 text-chart-5',
+  'bg-primary/10 text-primary',
+  'bg-status-info/10 text-status-info',
+  'bg-status-warning/10 text-status-warning',
 ]
 
 type SortOption = 'recent' | 'spent' | 'visits' | 'alpha'
@@ -68,17 +68,13 @@ function sortCustomers(
 
 export function CustomerList() {
   const navigate = useNavigate()
-  const [customers, setCustomers] = useState<CustomerWithStats[]>([])
+  const [customers] = useState<CustomerWithStats[]>(() => 
+    customerService.getAllWithStats()
+  )
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [sortBy, setSortBy] = useState<SortOption>('recent')
   const [currentPage, setCurrentPage] = useState(1)
-
-  // Load customers on mount
-  useEffect(() => {
-    const data = customerService.getAllWithStats()
-    setCustomers(data)
-  }, [])
 
   // Debounce search input (300ms)
   useEffect(() => {
@@ -148,7 +144,7 @@ export function CustomerList() {
   if (customers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 mb-4">
+        <div className="flex size-16 items-center justify-center rounded-full bg-muted mb-4">
           <Users size={28} className="text-slate-400" />
         </div>
         <p className="text-slate-500 text-sm max-w-sm">
@@ -159,7 +155,7 @@ export function CustomerList() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-800">
@@ -176,14 +172,14 @@ export function CustomerList() {
         <div className="relative flex-1 max-w-md">
           <Search
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Tim theo ten, SDT, email..."
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white py-2 pl-9 pr-4 text-sm text-slate-700 placeholder:text-slate-400 focus:border-[#F87171] focus:outline-none focus:ring-1 focus:ring-[#F87171]/30 transition-colors"
+            className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-4 text-sm text-slate-700 placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
           />
         </div>
 
@@ -191,7 +187,7 @@ export function CustomerList() {
         <select
           value={sortBy}
           onChange={handleSortChange}
-          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#F87171] focus:outline-none focus:ring-1 focus:ring-[#F87171]/30"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-slate-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -202,10 +198,10 @@ export function CustomerList() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-border bg-card">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#E2E8F0] bg-slate-50/50">
+            <tr className="border-b border-border bg-muted/30">
               <th className="px-4 py-3 text-left font-medium text-slate-500">
                 Khach hang
               </th>
@@ -238,14 +234,14 @@ export function CustomerList() {
                 <tr
                   key={customer.id}
                   onClick={() => handleRowClick(customer.id)}
-                  className="cursor-pointer border-b border-[#E2E8F0] last:border-b-0 hover:bg-slate-50/50 transition-colors"
+                  className="cursor-pointer border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
                 >
                   {/* Avatar + Name + Email */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div
                         className={cn(
-                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
+                          'flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
                           getAvatarColor(customer.name),
                         )}
                       >
@@ -271,7 +267,7 @@ export function CustomerList() {
 
                   {/* Visit count badge */}
                   <td className="px-4 py-3 text-center">
-                    <span className="inline-flex items-center justify-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                    <span className="inline-flex items-center justify-center rounded-full bg-status-info-muted px-2.5 py-0.5 text-xs font-medium text-status-info-foreground">
                       {customer.visitCount}
                     </span>
                   </td>
@@ -292,7 +288,7 @@ export function CustomerList() {
                   <td className="px-4 py-3">
                     {customer.note ? (
                       customer.note.toLowerCase().includes('vip') ? (
-                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
+                        <span className="inline-flex items-center rounded-full bg-status-warning-muted px-2.5 py-0.5 text-xs font-semibold text-status-warning-foreground border border-status-warning/20">
                           VIP
                         </span>
                       ) : (
@@ -322,7 +318,7 @@ export function CustomerList() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E2E8F0] text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={14} />
             </button>
@@ -333,8 +329,8 @@ export function CustomerList() {
                 className={cn(
                   'flex h-8 min-w-[32px] items-center justify-center rounded-lg px-2 text-xs font-medium transition-colors',
                   page === currentPage
-                    ? 'bg-[#F87171] text-white'
-                    : 'border border-[#E2E8F0] text-slate-600 hover:bg-slate-50',
+                    ? 'bg-primary text-primary-foreground'
+                    : 'border border-border text-muted-foreground hover:bg-accent',
                 )}
               >
                 {page}
@@ -343,7 +339,7 @@ export function CustomerList() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E2E8F0] text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={14} />
             </button>

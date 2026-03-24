@@ -26,19 +26,19 @@ const TIME_SLOTS = Array.from({ length: 12 }, (_, i) => i * 2)
 
 // Status color mapping
 const STATUS_COLORS: Record<string, string> = {
-  confirmed: 'bg-green-100 border-l-4 border-l-green-500 text-green-800',
-  pending: 'bg-yellow-100 border-l-4 border-l-yellow-500 text-yellow-800',
-  'checked-in': 'bg-blue-100 border-l-4 border-l-blue-500 text-blue-800',
-  'checked-out': 'bg-slate-100 border-l-4 border-l-slate-400 text-slate-600',
-  cancelled: 'bg-red-100 border-l-4 border-l-red-500 text-red-600',
+  confirmed: 'bg-booking-confirmed-bg border-l-4 border-l-booking-confirmed text-booking-confirmed-text',
+  pending: 'bg-booking-pending-bg border-l-4 border-l-booking-pending text-booking-pending-text',
+  'checked-in': 'bg-booking-checked-in-bg border-l-4 border-l-booking-checked-in text-booking-checked-in-text',
+  'checked-out': 'bg-booking-checked-out-bg border-l-4 border-l-booking-checked-out text-booking-checked-out-text',
+  cancelled: 'bg-booking-cancelled-bg border-l-4 border-l-booking-cancelled text-booking-cancelled-text',
 }
 
 // Internal tag colors
 const TAG_COLORS: Record<InternalTag, string> = {
-  cleaning: 'bg-purple-100 border-l-4 border-l-purple-500 text-purple-800',
-  maintenance: 'bg-amber-100 border-l-4 border-l-amber-500 text-amber-800',
-  locked: 'bg-pink-100 border-l-4 border-l-pink-500 text-pink-800',
-  custom: 'bg-slate-100 border-l-4 border-l-slate-400 text-slate-700',
+  cleaning: 'bg-tag-cleaning-bg border-l-4 border-l-tag-cleaning text-tag-cleaning-text',
+  maintenance: 'bg-tag-maintenance-bg border-l-4 border-l-tag-maintenance text-tag-maintenance-text',
+  locked: 'bg-tag-locked-bg border-l-4 border-l-tag-locked text-tag-locked-text',
+  custom: 'bg-tag-custom-bg border-l-4 border-l-tag-custom text-tag-custom-text',
 }
 
 const TAG_ICONS: Record<InternalTag, string> = {
@@ -80,7 +80,6 @@ export function BookingSchedule() {
 
   // State
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [bookings, setBookings] = useState<Booking[]>([])
   const [showModal, setShowModal] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [selectedBooking, setSelectedBooking] = useState<Booking | undefined>(undefined)
@@ -102,13 +101,17 @@ export function BookingSchedule() {
 
   const dateStr = formatDateISO(selectedDate)
 
+  const [bookings, setBookings] = useState<Booking[]>(() => {
+    bookingService.init()
+    return bookingService.getByDate(dateStr)
+  })
+
   const refreshBookings = useCallback(() => {
     const data = bookingService.getByDate(dateStr)
     setBookings(data)
   }, [dateStr])
 
   useEffect(() => {
-    bookingService.init()
     refreshBookings()
   }, [refreshBookings])
 
@@ -301,7 +304,7 @@ export function BookingSchedule() {
         return (
           <div
             key={booking.id}
-            className="absolute top-1 bottom-1 rounded px-1.5 flex items-center text-[11px] bg-slate-200 text-slate-500 cursor-default overflow-hidden z-10"
+            className="absolute top-1 bottom-1 rounded px-1.5 flex items-center text-[11px] bg-muted text-muted-foreground cursor-default overflow-hidden z-10"
             style={pos}
             title="Khung gio nay khong the dat phong"
           >
@@ -370,7 +373,7 @@ export function BookingSchedule() {
             type="date"
             value={dateStr}
             onChange={handleDateChange}
-            className="border border-[#E2E8F0] rounded-md px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#F87171]/50"
+            className="border border-border rounded-md px-3 py-1.5 text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
           <Button variant="outline" size="sm" onClick={handleNextDay}>
             <ChevronRight className="h-4 w-4" />
@@ -387,26 +390,26 @@ export function BookingSchedule() {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 mb-4 text-xs text-slate-600">
+      <div className="flex flex-wrap gap-3 mb-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-green-400 inline-block" /> Xac nhan
+          <span className="size-3 rounded bg-booking-confirmed inline-block" /> Xac nhan
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-yellow-400 inline-block" /> Cho xac nhan
+          <span className="size-3 rounded bg-booking-pending inline-block" /> Cho xac nhan
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-blue-400 inline-block" /> Nhan phong
+          <span className="size-3 rounded bg-booking-checked-in inline-block" /> Nhan phong
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-slate-400 inline-block" /> Tra phong
+          <span className="size-3 rounded bg-booking-checked-out inline-block" /> Tra phong
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-red-400 inline-block" /> Huy
+          <span className="size-3 rounded bg-booking-cancelled inline-block" /> Huy
         </span>
         {isAdmin && (
           <span className="flex items-center gap-1">
             <span
-              className="w-3 h-3 rounded bg-purple-300 inline-block"
+              className="size-3 rounded bg-tag-cleaning inline-block"
               style={{
                 backgroundImage:
                   'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.4) 2px, rgba(255,255,255,0.4) 4px)',
@@ -418,18 +421,18 @@ export function BookingSchedule() {
       </div>
 
       {/* Schedule grid */}
-      <div className="overflow-x-auto border border-[#E2E8F0] rounded-lg bg-white">
+      <div className="overflow-x-auto border border-border rounded-lg bg-card">
         <div className="min-w-[900px]">
           {/* Header row */}
-          <div className="flex bg-[#F8FAFC] border-b border-[#E2E8F0]">
-            <div className="w-24 shrink-0 px-3 py-2 text-xs font-semibold text-slate-600 border-r border-[#E2E8F0]">
+          <div className="flex bg-muted/50 border-b border-border">
+            <div className="w-24 shrink-0 px-3 py-2 text-xs font-semibold text-muted-foreground border-r border-border">
               Phong
             </div>
             <div className="flex-1 flex">
               {TIME_SLOTS.map((hour) => (
                 <div
                   key={hour}
-                  className="flex-1 text-center py-2 text-xs font-medium text-slate-500 border-r border-[#E2E8F0] last:border-r-0"
+                  className="flex-1 text-center py-2 text-xs font-medium text-muted-foreground border-r border-border last:border-r-0"
                 >
                   {String(hour).padStart(2, '0')}:00
                 </div>
@@ -444,19 +447,19 @@ export function BookingSchedule() {
             return (
               <div
                 key={room.id}
-                className="flex border-b border-[#E2E8F0] last:border-b-0 hover:bg-slate-50/30"
+                className="flex border-b border-border last:border-b-0 hover:bg-muted/20"
               >
                 {/* Room name cell */}
-                <div className="w-24 shrink-0 px-3 py-2 border-r border-[#E2E8F0] bg-white">
+                <div className="w-24 shrink-0 px-3 py-2 border-r border-border bg-card">
                   <div className="font-semibold text-sm text-slate-800">{room.name}</div>
                   <div
                     className={cn(
                       'text-[10px] uppercase font-medium',
                       room.type === 'supervip'
-                        ? 'text-purple-600'
+                        ? 'text-room-supervip'
                         : room.type === 'vip'
-                          ? 'text-[#F87171]'
-                          : 'text-slate-400'
+                          ? 'text-room-vip'
+                          : 'text-muted-foreground'
                     )}
                   >
                     {room.type}
@@ -472,13 +475,13 @@ export function BookingSchedule() {
                       return (
                         <div
                           key={slotHour}
-                          className="flex-1 border-r border-[#E2E8F0] last:border-r-0 relative"
+                          className="flex-1 border-r border-border last:border-r-0 relative"
                         >
                           {!occupied && (
                             <button
                               type="button"
                               onClick={() => handleEmptySlotClick(room.id, slotHour)}
-                              className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-slate-300 hover:text-[#F87171] z-[5]"
+                              className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary z-[5]"
                               title="Them booking"
                             >
                               <Plus className="h-4 w-4" />
@@ -508,6 +511,7 @@ export function BookingSchedule() {
 
       {/* Booking Modal */}
       <BookingModal
+        key={selectedBooking?.id || `new-${prefillRoomId}-${dateStr}`}
         open={showModal}
         onClose={() => {
           setShowModal(false)
@@ -543,7 +547,7 @@ export function BookingSchedule() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCleaningConfirm}
-              className="bg-[#F87171] hover:bg-[#EF4444] text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               Them don phong
             </AlertDialogAction>
@@ -555,12 +559,12 @@ export function BookingSchedule() {
       {contextMenu && (
         <div
           ref={contextRef}
-          className="fixed z-50 bg-white border border-[#E2E8F0] rounded-md shadow-lg py-1 min-w-[180px]"
+          className="fixed z-50 bg-card border border-border rounded-md shadow-lg py-1 min-w-[180px]"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
           <button
             type="button"
-            className="w-full text-left px-3 py-1.5 text-sm hover:bg-slate-100 transition-colors flex items-center gap-2"
+            className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
             onClick={() => handleAddCleaningAfter(contextMenu.booking)}
           >
             🧹 Them don phong sau

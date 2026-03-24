@@ -300,7 +300,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     </div>
 
                     {/* Chỉ báo bước cho Mobile */}
-                    <div className="sm:hidden px-3 py-2 border-b bg-gray-50 flex justify-center">
+                    <div className="sm:hidden px-3 py-2 border-b bg-muted/50 flex justify-center">
                         <StepIndicator currentStep={currentStep} totalSteps={3} />
                     </div>
 
@@ -361,7 +361,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
                         {/* Hiển thị thông báo lỗi (nếu có) */}
                         {(errors.duration || errors.time) && (
-                            <div className="mt-3 p-3 bg-red-50 rounded-lg">
+                            <div className="mt-3 p-3 bg-status-error-muted rounded-lg">
                                 {errors.duration && (
                                     <p className="text-sm text-red-600">{errors.duration}</p>
                                 )}
