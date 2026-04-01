@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils"
 import * as authService from "@/services/authService"
 import type { UserRole } from "@/types/auth"
 
-// === Cau hinh menu dieu huong voi role-based visibility ===
 const NAV_ITEMS: { label: string; icon: LucideIcon; to: string; roles: UserRole[] }[] = [
   { label: "Tong quan", icon: LayoutDashboard, to: "/admin", roles: ['admin'] },
   { label: "Lich phong", icon: CalendarDays, to: "/admin/bookings", roles: ['admin', 'staff'] },
@@ -32,11 +31,8 @@ interface SidebarProps {
 }
 
 /**
- * Sidebar - Dieu huong admin doc
- * - Collapsed: chi hien thi icons (64px)
- * - Expanded: icons + labels (220px)
- * - Active state: mau rose-400 nhacam primary
- * - Role-based filtering: staff chi thay "Lich phong"
+ * Thanh điều hướng dọc — thu gọn/mở rộng, lọc menu theo vai trò người dùng
+ * Staff chỉ thấy "Lịch phòng", admin thấy toàn bộ menu
  */
 export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }: SidebarProps) {
   const currentRole = authService.getRole()
@@ -44,7 +40,6 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
 
   return (
     <>
-      {/* Overlay cho mobile khi mo sidebar */}
       {mobileOpen && (
         <button
           aria-label="Dong menu dieu huong"
@@ -55,25 +50,19 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
 
       <aside
         className={cn(
-          // Layout va transition
           "fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r border-sidebar-border bg-sidebar",
           "transition-[width,transform] duration-300 ease-in-out lg:static lg:z-auto",
-          // Chieu rong theo trang thai o desktop
           isOpen ? "w-[220px]" : "w-16",
-          // Trang thai truot vao/ra o mobile
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
-      {/* Logo khu vuc tren */}
       <div className={cn(
         "flex h-14 items-center border-b border-sidebar-border px-3",
         isOpen ? "gap-3" : "justify-center"
       )}>
-        {/* Logo icon nha cam */}
         <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary">
           <span className="text-primary-foreground font-bold text-sm">NC</span>
         </div>
-        {/* Ten thuong hieu - an khi collapse */}
         {isOpen && (
           <span className="font-semibold text-sidebar-foreground text-sm truncate">
             Nha Cam Admin
@@ -81,7 +70,6 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
         )}
       </div>
 
-      {/* Danh sach menu - filtered by role */}
       <nav className="flex-1 overflow-y-auto py-3 px-2 flex flex-col gap-1">
         {visibleItems.map(({ label, icon: Icon, to }) => (
           <NavLink
@@ -93,22 +81,18 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
               "flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium",
               "transition-colors duration-150",
               isActive
-                // Active: nen rose nhat, text rose-400
                 ? "bg-sidebar-accent text-sidebar-primary"
-                // Mac dinh: muted-foreground, hover nen accent
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
               !isOpen && "justify-center"
             )}
             title={!isOpen ? label : undefined}
           >
             <Icon size={18} className="shrink-0" />
-            {/* Label an khi sidebar thu nho */}
             {isOpen && <span className="truncate">{label}</span>}
           </NavLink>
         ))}
       </nav>
 
-      {/* Nut toggle expand/collapse o cuoi */}
       <div className="border-t border-sidebar-border p-2">
         <button
           onClick={onToggle}

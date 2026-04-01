@@ -7,7 +7,7 @@ import { apiRoutes } from './routes/index.js';
 
 const app = new Hono();
 
-// Global middleware
+/** Middleware toàn cục: logger + CORS */
 app.use('*', logger());
 app.use('*', cors({
   origin: env.CORS_ORIGIN,
@@ -16,16 +16,13 @@ app.use('*', cors({
   credentials: true,
 }));
 
-// Health check
+/** Endpoint kiểm tra sức khỏe server */
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// API routes
+/** Gắn tất cả API routes vào prefix /api/v1 */
 app.route('/api/v1', apiRoutes);
 
-// Error handler
 app.onError(errorHandler);
-
-// 404
 app.notFound((c) => c.json({ error: 'Not found' }, 404));
 
 export { app };
