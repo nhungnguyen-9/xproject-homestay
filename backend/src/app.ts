@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { env } from './config/env.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiRoutes } from './routes/index.js';
@@ -15,6 +16,9 @@ app.use('*', cors({
   allowHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
+
+/** Phục vụ file tĩnh (ảnh phòng) từ thư mục uploads/ */
+app.use('/uploads/*', serveStatic({ root: './' }));
 
 /** Endpoint kiểm tra sức khỏe server */
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));

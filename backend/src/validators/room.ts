@@ -23,3 +23,19 @@ export const createRoomSchema = z.object({
 
 /** Schema cập nhật phòng — tất cả trường optional */
 export const updateRoomSchema = createRoomSchema.partial();
+
+/**
+ * Schema validate xóa ảnh phòng
+ * - imageUrl: URL ảnh cần xóa (dạng /uploads/rooms/filename)
+ */
+export const deleteImageSchema = z.object({
+  imageUrl: z.string().min(1, 'Image URL is required'),
+});
+
+/**
+ * Schema validate sắp xếp lại thứ tự ảnh phòng
+ * - images: mảng URL ảnh theo thứ tự mới (phải cùng set với ảnh hiện tại)
+ */
+export const reorderImagesSchema = z.object({
+  images: z.array(z.string()).max(5),
+});
