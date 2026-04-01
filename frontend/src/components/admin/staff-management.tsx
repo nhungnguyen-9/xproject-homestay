@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -372,39 +373,18 @@ export function StaffManagement() {
 
               <div className="flex flex-col gap-2">
                 <Label>Quyền truy cập</Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col divide-y divide-border rounded-lg border border-border">
                   {VALID_PERMISSIONS.map((perm) => (
-                    <label
-                      key={perm.value}
-                      className={cn(
-                        'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors',
-                        formData.permissions.includes(perm.value)
-                          ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border text-muted-foreground hover:bg-accent',
-                      )}
-                    >
-                      <input
-                        type="checkbox"
+                    <div key={perm.value} className="flex items-center justify-between px-3 py-2.5">
+                      <Label htmlFor={`perm-${perm.value}`} className="text-sm font-normal cursor-pointer">
+                        {perm.label}
+                      </Label>
+                      <Switch
+                        id={`perm-${perm.value}`}
                         checked={formData.permissions.includes(perm.value)}
-                        onChange={() => togglePermission(perm.value)}
-                        className="sr-only"
+                        onCheckedChange={() => togglePermission(perm.value)}
                       />
-                      <div
-                        className={cn(
-                          'flex size-4 shrink-0 items-center justify-center rounded border',
-                          formData.permissions.includes(perm.value)
-                            ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-border',
-                        )}
-                      >
-                        {formData.permissions.includes(perm.value) && (
-                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                            <path d="M2 5L4 7L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </div>
-                      {perm.label}
-                    </label>
+                    </div>
                   ))}
                 </div>
               </div>
