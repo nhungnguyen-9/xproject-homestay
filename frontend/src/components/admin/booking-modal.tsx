@@ -38,6 +38,7 @@ import * as promoService from '@/services/promoService'
 import * as authService from '@/services/authService'
 import type { Booking, BookingStatus, InternalTag, RoomType } from '@/types/schedule'
 import { ROOM_PRICES } from '@/types/schedule'
+import { calculateBookingPrice } from '@/utils/helpers'
 
 interface BookingModalProps {
   open: boolean
@@ -228,9 +229,14 @@ export function BookingModal({
     const room = demoRooms.find((r) => r.id === roomId)
     if (!room) return 0
     const priceConfig = ROOM_PRICES[room.type]
+    
+    // Giả định Admin modal hiện tại chỉ hỗ trợ tính theo giờ (hourly) hoặc cần logic xác định mode
+    // Vì Admin modal không có trường 'mode', ta mặc định là 'hourly' hoặc tính dựa trên thời gian
     const minutes = timeToMinutes(endTime) - timeToMinutes(startTime)
     const hours = Math.max(0, minutes / 60)
-    let price = Math.round(hours * priceConfig.hourlyRate)
+    
+    // Sử dụng helper để tính giá chuẩn
+    let price = calculateBookingPrice('hourly', hours, priceConfig)
 
     if (voucher.trim()) {
       const roomType: RoomType = room.type
@@ -502,7 +508,7 @@ export function BookingModal({
           <AlertDialogHeader>
             <AlertDialogTitle>Xoa booking?</AlertDialogTitle>
             <AlertDialogDescription>
-              Ban co chac muon xoa booking nay? Hanh dong nay khong the hoan tac.
+              Ban co chac muon xoa booking nay? Hanh dong nay khong thể hoan tac.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

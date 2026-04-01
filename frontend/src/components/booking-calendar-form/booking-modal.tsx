@@ -16,6 +16,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import {
     calculateDuration,
+    calculateBookingPrice,
 } from "@/utils/helpers";
 import {
     StepIndicator,
@@ -25,6 +26,7 @@ import {
     Step2,
     Step3,
     FoodModal,
+    validateStep1 as sharedValidateStep1,
 } from "./booking-modal/index";
 
 interface BookingModalProps {
@@ -115,31 +117,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         formData.checkOutTime,
     ]);
 
-    // Tính giá phòng: theo giờ nhân hourlyRate, theo ngày cộng phụ thu giờ lẻ, qua đêm cộng phụ thu nếu vượt 11h
+    // Tính giá phòng bằng helper tập trung để đảm bảo tính đúng đắn cho các ca phụ thu
     const price = useMemo(() => {
-        const priceConfig = ROOM_PRICES[formData.roomType];
-
-        if (formData.mode === "hourly") {
-            return Math.max(1, Math.ceil(duration)) * priceConfig.hourlyRate;
-        }
-
-        if (formData.mode === "daily") {
-            const fullDays = Math.max(1, Math.floor(duration / 24) || 1);
-            const remainingHours = duration - fullDays * 24;
-            const extraHours = Math.max(0, Math.ceil(remainingHours));
-            return fullDays * priceConfig.dailyRate + extraHours * priceConfig.extraHourRate;
-        }
-
-        if (formData.mode === "overnight") {
-            const OVERNIGHT_BASE_HOURS = 11;
-            if (duration <= OVERNIGHT_BASE_HOURS) {
-                return priceConfig.overnightRate;
-            }
-            const extraHours = Math.ceil(duration - OVERNIGHT_BASE_HOURS);
-            return priceConfig.overnightRate + extraHours * priceConfig.extraHourRate;
-        }
-
-        return Math.ceil(duration) * priceConfig.hourlyRate;
+        return calculateBookingPrice(formData.mode, duration, ROOM_PRICES[formData.roomType]);
     }, [formData.roomType, formData.mode, duration]);
 
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);
@@ -150,48 +130,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     const totalPrice = price + foodTotal;
 
     const validateStep1 = useCallback((): boolean => {
-        const newErrors: Record<string, string> = {};
-
-        if (duration < 0.5) {
-            newErrors.duration = "Thời gian đặt phòng tối thiểu 30 phút";
-        }
-
-        // Chuyển chuỗi ngày + giờ thành timestamp tuyệt đối để so sánh overlap
-        function toTs(dateStr: string, time: string): number {
-            const [h, m] = time.split(':').map(Number);
-            const d = new Date(dateStr);
-            d.setHours(h, m, 0, 0);
-            return d.getTime();
-        }
-
-        const inDate = formData.checkInDate instanceof Date
-            ? formData.checkInDate.toISOString().split('T')[0]
-            : String(formData.checkInDate);
-        const outDate = formData.checkOutDate instanceof Date
-            ? formData.checkOutDate.toISOString().split('T')[0]
-            : String(formData.checkOutDate);
-
-        const newStart = toTs(inDate, formData.checkInTime);
-        let newEnd = toTs(outDate, formData.checkOutTime);
-        // Nếu checkout <= checkin (qua đêm), cộng thêm 24h
-        if (newEnd <= newStart) newEnd += 24 * 60 * 60 * 1000;
-
-        // Phát hiện trùng lịch: so sánh khoảng thời gian mới với các booking hiện có
-        const roomBookings = bookings.filter((b) => b.roomId === formData.roomId);
-        for (const booking of roomBookings) {
-            const bStart = toTs(booking.date, booking.startTime);
-            let bEnd = toTs(booking.date, booking.endTime);
-            if (bEnd <= bStart) bEnd += 24 * 60 * 60 * 1000;
-
-            if (newStart < bEnd && bStart < newEnd) {
-                newErrors.time = "Khung giờ này đã có người đặt";
-                break;
-            }
-        }
-
+        const newErrors = sharedValidateStep1(formData, bookings, duration, selectedDate);
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [formData, bookings, duration]);
+    }, [formData, bookings, duration, selectedDate]);
 
     const validateStep2 = useCallback((): boolean => {
         const newErrors: Record<string, string> = {};

@@ -62,7 +62,48 @@ export const calculateDuration = (
         return Math.max(0, (checkOutMinutes - checkInMinutes) / 60);
     }
 
-    const dayDiff = Math.floor((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
-    const totalMinutes = (dayDiff * 24 * 60) + checkOutMinutes - checkInMinutes;
-    return Math.max(0, totalMinutes / 60);
+/**
+ * Tính giá phòng dựa trên loại phòng, chế độ đặt, và thời lượng
+ * @param roomType - Loại phòng (standard, vip, supervip)
+ * @param mode - Chế độ đặt (hourly, daily, overnight)
+ * @param duration - Thời lượng tính bằng giờ
+ * @param priceConfig - Cấu hình giá từ ROOM_PRICES
+ * @returns Tổng giá phòng (chưa tính đồ ăn)
+ */
+export const calculateBookingPrice = (
+    mode: string,
+    duration: number,
+    priceConfig: { hourlyRate: number; dailyRate: number; overnightRate: number; extraHourRate: number }
+): number => {
+    if (mode === "hourly") {
+        return Math.max(1, Math.ceil(duration)) * priceConfig.hourlyRate;
+    }
+
+    if (mode === "daily") {
+        const fullDays = Math.max(1, Math.floor(duration / 24) || 1);
+        const remainingHours = duration - fullDays * 24;
+        const extraHours = Math.max(0, Math.ceil(remainingHours));
+        
+        // Giá = (số ngày * dailyRate) + (giờ lẻ * extraRate), nhưng không vượt quá (số ngày + 1) * dailyRate
+        const basePrice = fullDays * priceConfig.dailyRate;
+        const extraPrice = extraHours * priceConfig.extraHourRate;
+        return Math.min(basePrice + extraPrice, (fullDays + 1) * priceConfig.dailyRate);
+    }
+
+    if (mode === "overnight") {
+        const OVERNIGHT_BASE_HOURS = 11;
+        if (duration <= OVERNIGHT_BASE_HOURS) {
+            return priceConfig.overnightRate;
+        }
+        const extraHours = Math.ceil(duration - OVERNIGHT_BASE_HOURS);
+        // Tương tự, giá qua đêm + giờ lẻ không vượt quá giá ngày tiếp theo (nếu có logic liên quan)
+        // Ở đây tạm thời giới hạn ở mức dailyRate nếu vượt quá nhiều giờ
+        return Math.min(
+            priceConfig.overnightRate + extraHours * priceConfig.extraHourRate,
+            priceConfig.dailyRate // Giả định qua đêm quá nhiều giờ thì tính bằng 1 ngày
+        );
+    }
+
+    return Math.ceil(duration) * priceConfig.hourlyRate;
 };
+

@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { type BookingFormData, type Booking, ROOM_PRICES } from "@/types/schedule";
-import { calculateDuration } from "@/utils/helpers";
+import { calculateDuration, calculateBookingPrice } from "@/utils/helpers";
 import { validateStep1, validateStep2, validateStep3 } from "./validation";
 
 interface UseBookingFormProps {
@@ -34,31 +34,9 @@ export const useBookingForm = ({ initialFormData, bookings, selectedDate }: UseB
         formData.checkOutTime,
     ]);
 
-    // Tính giá phòng: theo giờ nhân hourlyRate, theo ngày cộng phụ thu giờ lẻ, qua đêm cộng phụ thu nếu vượt 11h
+    // Tính giá phòng bằng helper tập trung để đảm bảo tính đúng đắn cho các ca phụ thu
     const price = useMemo(() => {
-        const priceConfig = ROOM_PRICES[formData.roomType];
-
-        if (formData.mode === "hourly") {
-            return Math.max(1, Math.ceil(duration)) * priceConfig.hourlyRate;
-        }
-
-        if (formData.mode === "daily") {
-            const fullDays = Math.max(1, Math.floor(duration / 24) || 1);
-            const remainingHours = duration - fullDays * 24;
-            const extraHours = Math.max(0, Math.ceil(remainingHours));
-            return fullDays * priceConfig.dailyRate + extraHours * priceConfig.extraHourRate;
-        }
-
-        if (formData.mode === "overnight") {
-            const OVERNIGHT_BASE_HOURS = 11;
-            if (duration <= OVERNIGHT_BASE_HOURS) {
-                return priceConfig.overnightRate;
-            }
-            const extraHours = Math.ceil(duration - OVERNIGHT_BASE_HOURS);
-            return priceConfig.overnightRate + extraHours * priceConfig.extraHourRate;
-        }
-
-        return Math.ceil(duration) * priceConfig.hourlyRate;
+        return calculateBookingPrice(formData.mode, duration, ROOM_PRICES[formData.roomType]);
     }, [formData.roomType, formData.mode, duration]);
 
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);

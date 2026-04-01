@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link, NavLink } from "react-router"
 import { HeartParticles } from "@/components/header/header-particle"
+import { BookingLookupModal } from "@/components/booking-calendar-form/BookingLookupModal"
 
 /**
  * Thanh điều hướng chính — logo, menu desktop/mobile, hiệu ứng cố định khi cuộn trang
@@ -12,6 +13,7 @@ export const Header = ({
 }) => {
     const [mobileOpen, setMobileOpen] = useState(false)
     const [isScrolled, setIsScrolled] = useState(false)
+    const [lookupOpen, setLookupOpen] = useState(false)
 
     useEffect(() => {
         let ticking = false
@@ -56,8 +58,12 @@ export const Header = ({
 
                 <div className="relative hidden lg:flex items-center gap-12 font-semibold">
                     <NavLink className="hover:text-rose-100" to="/chi-nhanh">Chi nhánh</NavLink>
-                    <NavLink className="hover:text-rose-100" to="">Tra cứu Booking</NavLink>
-                    <NavLink className="hover:text-rose-100" to="">Hợp tác / Nhượng quyền</NavLink>
+                    <button 
+                        onClick={() => setLookupOpen(true)}
+                        className="hover:text-rose-100 cursor-pointer"
+                    >
+                        Tra cứu Booking
+                    </button>
                     <NavLink className="hover:text-rose-100" to="">Blog</NavLink>
                     <NavLink className="hover:text-rose-100" to="">Liên hệ</NavLink>
                 </div>
@@ -84,13 +90,25 @@ export const Header = ({
                 <div className={`${mobileOpen ? 'block' : 'hidden'} lg:hidden w-full bg-[#ef6666] absolute top-full left-0 z-30`}>
                     <div className="flex flex-col items-center gap-3 py-3 font-semibold">
                         <NavLink className="hover:text-rose-100" to="/chi-nhanh">Chi nhánh</NavLink>
-                        <NavLink className="hover:text-rose-100" to="">Tra cứu Booking</NavLink>
-                        <NavLink className="hover:text-rose-100" to="">Hợp tác / Nhượng quyền</NavLink>
+                        <button 
+                            onClick={() => {
+                                setLookupOpen(true)
+                                setMobileOpen(false)
+                            }}
+                            className="hover:text-rose-100 cursor-pointer"
+                        >
+                            Tra cứu Booking
+                        </button>
                         <NavLink className="hover:text-rose-100" to="">Blog</NavLink>
                         <NavLink className="hover:text-rose-100" to="">Liên hệ</NavLink>
                     </div>
                 </div>
             </div>
+
+            <BookingLookupModal 
+                open={lookupOpen}
+                onOpenChange={setLookupOpen}
+            />
         </>
     )
 }

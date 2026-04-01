@@ -169,19 +169,23 @@ export const Step1: React.FC<Step1Props> = ({
 
     // Hiển thị thời lượng theo đơn vị phù hợp: ngày/đêm/giờ tuỳ chế độ đặt
     const displayDuration = () => {
+        const duration = calculateDuration(
+            formData.checkInDate,
+            formData.checkInTime,
+            formData.checkOutDate,
+            formData.checkOutTime,
+        );
+
         if (formData.mode === 'daily') {
-            const daysDiff = Math.ceil((formData.checkOutDate.getTime() - formData.checkInDate.getTime()) / (1000 * 60 * 60 * 24));
-            return `${daysDiff} ngày`;
+            const days = Math.max(1, Math.floor(duration / 24) || 1);
+            const extra = Math.max(0, Math.ceil(duration - days * 24));
+            return `${days} ngày${extra > 0 ? ` + ${extra}h` : ''}`;
         } else if (formData.mode === 'overnight') {
-            const nightsDiff = Math.ceil((formData.checkOutDate.getTime() - formData.checkInDate.getTime()) / (1000 * 60 * 60 * 24));
-            return `${nightsDiff} đêm`;
+            const OVERNIGHT_BASE_HOURS = 11;
+            if (duration <= OVERNIGHT_BASE_HOURS) return '1 đêm';
+            const extra = Math.ceil(duration - OVERNIGHT_BASE_HOURS);
+            return `1 đêm + ${extra}h`;
         } else {
-            const duration = calculateDuration(
-                formData.checkInDate,
-                formData.checkInTime,
-                formData.checkOutDate,
-                formData.checkOutTime,
-            );
             return `${duration} giờ`;
         }
     };

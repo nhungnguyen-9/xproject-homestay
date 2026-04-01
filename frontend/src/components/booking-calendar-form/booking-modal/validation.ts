@@ -1,17 +1,17 @@
 import type { BookingFormData, Booking } from "@/types/schedule";
 
-/** Chuyển chuỗi ngày + giờ thành Unix timestamp (ms) để so sánh khoảng thời gian */
+/** Chuyển chuỗi ngày (YYYY-MM-DD) và giờ (HH:mm) thành timestamp tuyệt đối (local time) */
 function toTimestamp(dateStr: string, time: string): number {
+    const [y, M, d] = dateStr.split('-').map(Number);
     const [h, m] = time.split(':').map(Number);
-    const d = new Date(dateStr);
-    d.setHours(h, m, 0, 0);
-    return d.getTime();
+    return new Date(y, M - 1, d, h, m, 0, 0).getTime();
 }
 
-/** Trả về khoảng thời gian {start, end} của booking; nếu end <= start (qua đêm) thì cộng 24h */
+/** Trả về khoảng thời gian {start, end} tuyệt đối của một booking */
 function bookingRange(booking: Booking): { start: number; end: number } {
     const start = toTimestamp(booking.date, booking.startTime);
     let end = toTimestamp(booking.date, booking.endTime);
+    // Nếu endTime <= startTime, coi như kết thúc vào ngày hôm sau (qua đêm)
     if (end <= start) end += 24 * 60 * 60 * 1000;
     return { start, end };
 }
@@ -40,14 +40,18 @@ export const validateStep1 = (
 
     const newStart = toTimestamp(inDate, formData.checkInTime);
     let newEnd = toTimestamp(outDate, formData.checkOutTime);
+    
+    // Nếu checkout <= checkin, cộng thêm 24h (trường hợp cùng ngày nhưng ghi giờ ngược)
     if (newEnd <= newStart) newEnd += 24 * 60 * 60 * 1000;
 
-    // Phát hiện trùng lịch: newStart < bEnd && bStart < newEnd = overlap
-    const roomBookings = bookings.filter((b) => b.roomId === formData.roomId);
+    // Phát hiện trùng lịch: so sánh với TẤT CẢ booking của phòng này
+    const roomBookings = bookings.filter((b) => b.roomId === formData.roomId && b.status !== 'cancelled');
     for (const booking of roomBookings) {
         const { start: bStart, end: bEnd } = bookingRange(booking);
+        
+        // Overlap: newStart < bEnd && bStart < newEnd
         if (newStart < bEnd && bStart < newEnd) {
-            newErrors.time = `Phòng đã được đặt từ ${booking.startTime} đến ${booking.endTime}`;
+            newErrors.time = `Phòng đã được đặt từ ${booking.startTime} đến ${booking.endTime}${booking.date !== inDate ? ' (ca qua đêm từ ngày ' + booking.date + ')' : ''}`;
             break;
         }
     }

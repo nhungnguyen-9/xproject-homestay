@@ -2,8 +2,9 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { BookingFormData } from "@/types/schedule";
-import { formatDate, formatPrice } from "@/utils/helpers";
+import { formatPrice } from "@/utils/helpers";
 import { CreditCard } from "lucide-react";
+import { BANK_CONFIG } from "@/config/bank";
 
 interface PaymentModalProps {
     open: boolean;
@@ -21,12 +22,16 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     formData,
     totalPrice,
 }) => {
-    const bankId = import.meta.env.VITE_BANK_ID || 'MB';
-    const bankAccount = import.meta.env.VITE_BANK_ACCOUNT || '0123456789';
-    const accountName = import.meta.env.VITE_ACCOUNT_NAME || 'CHON CINEHOME';
+    const { bankId, bankAccount, accountName } = BANK_CONFIG;
     const phoneSuffix = formData.guestPhone.slice(-4);
-    // Nội dung CK: "DP [tên phòng] [4 số cuối SĐT] [ngày nhận]" để đối soát tự động
-    const transferContent = `DP ${formData.roomName} ${phoneSuffix} ${formatDate(formData.checkInDate)}`;
+
+    // Định dạng ngày DDMM để nội dung CK ngắn gọn (VD: 2003 cho ngày 20/03)
+    const day = String(formData.checkInDate.getDate()).padStart(2, '0');
+    const month = String(formData.checkInDate.getMonth() + 1).padStart(2, '0');
+    const dateCompact = `${day}${month}`;
+
+    // Nội dung CK: "DP [tên phòng] [4 số cuối SĐT] [DDMM]" để đối soát tự động dễ dàng
+    const transferContent = `DP ${formData.roomName} ${phoneSuffix} ${dateCompact}`;
     const qrUrl = `https://img.vietqr.io/image/${bankId}-${bankAccount}-compact2.png?amount=${totalPrice}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountName)}`;
 
     return (

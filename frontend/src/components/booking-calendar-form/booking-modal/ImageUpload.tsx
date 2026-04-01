@@ -1,11 +1,14 @@
 import React, { useRef } from "react";
 import { Upload, X } from "lucide-react";
+import { toast } from "sonner";
 
 interface ImageUploadProps {
     images: File[];
     onImagesChange: (images: File[]) => void;
     maxImages?: number;
 }
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 /**
  * Component upload ảnh giấy tờ tuỳ thân (CMND/CCCD/Passport) — hỗ trợ kéo thả, xem trước và xoá ảnh
@@ -19,12 +22,20 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        const validFiles = files.filter((file) =>
-            ["image/jpeg", "image/png", "image/heic", "image/webp"].includes(
-                file.type,
-            ),
-        );
-        const newImages = [...images, ...validFiles].slice(0, maxImages);
+        
+        const invalidType = files.find(file => !["image/jpeg", "image/png", "image/heic", "image/webp"].includes(file.type));
+        if (invalidType) {
+            toast.error(`File ${invalidType.name} không đúng định dạng ảnh`);
+            return;
+        }
+
+        const oversized = files.find(file => file.size > MAX_FILE_SIZE);
+        if (oversized) {
+            toast.error(`File ${oversized.name} quá lớn (tối đa 5MB)`);
+            return;
+        }
+
+        const newImages = [...images, ...files].slice(0, maxImages);
         onImagesChange(newImages);
         if (inputRef.current) inputRef.current.value = "";
     };

@@ -31,23 +31,46 @@ export function getAll(): Booking[] {
   return load();
 }
 
+/** Chuyển chuỗi ngày (YYYY-MM-DD) và giờ (HH:mm) thành timestamp tuyệt đối (local time) */
+function toTimestamp(date: string, time: string): number {
+  const [y, M, d] = date.split('-').map(Number);
+  const [h, m] = time.split(':').map(Number);
+  return new Date(y, M - 1, d, h, m, 0, 0).getTime();
+}
+
+/** Trả về khoảng thời gian {start, end} tuyệt đối của một booking */
+function getBookingRange(booking: Booking): { start: number; end: number } {
+  const start = toTimestamp(booking.date, booking.startTime);
+  let end = toTimestamp(booking.date, booking.endTime);
+  // Nếu endTime <= startTime, coi như kết thúc vào ngày hôm sau (qua đêm)
+  if (end <= start) end += 24 * 60 * 60 * 1000;
+  return { start, end };
+}
+
 /**
- * Lấy danh sách đặt phòng theo ngày
- * @param date - Ngày cần lọc (định dạng YYYY-MM-DD)
- * @returns Mảng booking trong ngày đó
+ * Lấy danh sách đặt phòng theo ngày, bao gồm cả các booking qua đêm từ ngày hôm trước
+ * @param dateStr - Ngày cần lọc (định dạng YYYY-MM-DD)
+ * @returns Mảng booking có hiện diện trong ngày đó
  */
-export function getByDate(date: string): Booking[] {
-  return load().filter((b) => b.date === date);
+export function getByDate(dateStr: string): Booking[] {
+  const dayStart = toTimestamp(dateStr, '00:00');
+  const dayEnd = dayStart + 24 * 60 * 60 * 1000;
+
+  return load().filter((b) => {
+    const { start, end } = getBookingRange(b);
+    // Overlap: start < dayEnd && end > dayStart
+    return start < dayEnd && end > dayStart;
+  });
 }
 
 /**
  * Lấy danh sách đặt phòng theo phòng và ngày
  * @param roomId - Mã phòng
- * @param date - Ngày cần lọc (định dạng YYYY-MM-DD)
- * @returns Mảng booking khớp phòng và ngày
+ * @param dateStr - Ngày cần lọc (định dạng YYYY-MM-DD)
+ * @returns Mảng booking khớp phòng và có hiện diện trong ngày đó
  */
-export function getByRoom(roomId: string, date: string): Booking[] {
-  return load().filter((b) => b.roomId === roomId && b.date === date);
+export function getByRoom(roomId: string, dateStr: string): Booking[] {
+  return getByDate(dateStr).filter((b) => b.roomId === roomId);
 }
 
 /**
@@ -121,22 +144,17 @@ export function hasConflict(
   endTime: string,
   excludeId?: string,
 ): boolean {
-  const bookings = getByRoom(roomId, date).filter(
-    (b) => b.id !== excludeId && b.status !== 'cancelled',
+  const allBookings = load();
+  const roomBookings = allBookings.filter(
+    (b) => b.roomId === roomId && b.id !== excludeId && b.status !== 'cancelled',
   );
 
-  const toMinutes = (time: string): number => {
-    const [h, m] = time.split(':').map(Number);
-    return h * 60 + m;
-  };
+  const newStart = toTimestamp(date, startTime);
+  let newEnd = toTimestamp(date, endTime);
+  if (newEnd <= newStart) newEnd += 24 * 60 * 60 * 1000;
 
-  const newStart = toMinutes(startTime);
-  const newEnd = toMinutes(endTime);
-
-  return bookings.some((b) => {
-    const bStart = toMinutes(b.startTime);
-    const bEnd = toMinutes(b.endTime);
-    // Hai khoảng thời gian trùng nhau khi một cái bắt đầu trước khi cái kia kết thúc
-    return newStart < bEnd && newEnd > bStart;
+  return roomBookings.some((b) => {
+    const { start: bStart, end: bEnd } = getBookingRange(b);
+    return newStart < bEnd && bStart < newEnd;
   });
 }
