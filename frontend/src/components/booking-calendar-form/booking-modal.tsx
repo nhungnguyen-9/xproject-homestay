@@ -16,7 +16,6 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import {
     calculateDuration,
-    timeToMinutes,
 } from "@/utils/helpers";
 import {
     StepIndicator,
@@ -28,24 +27,19 @@ import {
     FoodModal,
 } from "./booking-modal/index";
 
-// ==================== PROPS ====================
 interface BookingModalProps {
-    open: boolean;                 // Trạng thái đóng/mở modal
-    onOpenChange: (open: boolean) => void; // Hàm xử lý khi thay đổi trạng thái mở
-    room: Room | null;             // Phòng đang được chọn để đặt
-    rooms: Room[];                 // Danh sách tất cả các phòng
-    selectedDate: Date;            // Ngày được chọn trên lịch
-    selectedTime: string;          // Giờ được chọn trên lịch
-    bookings: Booking[];           // Danh sách các đơn đặt phòng hiện có (để kiểm tra trùng lịch)
-    onBookingCreate?: (booking: Omit<Booking, "id">) => void; // Callback khi đặt phòng thành công
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    room: Room | null;
+    rooms: Room[];
+    selectedDate: Date;
+    selectedTime: string;
+    bookings: Booking[];
+    onBookingCreate?: (booking: Omit<Booking, "id">) => void;
 }
 
 /**
- * Thành phần chính: Modal Đặt Phòng (BookingModal)
- * Quản lý quy trình đặt phòng đa bước:
- * Bước 1: Chọn phòng & Thời gian & Dịch vụ
- * Bước 2: Thông tin khách hàng & Giấy tờ
- * Bước 3: Xác nhận & Điều khoản
+ * Modal đặt phòng đa bước — quản lý quy trình chọn phòng, nhập thông tin khách, xác nhận thanh toán
  */
 export const BookingModal: React.FC<BookingModalProps> = ({
     open,
@@ -57,19 +51,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     bookings,
     onBookingCreate,
 }) => {
-    // Quản lý bước hiện tại
     const [currentStep, setCurrentStep] = useState(1);
-    // Quản lý lỗi hiển thị
     const [errors, setErrors] = useState<Record<string, string>>({});
-    // Trạng thái hiển thị modal thanh toán sau khi hoàn tất
     const [showPayment, setShowPayment] = useState(false);
-    // Lưu trữ dữ liệu form đã submit thành công
     const [submittedFormData, setSubmittedFormData] =
         useState<BookingFormData | null>(null);
-    // Trạng thái đóng/mở modal chọn món ăn/dịch vụ
     const [showFoodModal, setShowFoodModal] = useState(false);
 
-    // Khởi tạo dữ liệu form ban đầu dựa trên phòng và giờ được chọn từ lịch
     const initialFormData = useMemo((): BookingFormData => {
         const checkInHour = selectedTime.split(":")[0] || "06";
         const checkOutHour = String(
@@ -97,10 +85,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         };
     }, [room, rooms, selectedDate, selectedTime]);
 
-    // Trạng thái dữ liệu form hiện tại
     const [formData, setFormData] = useState<BookingFormData>(initialFormData);
 
-    // Reset lại form mỗi khi mở modal
     React.useEffect(() => {
         if (open) {
             setFormData(initialFormData);
@@ -109,14 +95,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         }
     }, [open, initialFormData]);
 
-    // Cập nhật lại form nếu người dùng đổi ô chọn trên lịch trong khi modal vẫn mở
     React.useEffect(() => {
         if (open) {
             setFormData(initialFormData);
         }
     }, [open, selectedDate, selectedTime, room, initialFormData]);
 
-    // Tính toán thời lượng lưu trú
     const duration = useMemo(() => {
         return calculateDuration(
             formData.checkInDate,
@@ -131,32 +115,40 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         formData.checkOutTime,
     ]);
 
-    // Tính toán tiền phòng tạm tính
+    // Tính giá phòng: theo giờ nhân hourlyRate, theo ngày cộng phụ thu giờ lẻ, qua đêm cộng phụ thu nếu vượt 11h
     const price = useMemo(() => {
         const priceConfig = ROOM_PRICES[formData.roomType];
+
+        if (formData.mode === "hourly") {
+            return Math.max(1, Math.ceil(duration)) * priceConfig.hourlyRate;
+        }
+
         if (formData.mode === "daily") {
-            const days = Math.ceil(duration / 24);
-            return priceConfig.dailyRate * days;
+            const fullDays = Math.max(1, Math.floor(duration / 24) || 1);
+            const remainingHours = duration - fullDays * 24;
+            const extraHours = Math.max(0, Math.ceil(remainingHours));
+            return fullDays * priceConfig.dailyRate + extraHours * priceConfig.extraHourRate;
         }
+
         if (formData.mode === "overnight") {
-            const nights = Math.ceil(duration / 24);
-            return priceConfig.overnightRate * nights;
+            const OVERNIGHT_BASE_HOURS = 11;
+            if (duration <= OVERNIGHT_BASE_HOURS) {
+                return priceConfig.overnightRate;
+            }
+            const extraHours = Math.ceil(duration - OVERNIGHT_BASE_HOURS);
+            return priceConfig.overnightRate + extraHours * priceConfig.extraHourRate;
         }
+
         return Math.ceil(duration) * priceConfig.hourlyRate;
     }, [formData.roomType, formData.mode, duration]);
 
-    // Tính tiền dịch vụ đi kèm
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);
     const foodTotal = selectedFoodItems.reduce(
         (sum, item) => sum + item.price * (item.qty || 0),
         0,
     );
-    // Tổng cộng cuối cùng
     const totalPrice = price + foodTotal;
 
-    /**
-     * Kiểm tra dữ liệu Bước 1: Thời gian & Phòng
-     */
     const validateStep1 = useCallback((): boolean => {
         const newErrors: Record<string, string> = {};
 
@@ -164,34 +156,43 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             newErrors.duration = "Thời gian đặt phòng tối thiểu 30 phút";
         }
 
-        // Kiểm tra xem thời gian chọn có bị trùng với lịch đặt hiện có không
+        // Chuyển chuỗi ngày + giờ thành timestamp tuyệt đối để so sánh overlap
+        function toTs(dateStr: string, time: string): number {
+            const [h, m] = time.split(':').map(Number);
+            const d = new Date(dateStr);
+            d.setHours(h, m, 0, 0);
+            return d.getTime();
+        }
+
+        const inDate = formData.checkInDate instanceof Date
+            ? formData.checkInDate.toISOString().split('T')[0]
+            : String(formData.checkInDate);
+        const outDate = formData.checkOutDate instanceof Date
+            ? formData.checkOutDate.toISOString().split('T')[0]
+            : String(formData.checkOutDate);
+
+        const newStart = toTs(inDate, formData.checkInTime);
+        let newEnd = toTs(outDate, formData.checkOutTime);
+        // Nếu checkout <= checkin (qua đêm), cộng thêm 24h
+        if (newEnd <= newStart) newEnd += 24 * 60 * 60 * 1000;
+
+        // Phát hiện trùng lịch: so sánh khoảng thời gian mới với các booking hiện có
         const roomBookings = bookings.filter((b) => b.roomId === formData.roomId);
-        const checkInMinutes = timeToMinutes(formData.checkInTime);
-        const checkOutMinutes = timeToMinutes(formData.checkOutTime);
-
         for (const booking of roomBookings) {
-            const bookingStart = timeToMinutes(booking.startTime);
-            const bookingEnd = timeToMinutes(booking.endTime);
+            const bStart = toTs(booking.date, booking.startTime);
+            let bEnd = toTs(booking.date, booking.endTime);
+            if (bEnd <= bStart) bEnd += 24 * 60 * 60 * 1000;
 
-            if (formData.checkInDate.toDateString() === selectedDate.toDateString()) {
-                if (
-                    (checkInMinutes >= bookingStart && checkInMinutes < bookingEnd) ||
-                    (checkOutMinutes > bookingStart && checkOutMinutes <= bookingEnd) ||
-                    (checkInMinutes <= bookingStart && checkOutMinutes >= bookingEnd)
-                ) {
-                    newErrors.time = "Khung giờ này đã có người đặt";
-                    break;
-                }
+            if (newStart < bEnd && bStart < newEnd) {
+                newErrors.time = "Khung giờ này đã có người đặt";
+                break;
             }
         }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [formData, bookings, duration, selectedDate]);
+    }, [formData, bookings, duration]);
 
-    /**
-     * Kiểm tra dữ liệu Bước 2: Thông tin khách hàng
-     */
     const validateStep2 = useCallback((): boolean => {
         const newErrors: Record<string, string> = {};
 
@@ -213,9 +214,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         return Object.keys(newErrors).length === 0;
     }, [formData]);
 
-    /**
-     * Kiểm tra dữ liệu Bước 3: Điều khoản
-     */
     const validateStep3 = useCallback((): boolean => {
         const newErrors: Record<string, string> = {};
 
@@ -227,16 +225,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         return Object.keys(newErrors).length === 0;
     }, [formData]);
 
-    /**
-     * Xử lý khi nhấn nút "Tiếp tục" hoặc "Đặt phòng"
-     */
     const handleNext = () => {
         if (currentStep === 1 && validateStep1()) {
             setCurrentStep(2);
         } else if (currentStep === 2 && validateStep2()) {
             setCurrentStep(3);
         } else if (currentStep === 3 && validateStep3()) {
-            // Chuẩn bị dữ liệu để gửi lên
             const newBooking: Omit<Booking, "id"> = {
                 roomId: formData.roomId,
                 startTime: formData.checkInTime,
@@ -251,19 +245,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 date: formData.checkInDate.toISOString().split('T')[0],
                 category: 'guest' as const,
             };
-            // Gọi callback thông báo tạo thành công
             onBookingCreate?.(newBooking);
-            // Lưu dữ liệu để hiển thị ở modal thanh toán
             setSubmittedFormData({ ...formData });
-            // Đóng modal chính và mở modal thanh toán
             onOpenChange(false);
             setShowPayment(true);
         }
     };
 
-    /**
-     * Quay lại bước trước đó
-     */
     const handleBack = () => {
         if (currentStep > 1) {
             setCurrentStep(currentStep - 1);
@@ -271,9 +259,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         }
     };
 
-    /**
-     * Đóng modal
-     */
     const handleCancel = () => {
         onOpenChange(false);
     };
@@ -285,10 +270,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     className="relative max-w-6xl w-[95vw] max-h-[90vh] sm:max-h-[85vh] flex flex-col p-0 gap-0"
                     style={{ maxWidth: "1150px", width: "95vw" }}
                 >
-                    {/* Hiệu ứng tuyết rơi bên trong modal */}
                     {open && <Snowfall />}
-                    
-                    {/* Tiêu đề Modal và Chỉ báo bước (Desktop) */}
+
                     <div className="relative flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 border-b">
                         <DialogTitle className="text-lg sm:text-2xl font-bold text-gray-800">
                             Đặt phòng
@@ -299,12 +282,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Chỉ báo bước cho Mobile */}
                     <div className="sm:hidden px-3 py-2 border-b bg-muted/50 flex justify-center">
                         <StepIndicator currentStep={currentStep} totalSteps={3} />
                     </div>
 
-                    {/* Nội dung chính - AnimatePresence tạo hiệu ứng chuyển bước mượt */}
                     <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-3 sm:py-4">
                         <AnimatePresence mode="wait">
                             {currentStep === 1 && (
@@ -359,7 +340,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                             )}
                         </AnimatePresence>
 
-                        {/* Hiển thị thông báo lỗi (nếu có) */}
                         {(errors.duration || errors.time) && (
                             <div className="mt-3 p-3 bg-status-error-muted rounded-lg">
                                 {errors.duration && (
@@ -372,7 +352,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                         )}
                     </div>
 
-                    {/* Chân Modal: Nút điều khiển - touch area ≥ 44px */}
                     <div className="flex items-center justify-between sm:justify-end px-3 sm:px-5 py-3 sm:py-4 border-t gap-2">
                         <Button
                             variant="ghost"
@@ -393,7 +372,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                                     <span className="sm:hidden">Quay</span>
                                 </Button>
                             )}
-                            {/* Nút CTA chính - rose-400 nhacam primary */}
                             <Button
                                 variant="primary"
                                 onClick={handleNext}
@@ -416,7 +394,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 </DialogContent>
             </Dialog>
 
-            {/* Modal phụ chọn đồ ăn */}
             <FoodModal
                 open={showFoodModal}
                 onOpenChange={setShowFoodModal}
@@ -424,7 +401,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 onConfirm={(items) => setFormData((prev) => ({ ...prev, foodItems: items }))}
             />
 
-            {/* Modal hiển thị thông tin thanh toán (QR code, chuyển khoản) */}
             {submittedFormData && (
                 <PaymentModal
                     open={showPayment}

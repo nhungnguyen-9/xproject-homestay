@@ -12,14 +12,22 @@ interface PaymentModalProps {
     totalPrice: number;
 }
 
+/**
+ * Modal xác nhận thanh toán — hiển thị mã QR VietQR, thông tin chuyển khoản sau khi đặt phòng thành công
+ */
 export const PaymentModal: React.FC<PaymentModalProps> = ({
     open,
     onOpenChange,
     formData,
     totalPrice,
 }) => {
-    const transferContent = `DP ${formData.roomName} ${formatDate(formData.checkInDate)}`;
-    const qrUrl = `https://img.vietqr.io/image/MB-0123456789-compact2.png?amount=${totalPrice}&addInfo=${encodeURIComponent(transferContent)}&accountName=CHON%20CINEHOME`;
+    const bankId = import.meta.env.VITE_BANK_ID || 'MB';
+    const bankAccount = import.meta.env.VITE_BANK_ACCOUNT || '0123456789';
+    const accountName = import.meta.env.VITE_ACCOUNT_NAME || 'CHON CINEHOME';
+    const phoneSuffix = formData.guestPhone.slice(-4);
+    // Nội dung CK: "DP [tên phòng] [4 số cuối SĐT] [ngày nhận]" để đối soát tự động
+    const transferContent = `DP ${formData.roomName} ${phoneSuffix} ${formatDate(formData.checkInDate)}`;
+    const qrUrl = `https://img.vietqr.io/image/${bankId}-${bankAccount}-compact2.png?amount=${totalPrice}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountName)}`;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -37,26 +45,24 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 </DialogHeader>
 
                 <div className="space-y-4 pt-2">
-                    {/* QR Code */}
                     <div className="flex justify-center">
                         <div className="relative">
                             <img src={qrUrl} alt="QR Code" className="size-48 border rounded-lg" />
                         </div>
                     </div>
 
-                    {/* Transfer Info */}
                     <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
                         <div className="flex justify-between">
                             <span className="text-gray-500">Ngân hàng</span>
-                            <span className="font-medium">MB Bank</span>
+                            <span className="font-medium">{bankId} Bank</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-500">Số tài khoản</span>
-                            <span className="font-medium">0123456789</span>
+                            <span className="font-medium">{bankAccount}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-500">Chủ tài khoản</span>
-                            <span className="font-medium">CHON CINEHOME</span>
+                            <span className="font-medium">{accountName}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-500">Số tiền</span>
@@ -72,7 +78,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
@@ -84,7 +89,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                         <Button
                             className="flex-1 bg-status-success hover:bg-status-success/90"
                             onClick={() => {
-                                // Handle payment confirmation
                                 onOpenChange(false);
                             }}
                         >

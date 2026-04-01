@@ -13,12 +13,15 @@ import {
 import { notificationLog } from './schema/notificationLog.js';
 import bcrypt from 'bcryptjs';
 
+/**
+ * Seed dữ liệu mẫu cho database
+ * Xóa toàn bộ dữ liệu cũ (theo thứ tự dependency ngược) rồi insert dữ liệu demo
+ * Bao gồm: chi nhánh, phòng, users, khách hàng, booking, khuyến mãi, đồ ăn, telegram
+ */
 async function seed() {
   console.log('🌱 Seeding database...');
 
-  // ---------------------------------------------------------------------------
-  // 1. Clear existing data (reverse dependency order)
-  // ---------------------------------------------------------------------------
+  // ---- 1. Xóa dữ liệu cũ (thứ tự dependency ngược) ----
   console.log('  Clearing existing data...');
   await db.delete(notificationLog);
   await db.delete(bookings);
@@ -32,9 +35,7 @@ async function seed() {
   await db.delete(foodItems);
   console.log('  ✓ All tables cleared');
 
-  // ---------------------------------------------------------------------------
-  // 2. Branches
-  // ---------------------------------------------------------------------------
+  // ---- 2. Chi nhánh ----
   console.log('  Inserting branches...');
   await db.insert(branches).values([
     { id: 'branch-ct', name: 'Cần Thơ', phone: '08xxxxxxxx', address: '08/245 Cần Thơ', district: 'Quận Ninh Kiều' },
@@ -42,24 +43,21 @@ async function seed() {
   ]);
   console.log('  ✓ 2 branches');
 
-  // ---------------------------------------------------------------------------
-  // 3. Rooms
-  // ---------------------------------------------------------------------------
+  // ---- 3. Phòng ----
   console.log('  Inserting rooms...');
   await db.insert(rooms).values([
     { id: 'g01', name: 'G01', type: 'standard', branchId: 'branch-ct', hourlyRate: 169000, dailyRate: 450000, overnightRate: 350000, extraHourRate: 40000 },
     { id: 'p102', name: 'P102', type: 'standard', branchId: 'branch-ct', hourlyRate: 169000, dailyRate: 450000, overnightRate: 350000, extraHourRate: 40000 },
     { id: 'p103', name: 'P103', type: 'standard', branchId: 'branch-ct', hourlyRate: 169000, dailyRate: 450000, overnightRate: 350000, extraHourRate: 40000 },
-    { id: 'p104', name: 'P104', type: 'vip', branchId: 'branch-ct', hourlyRate: 21000, dailyRate: 550000, overnightRate: 450000, extraHourRate: 50000 },
-    { id: 'p105', name: 'P105', type: 'vip', branchId: 'branch-ct', hourlyRate: 21000, dailyRate: 550000, overnightRate: 450000, extraHourRate: 50000 },
+    { id: 'p104', name: 'P104', type: 'vip', branchId: 'branch-ct', hourlyRate: 210000, dailyRate: 550000, overnightRate: 450000, extraHourRate: 50000 },
+    { id: 'p105', name: 'P105', type: 'vip', branchId: 'branch-ct', hourlyRate: 210000, dailyRate: 550000, overnightRate: 450000, extraHourRate: 50000 },
     { id: 'p106', name: 'P106', type: 'supervip', branchId: 'branch-ct', hourlyRate: 269000, dailyRate: 650000, overnightRate: 550000, extraHourRate: 60000 },
   ]);
   console.log('  ✓ 6 rooms');
 
-  // ---------------------------------------------------------------------------
-  // 4. Users
-  // ---------------------------------------------------------------------------
+  // ---- 4. Người dùng hệ thống ----
   console.log('  Inserting users...');
+  // Tạo hash bcrypt với 12 salt rounds cho bảo mật
   const adminPasswordHash = bcrypt.hashSync('admin123', 12);
   const staffPasswordHash = bcrypt.hashSync('staff123', 12);
   await db.insert(users).values([
@@ -68,9 +66,7 @@ async function seed() {
   ]);
   console.log('  ✓ 2 users');
 
-  // ---------------------------------------------------------------------------
-  // 5. Customers
-  // ---------------------------------------------------------------------------
+  // ---- 5. Khách hàng ----
   console.log('  Inserting customers...');
   const customerData = [
     { id: 'c1', name: 'Nguyễn Văn A', phone: '0901234567', email: 'nguyenvana@gmail.com', note: 'VIP — Thích phòng yên tĩnh' },
@@ -82,12 +78,10 @@ async function seed() {
   await db.insert(customers).values(customerData);
   console.log('  ✓ 5 customers');
 
-  // ---------------------------------------------------------------------------
-  // 6. Bookings (30 total)
-  // ---------------------------------------------------------------------------
+  // ---- 6. Đặt phòng (30 bookings: 27 guest + 3 internal) ----
   console.log('  Inserting bookings...');
 
-  // Helper: deterministic customer assignment based on booking id
+  // Gán khách hàng theo vòng lặp dựa trên index của booking
   const customerIds = ['c1', 'c2', 'c3', 'c4', 'c5'];
   const customerMap: Record<string, { name: string; phone: string }> = {
     c1: { name: 'Nguyễn Văn A', phone: '0901234567' },
@@ -103,7 +97,7 @@ async function seed() {
   }
 
   await db.insert(bookings).values([
-    // G01 (standard: 169,000/hr) — bookings 1-5
+    // G01 — standard 169.000đ/giờ
     {
       id: '1', roomId: 'g01', date: '2026-03-20', startTime: '00:00', endTime: '02:30',
       status: 'checked-out', totalPrice: 422500, category: 'guest',
@@ -130,7 +124,7 @@ async function seed() {
       createdBy: 'admin-001', ...assignCustomer(4),
     },
 
-    // P102 (standard: 169,000/hr) — bookings 6-9
+    // P102 — standard 169.000đ/giờ
     {
       id: '6', roomId: 'p102', date: '2026-03-20', startTime: '00:00', endTime: '01:30',
       status: 'checked-out', totalPrice: 253500, category: 'guest',
@@ -152,7 +146,7 @@ async function seed() {
       createdBy: 'admin-001', ...assignCustomer(8),
     },
 
-    // P103 (standard: 169,000/hr) — bookings 10-14
+    // P103 — standard 169.000đ/giờ
     {
       id: '10', roomId: 'p103', date: '2026-03-20', startTime: '00:00', endTime: '00:00',
       status: 'checked-out', totalPrice: 0, category: 'guest',
@@ -179,7 +173,7 @@ async function seed() {
       createdBy: 'admin-001', ...assignCustomer(13),
     },
 
-    // P104 (vip: 21,000/hr) — bookings 15-19
+    // P104 — vip 210.000đ/giờ
     {
       id: '15', roomId: 'p104', date: '2026-03-20', startTime: '00:00', endTime: '00:00',
       status: 'checked-out', totalPrice: 0, category: 'guest',
@@ -187,48 +181,48 @@ async function seed() {
     },
     {
       id: '16', roomId: 'p104', date: '2026-03-20', startTime: '09:28', endTime: '10:30',
-      status: 'confirmed', totalPrice: 21700, category: 'guest',
+      status: 'confirmed', totalPrice: 217000, category: 'guest',
       createdBy: 'admin-001', ...assignCustomer(15),
     },
     {
       id: '17', roomId: 'p104', date: '2026-03-20', startTime: '13:45', endTime: '15:00',
-      status: 'confirmed', totalPrice: 26250, category: 'guest',
+      status: 'confirmed', totalPrice: 262500, category: 'guest',
       createdBy: 'admin-001', ...assignCustomer(16),
     },
     {
       id: '18', roomId: 'p104', date: '2026-03-20', startTime: '17:19', endTime: '18:00',
-      status: 'confirmed', totalPrice: 14350, category: 'guest',
+      status: 'confirmed', totalPrice: 143500, category: 'guest',
       createdBy: 'admin-001', ...assignCustomer(17),
     },
     {
       id: '19', roomId: 'p104', date: '2026-03-20', startTime: '19:45', endTime: '21:00',
-      status: 'pending', totalPrice: 26250, category: 'guest',
+      status: 'pending', totalPrice: 262500, category: 'guest',
       createdBy: 'admin-001', ...assignCustomer(18),
     },
 
-    // P105 (vip: 21,000/hr) — bookings 20-23
+    // P105 — vip 210.000đ/giờ
     {
       id: '20', roomId: 'p105', date: '2026-03-20', startTime: '00:00', endTime: '01:30',
-      status: 'checked-out', totalPrice: 31500, category: 'guest',
+      status: 'checked-out', totalPrice: 315000, category: 'guest',
       createdBy: 'admin-001', ...assignCustomer(19),
     },
     {
       id: '21', roomId: 'p105', date: '2026-03-20', startTime: '11:36', endTime: '12:30',
-      status: 'confirmed', totalPrice: 18900, category: 'guest',
+      status: 'confirmed', totalPrice: 189000, category: 'guest',
       createdBy: 'admin-001', ...assignCustomer(20),
     },
     {
       id: '22', roomId: 'p105', date: '2026-03-20', startTime: '17:15', endTime: '19:00',
-      status: 'confirmed', totalPrice: 36750, category: 'guest',
+      status: 'confirmed', totalPrice: 367500, category: 'guest',
       createdBy: 'admin-001', ...assignCustomer(21),
     },
     {
       id: '23', roomId: 'p105', date: '2026-03-20', startTime: '21:00', endTime: '22:00',
-      status: 'pending', totalPrice: 21000, category: 'guest',
+      status: 'pending', totalPrice: 210000, category: 'guest',
       createdBy: 'admin-001', ...assignCustomer(22),
     },
 
-    // P106 (supervip: 269,000/hr) — bookings 24-27
+    // P106 — supervip 269.000đ/giờ
     {
       id: '24', roomId: 'p106', date: '2026-03-20', startTime: '00:00', endTime: '01:30',
       status: 'checked-out', totalPrice: 403500, category: 'guest',
@@ -250,7 +244,7 @@ async function seed() {
       createdBy: 'admin-001', ...assignCustomer(26),
     },
 
-    // Internal bookings — bookings 28-30
+    // Booking nội bộ (cleaning, maintenance, locked)
     {
       id: '28', roomId: 'g01', date: '2026-03-20', startTime: '08:00', endTime: '08:30',
       status: 'confirmed', totalPrice: 0, category: 'internal',
@@ -272,9 +266,7 @@ async function seed() {
   ]);
   console.log('  ✓ 30 bookings');
 
-  // ---------------------------------------------------------------------------
-  // 7. Promo Codes
-  // ---------------------------------------------------------------------------
+  // ---- 7. Mã khuyến mãi ----
   console.log('  Inserting promo codes...');
   await db.insert(promoCodes).values([
     {
@@ -295,9 +287,7 @@ async function seed() {
   ]);
   console.log('  ✓ 3 promo codes');
 
-  // ---------------------------------------------------------------------------
-  // 8. Food Items
-  // ---------------------------------------------------------------------------
+  // ---- 8. Thức ăn và đồ uống ----
   console.log('  Inserting food items...');
   await db.insert(foodItems).values([
     { id: 'f1', name: 'Pepsi', price: 11000, category: 'item', sortOrder: 1 },
@@ -312,18 +302,14 @@ async function seed() {
   ]);
   console.log('  ✓ 9 food items');
 
-  // ---------------------------------------------------------------------------
-  // 9. Telegram Config (singleton)
-  // ---------------------------------------------------------------------------
+  // ---- 9. Cấu hình Telegram (tắt mặc định) ----
   console.log('  Inserting telegram config...');
   await db.insert(telegramConfig).values([
     { id: 'default', botToken: '', chatId: '', enabled: false },
   ]);
   console.log('  ✓ 1 telegram config');
 
-  // ---------------------------------------------------------------------------
-  // 10. Notification Templates
-  // ---------------------------------------------------------------------------
+  // ---- 10. Mẫu thông báo Telegram ----
   console.log('  Inserting notification templates...');
   await db.insert(notificationTemplates).values([
     {
@@ -347,9 +333,6 @@ async function seed() {
   ]);
   console.log('  ✓ 3 notification templates');
 
-  // ---------------------------------------------------------------------------
-  // Done
-  // ---------------------------------------------------------------------------
   console.log('✅ Seed complete!');
   process.exit(0);
 }

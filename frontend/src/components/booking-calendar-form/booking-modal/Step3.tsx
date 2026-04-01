@@ -11,6 +11,9 @@ interface Step3Props {
     price: number;
 }
 
+/**
+ * Bước 3 — Hiển thị mã QR thanh toán chuyển khoản và tóm tắt số tiền cần trả
+ */
 export const Step3: React.FC<Step3Props> = ({ formData, price }) => {
 
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);
@@ -23,8 +26,13 @@ export const Step3: React.FC<Step3Props> = ({ formData, price }) => {
     const foodTotal = foodItemsTotal + comboTotal;
     const totalPrice = price + foodTotal;
 
-    const transferContent = `DP ${formData.roomName} ${formatDate(formData.checkInDate)}`;
-    const qrUrl = `https://img.vietqr.io/image/MB-0123456789-compact2.png?amount=${totalPrice}&addInfo=${encodeURIComponent(transferContent)}&accountName=CHON%20CINEHOME`;
+    const bankId = import.meta.env.VITE_BANK_ID || 'MB';
+    const bankAccount = import.meta.env.VITE_BANK_ACCOUNT || '0123456789';
+    const accountName = import.meta.env.VITE_ACCOUNT_NAME || 'CHON CINEHOME';
+    const phoneSuffix = formData.guestPhone.slice(-4);
+    // Nội dung CK: "DP [tên phòng] [4 số cuối SĐT] [ngày nhận]" để đối soát tự động
+    const transferContent = `DP ${formData.roomName} ${phoneSuffix} ${formatDate(formData.checkInDate)}`;
+    const qrUrl = `https://img.vietqr.io/image/${bankId}-${bankAccount}-compact2.png?amount=${totalPrice}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountName)}`;
 
     return (
         <div className="space-y-4 sm:space-y-5">
