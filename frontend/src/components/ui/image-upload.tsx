@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react'
 import { X, Upload, GripVertical, Loader2 } from 'lucide-react'
 import { Button } from './button'
+import { toast } from 'sonner'
 
 /** Props cho Component Upload Ảnh — giao tiếp với server qua callback */
 export interface ImageUploadProps {
@@ -46,7 +47,7 @@ export function ImageUpload({
     const files = Array.from(e.target.files || [])
     if (!files.length) return
 
-    const remainingSlots = maxImages - images.length - pendingFiles.length
+    const remainingSlots = Math.max(0, maxImages - images.length - pendingFiles.length)
     const allowedFiles = files.slice(0, remainingSlots)
 
     // Validation: Định dạng và dung lượng (Max 2MB theo backend)
@@ -55,6 +56,11 @@ export function ImageUpload({
       const isValidSize = file.size <= 2 * 1024 * 1024
       return isValidType && isValidSize
     })
+
+    const rejectedCount = allowedFiles.length - validFiles.length
+    if (rejectedCount > 0) {
+      toast.error(`${rejectedCount} file bị bỏ qua (sai định dạng hoặc vượt 2MB)`)
+    }
 
     if (validFiles.length > 0) {
       setPendingFiles(prev => [...prev, ...validFiles])

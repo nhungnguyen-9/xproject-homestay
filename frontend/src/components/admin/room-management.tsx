@@ -50,6 +50,7 @@ export function RoomManagement() {
       toast.success(`Đã upload ${files.length} ảnh`);
     } catch (err) {
       toast.error(`Upload thất bại: ${err instanceof Error ? err.message : 'Lỗi'}`);
+      throw err;
     }
   }, [updateRoomImages]);
 
