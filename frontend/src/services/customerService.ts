@@ -1,6 +1,7 @@
-import type { Customer, CustomerWithStats } from '@/types/customer';
+import type { Customer, CustomerWithStats, CustomerLookup } from '@/types/customer';
 import type { Booking } from '@/types/schedule';
 import { demoCustomers } from '@/data/demo-customers';
+import { apiFetch } from './apiClient';
 
 const STORAGE_KEY = 'nhacam_customers';
 const BOOKINGS_KEY = 'nhacam_bookings';
@@ -165,4 +166,38 @@ export function update(id: string, data: Partial<Customer>): Customer {
   customers[index] = { ...customers[index], ...data };
   save(customers);
   return customers[index];
+}
+
+/**
+ * Tra cứu khách hàng theo số điện thoại qua API (dùng cho booking form auto-fill)
+ * Endpoint này là public — không cần auth
+ */
+export async function getByPhone(phone: string): Promise<CustomerLookup | null> {
+  try {
+    const normalized = normalizePhone(phone);
+    return await apiFetch<CustomerLookup | null>(`/customers/by-phone/${normalized}`, { skipAuth: true });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Upload ảnh CCCD cho khách hàng (dùng sau khi tạo booking)
+ */
+export async function uploadIdImages(customerId: string, files: File[]): Promise<void> {
+  const form = new FormData();
+  files.forEach(f => form.append('images', f));
+  await apiFetch(`/customers/${customerId}/id-images`, {
+    method: 'POST',
+    body: form,
+  });
+}
+
+/**
+ * Xóa ảnh CCCD của khách hàng (admin)
+ */
+export async function deleteIdImage(customerId: string, filename: string): Promise<CustomerLookup> {
+  return apiFetch<CustomerLookup>(`/customers/${customerId}/id-images/${filename}`, {
+    method: 'DELETE',
+  });
 }

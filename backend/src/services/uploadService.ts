@@ -109,3 +109,60 @@ export async function deleteRoomImage(imageUrl: string): Promise<boolean> {
     return false;
   }
 }
+
+/** Giới hạn dung lượng ảnh CCCD: 5MB (scan độ phân giải cao) */
+const MAX_ID_IMAGE_SIZE = 5 * 1024 * 1024;
+
+/**
+ * Lưu ảnh CCCD vào uploads/customers/{customerId}/.
+ * Validate MIME type, dung lượng (5MB), và magic bytes.
+ */
+export async function saveCustomerIdImage(file: File, customerId: string, index: number): Promise<string> {
+  if (!ALLOWED_MIME_TYPES.has(file.type)) {
+    throw new Error(`Loại file không được hỗ trợ: ${file.type}. Chỉ chấp nhận JPEG, PNG, WebP`);
+  }
+
+  if (file.size > MAX_ID_IMAGE_SIZE) {
+    throw new Error(`File quá lớn: ${(file.size / 1024 / 1024).toFixed(1)}MB. Tối đa 5MB`);
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  const magicBytes = validateMagicBytes(buffer);
+  if (!magicBytes) {
+    throw new Error('File không phải ảnh hợp lệ. Nội dung file không khớp với định dạng ảnh.');
+  }
+
+  const ext = magicBytes.ext;
+  const filename = `${customerId}-${Date.now()}-${index}${ext}`;
+  const dir = path.join(UPLOADS_ROOT, 'customers', customerId);
+
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true });
+  }
+
+  await writeFile(path.join(dir, filename), buffer);
+
+  return filename;
+}
+
+/**
+ * Xóa 1 ảnh CCCD của khách hàng.
+ * @returns true nếu xóa thành công, false nếu file không tồn tại
+ */
+export async function deleteCustomerIdImage(customerId: string, filename: string): Promise<boolean> {
+  const safeFilename = path.basename(filename);
+  const filepath = path.join(UPLOADS_ROOT, 'customers', customerId, safeFilename);
+
+  // Chặn path traversal
+  if (!filepath.startsWith(path.join(UPLOADS_ROOT, 'customers', customerId))) {
+    throw new Error('Đường dẫn file không hợp lệ');
+  }
+
+  try {
+    await unlink(filepath);
+    return true;
+  } catch {
+    return false;
+  }
+}

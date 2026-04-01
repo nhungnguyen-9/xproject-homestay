@@ -18,6 +18,7 @@ import {
     calculateDuration,
     calculateBookingPrice,
 } from "@/utils/helpers";
+import * as customerService from "@/services/customerService";
 import {
     StepIndicator,
     PaymentModal,
@@ -148,7 +149,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             newErrors.guestPhone = "Số điện thoại không hợp lệ";
         }
 
-        if (formData.idImages.length === 0) {
+        // Chỉ yêu cầu upload nếu khách chưa có ảnh CCCD trong hệ thống
+        const hasExistingImages = formData.customerLookup?.hasIdImages === true;
+        if (!hasExistingImages && formData.idImages.length === 0) {
             newErrors.idImages = "Vui lòng upload ảnh CMND/CCCD";
         }
 
@@ -167,12 +170,21 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         return Object.keys(newErrors).length === 0;
     }, [formData]);
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (currentStep === 1 && validateStep1()) {
             setCurrentStep(2);
         } else if (currentStep === 2 && validateStep2()) {
             setCurrentStep(3);
         } else if (currentStep === 3 && validateStep3()) {
+            // Upload ảnh CCCD nếu có ảnh mới và biết customerId
+            if (formData.idImages.length > 0 && formData.customerLookup?.id) {
+                try {
+                    await customerService.uploadIdImages(formData.customerLookup.id, formData.idImages);
+                } catch {
+                    // Non-blocking: booking vẫn được tạo dù upload ảnh fail
+                }
+            }
+
             const newBooking: Omit<Booking, "id"> = {
                 roomId: formData.roomId,
                 startTime: formData.checkInTime,

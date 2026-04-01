@@ -5,6 +5,7 @@ export interface Customer {
   phone: string;
   email?: string;
   note?: string;
+  idImageUrls?: string[];
   createdAt: string;
 }
 
@@ -13,4 +14,13 @@ export interface CustomerWithStats extends Customer {
   totalSpent: number;
   visitCount: number;
   lastVisit: string;
+}
+
+/** Kết quả tra cứu khách hàng theo SĐT (dùng cho booking form auto-fill) */
+export interface CustomerLookup {
+  id: string;
+  name: string;
+  phone: string;
+  hasIdImages: boolean;
+  idImageUrls: string[];
 }

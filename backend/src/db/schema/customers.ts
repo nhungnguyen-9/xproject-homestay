@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uniqueIndex, jsonb } from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
 
 /**
@@ -17,6 +17,7 @@ export const customers = pgTable('customers', {
   phone: text('phone').notNull().unique(),
   email: text('email'),
   note: text('note'),
+  idImageUrls: jsonb('id_image_urls').$type<string[]>().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [

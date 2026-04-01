@@ -99,6 +99,7 @@ export interface BookingFormData {
   note: string;
   voucher: string;
   acceptTerms: boolean;
+  customerLookup?: import('@/types/customer').CustomerLookup | null;
 }
 
 /** Cấu hình giá phòng theo từng chế độ */

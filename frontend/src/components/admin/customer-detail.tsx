@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import {
   ArrowLeft,
@@ -14,11 +14,13 @@ import { cn } from '@/lib/utils'
 import { formatPrice } from '@/utils/helpers'
 import * as customerService from '@/services/customerService'
 import * as bookingService from '@/services/bookingService'
+import { apiFetch } from '@/services/apiClient'
 import { demoRooms } from '@/data/demo-schedule'
 import type { CustomerWithStats } from '@/types/customer'
 import type { Booking } from '@/types/schedule'
 import { Badge, BOOKING_STATUS_LABELS } from '@/components/ui/badge'
 import type { BadgeVariant } from '@/components/ui/badge'
+import { toast } from 'sonner'
 
 const AVATAR_COLORS = [
   'bg-chart-1/10 text-chart-1',
@@ -135,6 +137,15 @@ export function CustomerDetail() {
     matched.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
     return matched
   })
+
+  const [idImageUrls, setIdImageUrls] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!id) return
+    apiFetch<{ idImageUrls: string[] }>(`/customers/${id}`)
+      .then(data => setIdImageUrls(data.idImageUrls ?? []))
+      .catch(() => {})
+  }, [id])
 
   const [isEditingNote, setIsEditingNote] = useState(false)
   const [noteValue, setNoteValue] = useState(customer?.note ?? '')
@@ -353,6 +364,47 @@ export function CustomerDetail() {
           </div>
         </div>
       )}
+
+      <div className="rounded-xl border border-border bg-card p-5">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          Giấy tờ tùy thân (CCCD/CMND)
+          {idImageUrls.length === 0 && (
+            <span className="text-xs font-normal text-amber-500">Chưa có</span>
+          )}
+        </h3>
+        {idImageUrls.length === 0 ? (
+          <p className="text-sm text-slate-400 italic">Khách hàng chưa cung cấp giấy tờ.</p>
+        ) : (
+          <div className="flex flex-wrap gap-3">
+            {idImageUrls.map((url) => {
+              const filename = url.split('/').pop() ?? '';
+              const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') ?? 'http://localhost:3001';
+              return (
+                <div key={url} className="relative group">
+                  <img
+                    src={`${BACKEND_URL}${url}`}
+                    alt="CCCD"
+                    className="h-24 w-36 rounded-lg object-cover border border-border"
+                  />
+                  <button
+                    onClick={async () => {
+                      try {
+                        await customerService.deleteIdImage(id!, filename);
+                        setIdImageUrls(prev => prev.filter(u => u !== url));
+                      } catch {
+                        toast.error('Không thể xóa ảnh');
+                      }
+                    }}
+                    className="absolute top-1 right-1 hidden group-hover:flex size-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       <div className="rounded-xl border border-border bg-card">
         <div className="px-5 py-4 border-b border-border">

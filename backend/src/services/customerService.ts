@@ -104,6 +104,24 @@ export async function create(data: { name: string; phone: string; email?: string
   return customer;
 }
 
+/** Tìm khách hàng theo số điện thoại đã chuẩn hóa */
+export async function getByPhone(phone: string) {
+  const normalized = normalizePhone(phone);
+  const [customer] = await db.select().from(customers).where(eq(customers.phone, normalized)).limit(1);
+  return customer || null;
+}
+
+/** Cập nhật danh sách URL ảnh CCCD của khách hàng */
+export async function updateIdImages(id: string, idImageUrls: string[]) {
+  const [customer] = await db
+    .update(customers)
+    .set({ idImageUrls, updatedAt: new Date() })
+    .where(eq(customers.id, id))
+    .returning();
+  if (!customer) throw new AppError(404, 'Customer not found');
+  return customer;
+}
+
 /** Cập nhật thông tin khách hàng — chuẩn hóa SĐT nếu thay đổi */
 export async function update(id: string, data: Partial<{ name: string; phone: string; email: string; note: string }>) {
   if (data.phone) {

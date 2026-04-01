@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,6 +11,8 @@ import {
     formatPrice,
 } from "@/utils/helpers";
 import { ImageUpload, ROOM_TYPE_LABELS } from "./index";
+import * as customerService from "@/services/customerService";
+import type { CustomerLookup } from "@/types/customer";
 
 interface Step2Props {
     formData: BookingFormData;
@@ -33,6 +35,30 @@ export const Step2: React.FC<Step2Props> = ({
     const updateFormData = (updates: Partial<BookingFormData>) => {
         setFormData((prev) => ({ ...prev, ...updates }));
     };
+
+    const [lookupResult, setLookupResult] = React.useState<CustomerLookup | null | 'loading'>(null);
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    React.useEffect(() => {
+        const phone = formData.guestPhone.replace(/\s/g, '');
+        if (!/^[0-9]{10,11}$/.test(phone)) {
+            setLookupResult(null);
+            updateFormData({ customerLookup: null });
+            return;
+        }
+        setLookupResult('loading');
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(async () => {
+            const result = await customerService.getByPhone(phone);
+            setLookupResult(result);
+            if (result) {
+                updateFormData({ guestName: result.name, customerLookup: result });
+            } else {
+                updateFormData({ customerLookup: null });
+            }
+        }, 600);
+        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    }, [formData.guestPhone]);
 
     const [showTerms, setShowTerms] = React.useState(false);
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);
@@ -87,10 +113,20 @@ export const Step2: React.FC<Step2Props> = ({
                         {errors.guestPhone && (
                             <p className="text-xs text-red-500">{errors.guestPhone}</p>
                         )}
+                        {lookupResult === 'loading' && (
+                            <p className="text-xs text-muted-foreground">Đang tra cứu...</p>
+                        )}
+                        {lookupResult && lookupResult !== 'loading' && lookupResult.hasIdImages && (
+                            <p className="text-xs text-green-600 font-medium">✓ Khách quen — đã có giấy tờ, không cần upload lại</p>
+                        )}
+                        {lookupResult && lookupResult !== 'loading' && !lookupResult.hasIdImages && (
+                            <p className="text-xs text-amber-600 font-medium">Khách quen — vui lòng bổ sung giấy tờ</p>
+                        )}
                     </div>
                 </div>
             </div>
 
+            {!(lookupResult && lookupResult !== 'loading' && lookupResult.hasIdImages) && (
             <div className="space-y-3 bg-white border rounded-lg shadow-sm px-3 py-4">
                 <div>
                     <label className="text-sm font-medium text-gray-700">
@@ -108,6 +144,7 @@ export const Step2: React.FC<Step2Props> = ({
                     <p className="text-xs text-red-500">{errors.idImages}</p>
                 )}
             </div>
+            )}
 
             <div className="bg-muted rounded-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
                 <h4 className="font-semibold text-black text-base sm:text-lg">Thông tin đặt phòng</h4>
