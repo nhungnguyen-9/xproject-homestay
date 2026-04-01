@@ -9,6 +9,7 @@ import {
   UserCog,
   ChevronLeft,
   ChevronRight,
+  BedDouble,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -17,6 +18,7 @@ import * as authService from "@/services/authService"
 const NAV_ITEMS: { label: string; icon: LucideIcon; to: string; permission?: string }[] = [
   { label: "Tổng quan", icon: LayoutDashboard, to: "/admin", permission: 'revenue' },
   { label: "Lịch phòng", icon: CalendarDays, to: "/admin/bookings", permission: 'bookings' },
+  { label: "Quản lý phòng", icon: BedDouble, to: "/admin/management", permission: 'rooms' },
   { label: "Khách hàng", icon: Users, to: "/admin/customers", permission: 'customers' },
   { label: "Khuyến mãi", icon: Tag, to: "/admin/promos", permission: 'promos' },
   { label: "Telegram", icon: Send, to: "/admin/telegram", permission: 'telegram' },
