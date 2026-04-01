@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # Database PostgreSQL
   db:
     image: postgres:15-alpine
     container_name: nhacam_db
@@ -15,7 +12,6 @@ services:
     ports:
       - "5432:5432"
 
-  # Backend API
   backend:
     build: ./backend
     container_name: nhacam_backend
@@ -23,13 +19,17 @@ services:
     environment:
       DATABASE_URL: postgres://${DB_USER:-nhacam_user}:${DB_PASSWORD:-nhacam_password}@db:5432/${DB_NAME:-nhacam_db}
       JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       PORT: 3000
+      NODE_ENV: ${NODE_ENV:-production}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://103.57.220.186}
     depends_on:
       - db
     ports:
       - "3000:3000"
 
-  # Frontend Web
   frontend:
     build:
       context: ./frontend
