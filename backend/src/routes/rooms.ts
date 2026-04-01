@@ -4,7 +4,7 @@ import * as roomService from '../services/roomService.js';
 import { saveRoomImage, deleteRoomImage } from '../services/uploadService.js';
 import { createRoomSchema, updateRoomSchema, deleteImageSchema, reorderImagesSchema } from '../validators/room.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { adminOnly } from '../middleware/rbac.js';
+import { adminOnly, requirePermission } from '../middleware/rbac.js';
 import { AppError } from '../middleware/errorHandler.js';
 
 /** Router quản lý phòng — GET công khai, thao tác CUD yêu cầu admin */
@@ -25,21 +25,21 @@ rooms.get('/:id', async (c) => {
 });
 
 /** POST /rooms — tạo phòng mới (chỉ admin) */
-rooms.post('/', authMiddleware, adminOnly, zValidator('json', createRoomSchema), async (c) => {
+rooms.post('/', authMiddleware, requirePermission('rooms'), adminOnly, zValidator('json', createRoomSchema), async (c) => {
   const data = c.req.valid('json');
   const room = await roomService.create(data);
   return c.json(room, 201);
 });
 
 /** PUT /rooms/:id — cập nhật phòng (chỉ admin) */
-rooms.put('/:id', authMiddleware, adminOnly, zValidator('json', updateRoomSchema), async (c) => {
+rooms.put('/:id', authMiddleware, requirePermission('rooms'), adminOnly, zValidator('json', updateRoomSchema), async (c) => {
   const data = c.req.valid('json');
   const room = await roomService.update(c.req.param('id'), data);
   return c.json(room);
 });
 
 /** DELETE /rooms/:id — vô hiệu hóa phòng (chỉ admin, soft delete) */
-rooms.delete('/:id', authMiddleware, adminOnly, async (c) => {
+rooms.delete('/:id', authMiddleware, requirePermission('rooms'), adminOnly, async (c) => {
   await roomService.softDelete(c.req.param('id')!);
   return c.json({ message: 'Room deactivated' });
 });
@@ -51,7 +51,7 @@ rooms.delete('/:id', authMiddleware, adminOnly, async (c) => {
  * Chấp nhận JPEG, PNG, WebP (validate bằng magic bytes).
  * @returns Danh sách images sau khi cập nhật
  */
-rooms.post('/:id/images', authMiddleware, adminOnly, async (c) => {
+rooms.post('/:id/images', authMiddleware, requirePermission('rooms'), adminOnly, async (c) => {
   const roomId = c.req.param('id')!;
   const room = await roomService.getById(roomId);
   const currentImages = (room.images as string[]) || [];
@@ -98,7 +98,7 @@ rooms.post('/:id/images', authMiddleware, adminOnly, async (c) => {
  * Xóa file khỏi disk và cập nhật danh sách images trong DB.
  * @returns Danh sách images sau khi xóa
  */
-rooms.delete('/:id/images', authMiddleware, adminOnly, zValidator('json', deleteImageSchema), async (c) => {
+rooms.delete('/:id/images', authMiddleware, requirePermission('rooms'), adminOnly, zValidator('json', deleteImageSchema), async (c) => {
   const roomId = c.req.param('id')!;
   const { imageUrl } = c.req.valid('json');
   const room = await roomService.getById(roomId);
@@ -122,7 +122,7 @@ rooms.delete('/:id/images', authMiddleware, adminOnly, zValidator('json', delete
  * Giữ nguyên vị trí ảnh trong mảng, thay URL cũ bằng URL mới.
  * @returns Danh sách images sau khi thay thế
  */
-rooms.put('/:id/images/replace', authMiddleware, adminOnly, async (c) => {
+rooms.put('/:id/images/replace', authMiddleware, requirePermission('rooms'), adminOnly, async (c) => {
   const roomId = c.req.param('id')!;
   const room = await roomService.getById(roomId);
   const currentImages = (room.images as string[]) || [];
@@ -169,7 +169,7 @@ rooms.put('/:id/images/replace', authMiddleware, adminOnly, async (c) => {
  * Tất cả URLs phải tồn tại trong danh sách ảnh hiện tại (cùng set, khác thứ tự).
  * @returns Danh sách images sau khi sắp xếp
  */
-rooms.put('/:id/images/reorder', authMiddleware, adminOnly, zValidator('json', reorderImagesSchema), async (c) => {
+rooms.put('/:id/images/reorder', authMiddleware, requirePermission('rooms'), adminOnly, zValidator('json', reorderImagesSchema), async (c) => {
   const roomId = c.req.param('id')!;
   const { images: newOrder } = c.req.valid('json');
   const room = await roomService.getById(roomId);

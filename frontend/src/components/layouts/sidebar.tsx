@@ -6,21 +6,22 @@ import {
   Tag,
   Send,
   Settings,
+  UserCog,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import * as authService from "@/services/authService"
-import type { UserRole } from "@/types/auth"
 
-const NAV_ITEMS: { label: string; icon: LucideIcon; to: string; roles: UserRole[] }[] = [
-  { label: "Tổng quan", icon: LayoutDashboard, to: "/admin", roles: ['admin'] },
-  { label: "Lịch phòng", icon: CalendarDays, to: "/admin/bookings", roles: ['admin', 'staff'] },
-  { label: "Khách hàng", icon: Users, to: "/admin/customers", roles: ['admin'] },
-  { label: "Khuyến mãi", icon: Tag, to: "/admin/promos", roles: ['admin'] },
-  { label: "Telegram", icon: Send, to: "/admin/telegram", roles: ['admin'] },
-  { label: "Cài đặt", icon: Settings, to: "/admin/settings", roles: ['admin'] },
+const NAV_ITEMS: { label: string; icon: LucideIcon; to: string; permission?: string }[] = [
+  { label: "Tổng quan", icon: LayoutDashboard, to: "/admin", permission: 'revenue' },
+  { label: "Lịch phòng", icon: CalendarDays, to: "/admin/bookings", permission: 'bookings' },
+  { label: "Khách hàng", icon: Users, to: "/admin/customers", permission: 'customers' },
+  { label: "Khuyến mãi", icon: Tag, to: "/admin/promos", permission: 'promos' },
+  { label: "Telegram", icon: Send, to: "/admin/telegram", permission: 'telegram' },
+  { label: "Cài đặt", icon: Settings, to: "/admin/settings" },
+  { label: "Nhân viên", icon: UserCog, to: "/admin/staff" },
 ]
 
 interface SidebarProps {
@@ -36,7 +37,10 @@ interface SidebarProps {
  */
 export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }: SidebarProps) {
   const currentRole = authService.getRole()
-  const visibleItems = NAV_ITEMS.filter(item => item.roles.includes(currentRole))
+  const visibleItems = NAV_ITEMS.filter(item => {
+    if (!item.permission) return currentRole === 'admin'
+    return authService.canPerform(item.permission)
+  })
 
   return (
     <>

@@ -8,6 +8,7 @@ export interface User {
   role: UserRole;
   displayName: string | null;
   email: string | null;
+  permissions: string[];
 }
 
 /** Cặp token xác thực (access + refresh) */

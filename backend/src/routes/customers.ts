@@ -3,12 +3,12 @@ import { zValidator } from '@hono/zod-validator';
 import * as customerService from '../services/customerService.js';
 import { createCustomerSchema, updateCustomerSchema } from '../validators/customer.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { adminOnly } from '../middleware/rbac.js';
+import { adminOnly, requirePermission } from '../middleware/rbac.js';
 
-/** Router quản lý khách hàng — yêu cầu xác thực */
+/** Router quản lý khách hàng — yêu cầu xác thực + permission 'customers' */
 const customersRouter = new Hono();
 
-customersRouter.use('*', authMiddleware);
+customersRouter.use('*', authMiddleware, requirePermission('customers'));
 
 /** GET /customers — danh sách khách hàng (tìm kiếm, phân trang, kèm thống kê) */
 customersRouter.get('/', async (c) => {

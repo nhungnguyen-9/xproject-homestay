@@ -61,6 +61,10 @@ export async function login(username: string, password: string) {
     throw new AppError(401, 'Invalid username or password');
   }
 
+  if (!user.isActive) {
+    throw new AppError(403, 'Tài khoản đã bị vô hiệu hóa');
+  }
+
   const valid = await verifyPassword(password, user.passwordHash);
   if (!valid) {
     throw new AppError(401, 'Invalid username or password');
@@ -70,6 +74,7 @@ export async function login(username: string, password: string) {
     userId: user.id,
     username: user.username,
     role: user.role as 'admin' | 'staff',
+    permissions: (user.permissions as string[]) || ['bookings'],
   };
 
   const tokens = generateTokens(payload);
@@ -82,6 +87,7 @@ export async function login(username: string, password: string) {
       role: user.role,
       displayName: user.displayName,
       email: user.email,
+      permissions: payload.permissions,
     },
   };
 }
@@ -108,10 +114,15 @@ export async function refreshAccessToken(refreshToken: string) {
       throw new AppError(401, 'User no longer exists');
     }
 
+    if (!user.isActive) {
+      throw new AppError(403, 'Tài khoản đã bị vô hiệu hóa');
+    }
+
     const newPayload: JwtPayload = {
       userId: user.id,
       username: user.username,
       role: user.role as 'admin' | 'staff',
+      permissions: (user.permissions as string[]) || ['bookings'],
     };
 
     const accessToken = jwt.sign(newPayload, env.JWT_SECRET, {
@@ -139,6 +150,8 @@ export async function getMe(userId: string) {
       role: users.role,
       displayName: users.displayName,
       email: users.email,
+      permissions: users.permissions,
+      isActive: users.isActive,
     })
     .from(users)
     .where(eq(users.id, userId))

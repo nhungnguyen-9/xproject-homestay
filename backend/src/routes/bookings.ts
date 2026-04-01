@@ -3,13 +3,13 @@ import { zValidator } from '@hono/zod-validator';
 import * as bookingService from '../services/bookingService.js';
 import { createBookingSchema, updateBookingSchema, statusTransitionSchema, checkOverlapSchema } from '../validators/booking.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { adminOnly } from '../middleware/rbac.js';
+import { adminOnly, requirePermission } from '../middleware/rbac.js';
 import type { JwtPayload } from '../middleware/auth.js';
 
-/** Router quản lý đặt phòng — yêu cầu xác thực cho tất cả endpoints */
+/** Router quản lý đặt phòng — yêu cầu xác thực + permission 'bookings' */
 const bookingsRouter = new Hono();
 
-bookingsRouter.use('*', authMiddleware);
+bookingsRouter.use('*', authMiddleware, requirePermission('bookings'));
 
 /** GET /bookings — danh sách booking có phân trang và lọc */
 bookingsRouter.get('/', async (c) => {

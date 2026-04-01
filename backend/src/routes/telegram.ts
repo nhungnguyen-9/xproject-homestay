@@ -3,12 +3,12 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import * as telegramService from '../services/telegramService.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { adminOnly } from '../middleware/rbac.js';
+import { adminOnly, requirePermission } from '../middleware/rbac.js';
 
-/** Router cấu hình Telegram thông báo — yêu cầu xác thực */
+/** Router cấu hình Telegram thông báo — yêu cầu xác thực + permission 'telegram' */
 const telegram = new Hono();
 
-telegram.use('*', authMiddleware);
+telegram.use('*', authMiddleware, requirePermission('telegram'));
 
 /** Schema cập nhật cấu hình Telegram bot */
 const configSchema = z.object({

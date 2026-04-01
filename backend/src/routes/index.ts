@@ -8,6 +8,7 @@ import { telegramRoutes } from './telegram.js';
 import { revenueRoutes } from './revenue.js';
 import { foodItemRoutes } from './foodItems.js';
 import { branchRoutes } from './branches.js';
+import { usersRouter } from './users.js';
 
 /** Gom tất cả router con vào /api/v1/* */
 const apiRoutes = new Hono();
@@ -21,5 +22,6 @@ apiRoutes.route('/telegram', telegramRoutes);
 apiRoutes.route('/revenue', revenueRoutes);
 apiRoutes.route('/food-items', foodItemRoutes);
 apiRoutes.route('/branches', branchRoutes);
+apiRoutes.route('/users', usersRouter);
 
 export { apiRoutes };

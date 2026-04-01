@@ -166,9 +166,17 @@ export function getAuth(): { currentRole: UserRole; userName: string } {
  * @param action - Tên hành động cần kiểm tra (vd: 'view_bookings', 'add_booking')
  * @returns true nếu có quyền
  */
-export function canPerform(action: string): boolean {
-  const role = getRole();
-  const staffAllowed = ['view_bookings', 'add_booking', 'change_status'];
-  if (role === 'admin') return true;
-  return staffAllowed.includes(action);
+export function canPerform(permission: string): boolean {
+  const user = getUser();
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  return (user.permissions ?? []).includes(permission);
+}
+
+/**
+ * Lấy danh sách quyền của người dùng hiện tại
+ * @returns Mảng tên quyền
+ */
+export function getPermissions(): string[] {
+  return getUser()?.permissions ?? [];
 }

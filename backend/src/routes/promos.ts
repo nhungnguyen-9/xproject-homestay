@@ -3,12 +3,12 @@ import { zValidator } from '@hono/zod-validator';
 import * as promoService from '../services/promoService.js';
 import { createPromoSchema, updatePromoSchema, validatePromoSchema, applyPromoSchema } from '../validators/promo.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { adminOnly } from '../middleware/rbac.js';
+import { adminOnly, requirePermission } from '../middleware/rbac.js';
 
-/** Router quản lý mã khuyến mãi — yêu cầu xác thực */
+/** Router quản lý mã khuyến mãi — yêu cầu xác thực + permission 'promos' */
 const promos = new Hono();
 
-promos.use('*', authMiddleware);
+promos.use('*', authMiddleware, requirePermission('promos'));
 
 /** GET /promos — danh sách mã khuyến mãi (lọc theo status) */
 promos.get('/', async (c) => {

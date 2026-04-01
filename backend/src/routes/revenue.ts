@@ -1,13 +1,12 @@
 import { Hono } from 'hono';
 import * as revenueService from '../services/revenueService.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { adminOnly } from '../middleware/rbac.js';
+import { adminOnly, requirePermission } from '../middleware/rbac.js';
 
-/** Router báo cáo doanh thu — chỉ admin được truy cập */
+/** Router báo cáo doanh thu — yêu cầu xác thực + permission 'revenue' */
 const revenue = new Hono();
 
-revenue.use('*', authMiddleware);
-revenue.use('*', adminOnly);
+revenue.use('*', authMiddleware, requirePermission('revenue'));
 
 /** GET /revenue/summary — tổng hợp doanh thu + so sánh kỳ trước */
 revenue.get('/summary', async (c) => {

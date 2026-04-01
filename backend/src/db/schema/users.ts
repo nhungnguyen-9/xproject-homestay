@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, check } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, jsonb, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
@@ -20,6 +20,8 @@ export const users = pgTable('users', {
   role: text('role').notNull().default('staff'),
   displayName: text('display_name'),
   email: text('email'),
+  permissions: jsonb('permissions').$type<string[]>().default(['bookings']),
+  isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
