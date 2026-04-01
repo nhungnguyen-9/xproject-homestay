@@ -58,13 +58,21 @@ export const calculateDuration = (
     const checkInMinutes = timeToMinutes(checkInTime);
     const checkOutMinutes = timeToMinutes(checkOutTime);
 
-    if (checkInDate.toDateString() === checkOutDate.toDateString()) {
+    // Tạo bản sao để so sánh ngày (không quan tâm giờ phút)
+    const d1 = new Date(checkInDate.getFullYear(), checkInDate.getMonth(), checkInDate.getDate());
+    const d2 = new Date(checkOutDate.getFullYear(), checkOutDate.getMonth(), checkOutDate.getDate());
+
+    if (d1.getTime() === d2.getTime()) {
         return Math.max(0, (checkOutMinutes - checkInMinutes) / 60);
     }
 
+    const dayDiff = Math.floor((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+    const totalMinutes = (dayDiff * 24 * 60) + checkOutMinutes - checkInMinutes;
+    return Math.max(0, totalMinutes / 60);
+};
+
 /**
  * Tính giá phòng dựa trên loại phòng, chế độ đặt, và thời lượng
- * @param roomType - Loại phòng (standard, vip, supervip)
  * @param mode - Chế độ đặt (hourly, daily, overnight)
  * @param duration - Thời lượng tính bằng giờ
  * @param priceConfig - Cấu hình giá từ ROOM_PRICES
@@ -96,14 +104,12 @@ export const calculateBookingPrice = (
             return priceConfig.overnightRate;
         }
         const extraHours = Math.ceil(duration - OVERNIGHT_BASE_HOURS);
-        // Tương tự, giá qua đêm + giờ lẻ không vượt quá giá ngày tiếp theo (nếu có logic liên quan)
-        // Ở đây tạm thời giới hạn ở mức dailyRate nếu vượt quá nhiều giờ
+        // Giới hạn giá qua đêm + giờ lẻ không vượt quá dailyRate (giá 1 ngày)
         return Math.min(
             priceConfig.overnightRate + extraHours * priceConfig.extraHourRate,
-            priceConfig.dailyRate // Giả định qua đêm quá nhiều giờ thì tính bằng 1 ngày
+            priceConfig.dailyRate
         );
     }
 
     return Math.ceil(duration) * priceConfig.hourlyRate;
 };
-
