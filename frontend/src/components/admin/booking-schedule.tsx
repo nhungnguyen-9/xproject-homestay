@@ -46,10 +46,10 @@ const TAG_ICONS: Record<InternalTag, string> = {
 }
 
 const TAG_LABELS: Record<InternalTag, string> = {
-  cleaning: 'Don phong',
-  maintenance: 'Bao tri',
-  locked: 'Khoa phong',
-  custom: 'Tuy chinh',
+  cleaning: 'Dọn phòng',
+  maintenance: 'Bảo trì',
+  locked: 'Khóa phòng',
+  custom: 'Tùy chỉnh',
 }
 
 function timeToMinutes(time: string): number {
@@ -179,11 +179,11 @@ export function BookingSchedule() {
       totalPrice: 0,
       category: 'internal',
       internalTag: 'cleaning',
-      internalNote: 'Don phong sau check-out',
+      internalNote: 'Dọn phòng sau check-out',
       createdBy: authService.getAuth().userName,
     })
 
-    toast.success('Da them 30p don phong')
+    toast.success('Đã thêm 30p dọn phòng')
     refreshBookings()
   }
 
@@ -213,7 +213,7 @@ export function BookingSchedule() {
         }
       }
 
-      toast.success('Da cap nhat booking')
+      toast.success('Đã cập nhật booking')
     } else {
       saved = bookingService.create(bookingData)
 
@@ -226,7 +226,7 @@ export function BookingSchedule() {
         telegramService.notify(saved, 'new_booking', room?.name || saved.roomId)
       }
 
-      toast.success('Da tao booking moi')
+      toast.success('Đã tạo booking mới')
     }
 
     refreshBookings()
@@ -234,7 +234,7 @@ export function BookingSchedule() {
 
   const handleDelete = (id: string) => {
     bookingService.remove(id)
-    toast.success('Da xoa booking')
+    toast.success('Đã xóa booking')
     refreshBookings()
   }
 
@@ -252,11 +252,11 @@ export function BookingSchedule() {
       totalPrice: 0,
       category: 'internal',
       internalTag: 'cleaning',
-      internalNote: 'Don phong sau check-out',
+      internalNote: 'Dọn phòng sau check-out',
       createdBy: authService.getAuth().userName,
     })
 
-    toast.success('Da them 30p don phong')
+    toast.success('Đã thêm 30p dọn phòng')
     setShowCleaningPrompt(false)
     setCleaningAfterBooking(null)
     refreshBookings()
@@ -298,9 +298,9 @@ export function BookingSchedule() {
             key={booking.id}
             className="absolute top-1 bottom-1 rounded px-1.5 flex items-center text-[11px] bg-muted text-muted-foreground cursor-default overflow-hidden z-10"
             style={pos}
-            title="Khung gio nay khong the dat phong"
+            title="Khung giờ này không thể đặt phòng"
           >
-            <span className="truncate">Khong kha dung</span>
+            <span className="truncate">Không khả dụng</span>
           </div>
         )
       }
@@ -338,10 +338,10 @@ export function BookingSchedule() {
         style={pos}
         onClick={() => handleBookingClick(booking)}
         onContextMenu={(e) => handleBookingContextMenu(e, booking)}
-        title={`${booking.guestName || 'Khach'} (${booking.startTime} - ${booking.endTime})`}
+        title={`${booking.guestName || 'Khách'} (${booking.startTime} - ${booking.endTime})`}
       >
         <span className="truncate">
-          {booking.guestName || 'Khach'}{' '}
+          {booking.guestName || 'Khách'}{' '}
           <span className="opacity-60">
             {booking.startTime}-{booking.endTime}
           </span>
@@ -353,7 +353,7 @@ export function BookingSchedule() {
   return (
     <div className="p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <h2 className="text-xl font-bold text-slate-800">Lich phong</h2>
+        <h2 className="text-xl font-bold text-slate-800">Lịch phòng</h2>
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handlePrevDay}>
@@ -374,26 +374,26 @@ export function BookingSchedule() {
             onClick={() => setSelectedDate(new Date())}
             className="text-xs"
           >
-            Hom nay
+            Hôm nay
           </Button>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
-          <span className="size-3 rounded bg-booking-confirmed inline-block" /> Xac nhan
+          <span className="size-3 rounded bg-booking-confirmed inline-block" /> Xác nhận
         </span>
         <span className="flex items-center gap-1">
-          <span className="size-3 rounded bg-booking-pending inline-block" /> Cho xac nhan
+          <span className="size-3 rounded bg-booking-pending inline-block" /> Chờ xác nhận
         </span>
         <span className="flex items-center gap-1">
-          <span className="size-3 rounded bg-booking-checked-in inline-block" /> Nhan phong
+          <span className="size-3 rounded bg-booking-checked-in inline-block" /> Nhận phòng
         </span>
         <span className="flex items-center gap-1">
-          <span className="size-3 rounded bg-booking-checked-out inline-block" /> Tra phong
+          <span className="size-3 rounded bg-booking-checked-out inline-block" /> Trả phòng
         </span>
         <span className="flex items-center gap-1">
-          <span className="size-3 rounded bg-booking-cancelled inline-block" /> Huy
+          <span className="size-3 rounded bg-booking-cancelled inline-block" /> Hủy
         </span>
         {isAdmin && (
           <span className="flex items-center gap-1">
@@ -404,7 +404,7 @@ export function BookingSchedule() {
                   'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.4) 2px, rgba(255,255,255,0.4) 4px)',
               }}
             />{' '}
-            Noi bo
+            Nội bộ
           </span>
         )}
       </div>
@@ -413,7 +413,7 @@ export function BookingSchedule() {
         <div className="min-w-[900px]">
           <div className="flex bg-muted/50 border-b border-border">
             <div className="w-24 shrink-0 px-3 py-2 text-xs font-semibold text-muted-foreground border-r border-border">
-              Phong
+              Phòng
             </div>
             <div className="flex-1 flex">
               {TIME_SLOTS.map((hour) => (
@@ -465,7 +465,7 @@ export function BookingSchedule() {
                               type="button"
                               onClick={() => handleEmptySlotClick(room.id, slotHour)}
                               className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary z-[5]"
-                              title="Them booking"
+                              title="Thêm booking"
                             >
                               <Plus className="h-4 w-4" />
                             </button>
@@ -485,8 +485,8 @@ export function BookingSchedule() {
 
       {bookings.length === 0 && (
         <div className="text-center py-12 text-slate-400">
-          <p className="text-sm">Khong co booking nao cho ngay nay.</p>
-          <p className="text-xs mt-1">Nhan vao o trong de tao booking moi.</p>
+          <p className="text-sm">Không có booking nào cho ngày này.</p>
+          <p className="text-xs mt-1">Nhấn vào ô trống để tạo booking mới.</p>
         </div>
       )}
 
@@ -510,9 +510,9 @@ export function BookingSchedule() {
       <AlertDialog open={showCleaningPrompt} onOpenChange={setShowCleaningPrompt}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Them 30p don phong?</AlertDialogTitle>
+            <AlertDialogTitle>Thêm 30p dọn phòng?</AlertDialogTitle>
             <AlertDialogDescription>
-              Khach vua check-out. Ban co muon them 30 phut don phong sau checkout khong?
+              Khách vừa check-out. Bạn có muốn thêm 30 phút dọn phòng sau checkout không?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -522,13 +522,13 @@ export function BookingSchedule() {
                 setCleaningAfterBooking(null)
               }}
             >
-              Khong
+              Không
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCleaningConfirm}
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              Them don phong
+              Thêm dọn phòng
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -545,7 +545,7 @@ export function BookingSchedule() {
             className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
             onClick={() => handleAddCleaningAfter(contextMenu.booking)}
           >
-            🧹 Them don phong sau
+            🧹 Thêm dọn phòng sau
           </button>
         </div>
       )}

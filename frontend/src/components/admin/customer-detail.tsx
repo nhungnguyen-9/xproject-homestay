@@ -176,10 +176,10 @@ export function CustomerDetail() {
             className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
           >
             <ArrowLeft size={16} />
-            Quay lai
+            Quay lại
           </button>
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-slate-500 text-sm">Khong tim thay khach hang.</p>
+            <p className="text-slate-500 text-sm">Không tìm thấy khách hàng.</p>
           </div>
         </div>
       )
@@ -189,7 +189,7 @@ export function CustomerDetail() {
   if (!customer) {
     return (
       <div className="flex items-center justify-center py-24">
-        <p className="text-slate-400 text-sm">Dang tai...</p>
+        <p className="text-slate-400 text-sm">Đang tải...</p>
       </div>
     )
   }
@@ -201,7 +201,7 @@ export function CustomerDetail() {
         className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
       >
         <ArrowLeft size={16} />
-        Quay lai danh sach
+        Quay lại danh sách
       </button>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-border bg-card p-5">
@@ -230,7 +230,7 @@ export function CustomerDetail() {
             className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground hover:bg-accent transition-colors self-start"
           >
             <Pencil size={14} />
-            Sua ghi chu
+            Sửa ghi chú
           </button>
         )}
       </div>
@@ -241,12 +241,12 @@ export function CustomerDetail() {
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary/5">
               <DollarSign size={14} className="text-primary" />
             </div>
-            Tong chi tieu
+            Tổng chi tiêu
           </div>
           <p className="text-xl font-bold text-primary">
             {customer.totalSpent > 0
-              ? `${formatPrice(customer.totalSpent)}d`
-              : '0d'}
+              ? `${formatPrice(customer.totalSpent)}đ`
+              : '0đ'}
           </p>
         </div>
 
@@ -255,7 +255,7 @@ export function CustomerDetail() {
             <div className="flex size-7 items-center justify-center rounded-lg bg-status-info-muted">
               <Calendar size={14} className="text-status-info" />
             </div>
-            So lan dat
+            Số lần đặt
           </div>
           <p className="text-xl font-bold text-slate-800">{customer.visitCount}</p>
         </div>
@@ -265,7 +265,7 @@ export function CustomerDetail() {
             <div className="flex size-7 items-center justify-center rounded-lg bg-status-success-muted">
               <Clock size={14} className="text-status-success" />
             </div>
-            Lan cuoi den
+            Lần cuối đến
           </div>
           <p className="text-xl font-bold text-slate-800">
             {formatDateDisplay(customer.lastVisit)}
@@ -277,14 +277,14 @@ export function CustomerDetail() {
             <div className="flex size-7 items-center justify-center rounded-lg bg-status-warning-muted">
               <StickyNote size={14} className="text-status-warning" />
             </div>
-            Ghi chu
+            Ghi chú
           </div>
           {isEditingNote ? (
             <div className="space-y-2">
               <textarea
                 value={noteValue}
                 onChange={(e) => setNoteValue(e.target.value)}
-                placeholder="Nhap ghi chu..."
+                placeholder="Nhập ghi chú..."
                 rows={3}
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 resize-none"
               />
@@ -294,21 +294,21 @@ export function CustomerDetail() {
                   className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   <Save size={12} />
-                  Luu
+                  Lưu
                 </button>
                 <button
                   onClick={handleCancelNote}
                   className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent transition-colors"
                 >
                   <X size={12} />
-                  Huy
+                  Hủy
                 </button>
               </div>
             </div>
           ) : (
             <p className="text-sm text-slate-700">
               {customer.note || (
-                <span className="text-slate-400 italic">Chua co ghi chu</span>
+                <span className="text-slate-400 italic">Chưa có ghi chú</span>
               )}
             </p>
           )}
@@ -318,7 +318,7 @@ export function CustomerDetail() {
       {topRooms.length > 0 && (
         <div className="rounded-xl border border-border bg-card p-5">
           <h3 className="text-sm font-semibold text-slate-700 mb-3">
-            Phong hay dat nhat
+            Phòng hay đặt nhất
           </h3>
           <div className="flex flex-wrap gap-3">
             {topRooms.map((room, idx) => (
@@ -346,7 +346,7 @@ export function CustomerDetail() {
                 </span>
                 {getRoomTypeBadge(room.roomId)}
                 <span className="text-xs text-slate-400">
-                  ({room.count} lan)
+                  ({room.count} lần)
                 </span>
               </div>
             ))}
@@ -357,7 +357,7 @@ export function CustomerDetail() {
       <div className="rounded-xl border border-border bg-card">
         <div className="px-5 py-4 border-b border-border">
           <h3 className="text-sm font-semibold text-slate-700">
-            Lich su dat phong
+            Lịch sử đặt phòng
             <span className="ml-2 text-slate-400 font-normal">
               ({bookings.length})
             </span>
@@ -368,7 +368,7 @@ export function CustomerDetail() {
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Calendar size={28} className="text-slate-300 mb-2" />
             <p className="text-slate-400 text-sm">
-              Khach hang chua co lich su dat phong.
+              Khách hàng chưa có lịch sử đặt phòng.
             </p>
           </div>
         ) : (
@@ -377,22 +377,22 @@ export function CustomerDetail() {
               <thead>
                 <tr className="border-b border-border bg-muted/30">
                   <th className="px-4 py-3 text-left font-medium text-slate-500">
-                    Ngay
+                    Ngày
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-slate-500">
-                    Phong
+                    Phòng
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-slate-500">
-                    Gio
+                    Giờ
                   </th>
                   <th className="px-4 py-3 text-right font-medium text-slate-500">
-                    Gia
+                    Giá
                   </th>
                   <th className="px-4 py-3 text-center font-medium text-slate-500">
-                    Trang thai
+                    Trạng thái
                   </th>
                   <th className="px-4 py-3 text-center font-medium text-slate-500">
-                    Ma KM
+                    Mã KM
                   </th>
                 </tr>
               </thead>
@@ -421,15 +421,15 @@ export function CustomerDetail() {
                       {booking.voucher ? (
                         <div className="flex flex-col items-end">
                           <span className="text-xs text-slate-400 line-through">
-                            {formatPrice(booking.totalPrice)}d
+                            {formatPrice(booking.totalPrice)}đ
                           </span>
                           <span className="font-medium text-primary">
-                            {formatPrice(booking.totalPrice)}d
+                            {formatPrice(booking.totalPrice)}đ
                           </span>
                         </div>
                       ) : (
                         <span className="font-medium text-slate-700">
-                          {formatPrice(booking.totalPrice)}d
+                          {formatPrice(booking.totalPrice)}đ
                         </span>
                       )}
                     </td>

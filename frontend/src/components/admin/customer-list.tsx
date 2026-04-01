@@ -20,9 +20,9 @@ const AVATAR_COLORS = [
 type SortOption = 'recent' | 'spent' | 'visits' | 'alpha'
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: 'recent', label: 'Gan nhat' },
-  { value: 'spent', label: 'Chi tieu cao nhat' },
-  { value: 'visits', label: 'Dat nhieu nhat' },
+  { value: 'recent', label: 'Gần nhất' },
+  { value: 'spent', label: 'Chi tiêu cao nhất' },
+  { value: 'visits', label: 'Đặt nhiều nhất' },
   { value: 'alpha', label: 'A->Z' },
 ]
 
@@ -145,7 +145,7 @@ export function CustomerList() {
           <Users size={28} className="text-slate-400" />
         </div>
         <p className="text-slate-500 text-sm max-w-sm">
-          Chua co khach hang nao. Khach hang se tu dong duoc tao khi co booking moi.
+          Chưa có khách hàng nào. Khách hàng sẽ tự động được tạo khi có booking mới.
         </p>
       </div>
     )
@@ -155,7 +155,7 @@ export function CustomerList() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-800">
-          Khach hang
+          Khách hàng
           <span className="ml-2 text-sm font-normal text-slate-400">
             ({filteredCustomers.length})
           </span>
@@ -172,7 +172,7 @@ export function CustomerList() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tim theo ten, SDT, email..."
+            placeholder="Tìm theo tên, SĐT, email..."
             className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-4 text-sm text-slate-700 placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
           />
         </div>
@@ -195,22 +195,22 @@ export function CustomerList() {
           <thead>
             <tr className="border-b border-border bg-muted/30">
               <th className="px-4 py-3 text-left font-medium text-slate-500">
-                Khach hang
+                Khách hàng
               </th>
               <th className="px-4 py-3 text-left font-medium text-slate-500">
-                SDT
+                SĐT
               </th>
               <th className="px-4 py-3 text-center font-medium text-slate-500">
-                So lan dat
+                Số lần đặt
               </th>
               <th className="px-4 py-3 text-right font-medium text-slate-500">
-                Tong chi tieu
+                Tổng chi tiêu
               </th>
               <th className="px-4 py-3 text-left font-medium text-slate-500">
-                Lan cuoi
+                Lần cuối
               </th>
               <th className="px-4 py-3 text-left font-medium text-slate-500">
-                Ghi chu
+                Ghi chú
               </th>
             </tr>
           </thead>
@@ -218,7 +218,7 @@ export function CustomerList() {
             {paginatedCustomers.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-12 text-center text-slate-400">
-                  Khong tim thay khach hang phu hop.
+                  Không tìm thấy khách hàng phù hợp.
                 </td>
               </tr>
             ) : (
@@ -263,7 +263,7 @@ export function CustomerList() {
 
                   <td className="px-4 py-3 text-right font-medium text-slate-700 whitespace-nowrap">
                     {customer.totalSpent > 0
-                      ? `${formatPrice(customer.totalSpent)}d`
+                      ? `${formatPrice(customer.totalSpent)}đ`
                       : '--'}
                   </td>
 

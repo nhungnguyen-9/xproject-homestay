@@ -15,12 +15,12 @@ import * as authService from "@/services/authService"
 import type { UserRole } from "@/types/auth"
 
 const NAV_ITEMS: { label: string; icon: LucideIcon; to: string; roles: UserRole[] }[] = [
-  { label: "Tong quan", icon: LayoutDashboard, to: "/admin", roles: ['admin'] },
-  { label: "Lich phong", icon: CalendarDays, to: "/admin/bookings", roles: ['admin', 'staff'] },
-  { label: "Khach hang", icon: Users, to: "/admin/customers", roles: ['admin'] },
-  { label: "Khuyen mai", icon: Tag, to: "/admin/promos", roles: ['admin'] },
+  { label: "Tổng quan", icon: LayoutDashboard, to: "/admin", roles: ['admin'] },
+  { label: "Lịch phòng", icon: CalendarDays, to: "/admin/bookings", roles: ['admin', 'staff'] },
+  { label: "Khách hàng", icon: Users, to: "/admin/customers", roles: ['admin'] },
+  { label: "Khuyến mãi", icon: Tag, to: "/admin/promos", roles: ['admin'] },
   { label: "Telegram", icon: Send, to: "/admin/telegram", roles: ['admin'] },
-  { label: "Cai dat", icon: Settings, to: "/admin/settings", roles: ['admin'] },
+  { label: "Cài đặt", icon: Settings, to: "/admin/settings", roles: ['admin'] },
 ]
 
 interface SidebarProps {
@@ -42,7 +42,7 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
     <>
       {mobileOpen && (
         <button
-          aria-label="Dong menu dieu huong"
+          aria-label="Đóng menu điều hướng"
           className="fixed inset-0 bg-foreground/20 lg:hidden"
           onClick={onCloseMobile}
         />
@@ -65,7 +65,7 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
         </div>
         {isOpen && (
           <span className="font-semibold text-sidebar-foreground text-sm truncate">
-            Nha Cam Admin
+            Nhà Cắm Admin
           </span>
         )}
       </div>
@@ -96,7 +96,7 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
       <div className="border-t border-sidebar-border p-2">
         <button
           onClick={onToggle}
-          aria-label={isOpen ? "Thu nho sidebar" : "Mo rong sidebar"}
+          aria-label={isOpen ? "Thu nhỏ sidebar" : "Mở rộng sidebar"}
           className={cn(
             "flex w-full items-center rounded-lg px-2.5 py-2.5 text-muted-foreground",
             "hover:bg-accent hover:text-accent-foreground transition-colors",
@@ -106,7 +106,7 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
           {isOpen ? (
             <>
               <ChevronLeft size={16} className="shrink-0" />
-              <span className="ml-2 text-xs">Thu nho</span>
+              <span className="ml-2 text-xs">Thu nhỏ</span>
             </>
           ) : (
             <ChevronRight size={16} />

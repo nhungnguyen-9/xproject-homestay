@@ -41,7 +41,7 @@ const EVENT_LABELS: Record<string, string> = {
   checked_in: 'Check-in',
   checked_out: 'Check-out',
   cancelled: 'Hủy',
-  test: 'Test',
+  test: 'Kiểm tra',
 }
 
 /**
@@ -68,12 +68,12 @@ export function TelegramConfig() {
   const handleSendTest = () => {
     telegramService.sendTest()
     setLog(telegramService.getLog())
-    toast.success('Đã gửi tin test!')
+    toast.success('Đã gửi tin kiểm tra!')
   }
 
   const handleSaveTemplate = () => {
     telegramService.saveTemplate(template)
-    toast.success('Đã lưu template!')
+    toast.success('Đã lưu mẫu tin!')
   }
 
   const handleInsertVariable = (variable: string) => {
@@ -169,19 +169,19 @@ export function TelegramConfig() {
           </Button>
           <Button variant="outline" onClick={handleSendTest}>
             <Send className="h-4 w-4" />
-            Gửi tin test
+            Gửi tin kiểm tra
           </Button>
         </div>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <h3 className="mb-4 text-base font-semibold text-foreground">
-          Template tin nhắn
+          Mẫu tin nhắn
         </h3>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="flex flex-col gap-3">
-            <Label htmlFor="template-editor">Nội dung template</Label>
+            <Label htmlFor="template-editor">Nội dung mẫu</Label>
             <textarea
               ref={textareaRef}
               id="template-editor"
@@ -205,14 +205,14 @@ export function TelegramConfig() {
             </div>
 
             <Button variant="primary" onClick={handleSaveTemplate}>
-              Lưu template
+              Lưu mẫu
             </Button>
           </div>
 
           <div className="flex flex-col">
             <div className="rounded-xl bg-[#0E1621] p-4">
               <p className="mb-3 text-xs font-medium text-slate-400">
-                Preview — Telegram
+                Xem trước — Telegram
               </p>
               <div className="max-w-sm rounded-xl bg-[#182533] px-4 py-3">
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-200">

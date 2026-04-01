@@ -46,7 +46,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <main className="flex-1 overflow-y-auto">
         <div className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-card px-6 shadow-sm">
           <button
-            aria-label="Toggle sidebar"
+            aria-label="Mở/đóng sidebar"
             onClick={() => setMobileSidebarOpen(v => !v)}
             className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent transition-colors lg:hidden"
           >
@@ -65,7 +65,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   : "inline-flex items-center rounded-full bg-status-info-muted px-2 py-0.5 text-xs font-semibold text-status-info-foreground"
               }
             >
-              {role === 'admin' ? 'Admin' : 'Staff'}
+              {role === 'admin' ? 'Admin' : 'Nhân viên'}
             </span>
 
             <DropdownMenu>
