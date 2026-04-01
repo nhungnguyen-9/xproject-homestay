@@ -4,6 +4,7 @@ import { customers, bookings } from '../db/schema/index.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { normalizePhone } from '../utils/phone.js';
 
+/** Lấy danh sách khách hàng có phân trang — hỗ trợ tìm kiếm theo tên/SĐT/email */
 export async function getAll(search?: string, page = 1, limit = 20) {
   const offset = (page - 1) * limit;
   if (search) {
@@ -19,12 +20,20 @@ export async function getAll(search?: string, page = 1, limit = 20) {
   return db.select().from(customers).limit(limit).offset(offset);
 }
 
+/** Lấy chi tiết khách hàng theo ID */
 export async function getById(id: string) {
   const [customer] = await db.select().from(customers).where(eq(customers.id, id)).limit(1);
   if (!customer) throw new AppError(404, 'Customer not found');
   return customer;
 }
 
+/**
+ * Lấy thống kê khách hàng: tổng chi tiêu, số lần ghé, lần ghé cuối
+ * Tính từ bookings category='guest' đã checked-out
+ * @param customerId - ID khách hàng
+ * @returns Thông tin khách + totalSpent, visitCount, lastVisit
+ * @throws AppError 404 nếu khách hàng không tồn tại
+ */
 export async function getStats(customerId: string) {
   const customer = await getById(customerId);
 
@@ -46,11 +55,11 @@ export async function getStats(customerId: string) {
   };
 }
 
+/** Lấy danh sách khách hàng kèm thống kê — query gộp để tối ưu hiệu suất */
 export async function getAllWithStats(page = 1, limit = 20) {
   const offset = (page - 1) * limit;
   const allCustomers = await db.select().from(customers).limit(limit).offset(offset);
 
-  // Single query to get stats for all customers
   const statsRows = await db
     .select({
       customerId: bookings.customerId,
@@ -75,10 +84,13 @@ export async function getAllWithStats(page = 1, limit = 20) {
   });
 }
 
+/**
+ * Tạo khách hàng mới.
+ * Chuẩn hóa SĐT, kiểm tra trùng lặp trước khi insert.
+ */
 export async function create(data: { name: string; phone: string; email?: string; note?: string }) {
   const normalized = normalizePhone(data.phone);
 
-  // Check for duplicate phone
   const [existing] = await db.select().from(customers).where(eq(customers.phone, normalized)).limit(1);
   if (existing) {
     throw new AppError(409, 'A customer with this phone number already exists');
@@ -92,6 +104,7 @@ export async function create(data: { name: string; phone: string; email?: string
   return customer;
 }
 
+/** Cập nhật thông tin khách hàng — chuẩn hóa SĐT nếu thay đổi */
 export async function update(id: string, data: Partial<{ name: string; phone: string; email: string; note: string }>) {
   if (data.phone) {
     data.phone = normalizePhone(data.phone);

@@ -13,6 +13,9 @@ const mockRoomsData = [
   { title: "Phòng Đôi 02", price: "3 tiếng/249K • Qua đêm/399K", images: ["/images/generated-1773764007485.png", "/images/generated-1773764000619.png", "/images/generated-1773763992260.png", "/images/generated-1773763989897.png", "/images/generated-1773763985850.png"] }
 ]
 
+/**
+ * Trang chủ — hiển thị hero banner, bộ lọc danh mục phòng, và lưới phòng
+ */
 export const Home = () => {
     const [activeFilter, setActiveFilter] = useState("Tất cả")
 
@@ -20,7 +23,6 @@ export const Home = () => {
         <div className="flex flex-col gap-6 pb-20">
             <HeroBanner />
             
-            {/* Rooms Header & Filters Section */}
             <div className="px-8 mt-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <h2 className="text-[28px] font-extrabold text-[#2B2B2B] tracking-tight">

@@ -7,6 +7,9 @@ interface StepIndicatorProps {
     totalSteps: number;
 }
 
+/**
+ * Thanh chỉ báo bước hiện tại trong quy trình đặt phòng (1 → 2 → 3)
+ */
 export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
     const steps = [
         { num: 1, label: "Chọn phòng" },

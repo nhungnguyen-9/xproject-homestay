@@ -43,6 +43,10 @@ function formatDateShort(dateStr: string): string {
   return `${parts[2]}/${parts[1]}/${parts[0]}`
 }
 
+/**
+ * Trang quản lý khuyến mãi — CRUD mã giảm giá
+ * Hiển thị danh sách promo codes, cho phép tạo/sửa/xoá và lọc theo trạng thái
+ */
 export function PromoManager() {
   const [promos, setPromos] = useState<PromoCode[]>(() => {
     promoService.refreshStatuses()
@@ -101,7 +105,6 @@ export function PromoManager() {
 
   return (
     <div className="p-6">
-      {/* Toolbar */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-slate-800">Mã khuyến mãi</h2>
         <div className="flex items-center gap-3">
@@ -125,14 +128,12 @@ export function PromoManager() {
         </div>
       </div>
 
-      {/* Summary */}
       <p className="text-sm text-slate-500 mb-4">
         Hoạt động: <span className="font-medium text-status-success-foreground">{activeCount}</span>
         {' '}&middot;{' '}
         Hết hạn: <span className="font-medium text-slate-500">{expiredCount}</span>
       </p>
 
-      {/* Table or empty state */}
       {filtered.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-slate-400 text-sm">
@@ -167,21 +168,18 @@ export function PromoManager() {
                       isExpired && 'opacity-50'
                     )}
                   >
-                    {/* Code */}
                     <td className="px-4 py-3">
                       <span className="inline-block rounded bg-status-info-muted px-2 py-0.5 font-mono text-xs font-semibold text-status-info-foreground tracking-wide">
                         {promo.code}
                       </span>
                     </td>
 
-                    {/* Discount */}
                     <td className="px-4 py-3 whitespace-nowrap">
                       {promo.discountType === 'percent'
                         ? `-${promo.discountValue}%`
                         : `-${formatPrice(promo.discountValue)}đ`}
                     </td>
 
-                    {/* Room types */}
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {promo.applicableRoomTypes.length === 0 ? (
@@ -201,18 +199,15 @@ export function PromoManager() {
                       </div>
                     </td>
 
-                    {/* Used / max */}
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className="font-semibold">{promo.usedCount}</span>
                       <span className="text-slate-400">/{promo.maxUses}</span>
                     </td>
 
-                    {/* Expiry date */}
                     <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                       {formatDateShort(promo.endDate)}
                     </td>
 
-                    {/* Status */}
                     <td className="px-4 py-3">
                       <span
                         className={cn(
@@ -224,7 +219,6 @@ export function PromoManager() {
                       </span>
                     </td>
 
-                    {/* Actions */}
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button
@@ -254,7 +248,6 @@ export function PromoManager() {
         </div>
       )}
 
-      {/* Promo Modal */}
       <PromoModal
         key={editingPromo?.id || (modalOpen ? 'new' : 'idle')}
         open={modalOpen}
@@ -266,7 +259,6 @@ export function PromoManager() {
         onSave={handleSave}
       />
 
-      {/* Delete confirmation */}
       <AlertDialog
         open={!!deleteTarget}
         onOpenChange={(v) => !v && setDeleteTarget(null)}

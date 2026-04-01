@@ -1,8 +1,18 @@
 import { z } from 'zod';
 
+/** Regex giờ HH:mm (00:00 – 23:59) */
 const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+/** Regex ngày YYYY-MM-DD */
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
+/**
+ * Schema validate tạo booking mới
+ * - roomId, date (YYYY-MM-DD), startTime/endTime (HH:mm): bắt buộc
+ * - mode: hourly/daily/overnight (mặc định hourly)
+ * - category: guest/internal (mặc định guest)
+ * - foodItems: danh sách đồ ăn kèm theo
+ * - totalPrice: tổng tiền (tính sẵn từ frontend)
+ */
 export const createBookingSchema = z.object({
   roomId: z.string().min(1),
   date: z.string().regex(dateRegex, 'Date must be YYYY-MM-DD'),
@@ -27,12 +37,15 @@ export const createBookingSchema = z.object({
   voucher: z.string().optional(),
 });
 
+/** Schema cập nhật booking — tất cả trường optional */
 export const updateBookingSchema = createBookingSchema.partial();
 
+/** Schema chuyển trạng thái booking */
 export const statusTransitionSchema = z.object({
   status: z.enum(['pending', 'confirmed', 'checked-in', 'checked-out', 'cancelled']),
 });
 
+/** Schema kiểm tra trùng lịch phòng */
 export const checkOverlapSchema = z.object({
   roomId: z.string().min(1),
   date: z.string().regex(dateRegex),

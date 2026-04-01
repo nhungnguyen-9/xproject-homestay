@@ -1,3 +1,6 @@
+/**
+ * Trang quản lý phòng — placeholder, chức năng đang phát triển
+ */
 export function RoomManagement() {
   return (
     <div className="p-6">

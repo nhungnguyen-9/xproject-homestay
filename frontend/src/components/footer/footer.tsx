@@ -2,6 +2,9 @@ import { Button } from "@/components/ui/button"
 import { FooterParticles } from "@/components/footer/footer-particle"
 import { Separator } from "@/components/ui/separator"
 
+/**
+ * Chân trang — logo, chính sách, hỗ trợ thanh toán, và bản quyền
+ */
 export const Footer = () => {
     return (
         <footer className="relative overflow-hidden border-t border-border bg-card">

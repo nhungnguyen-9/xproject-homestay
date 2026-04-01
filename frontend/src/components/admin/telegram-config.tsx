@@ -11,7 +11,6 @@ import type {
   NotificationLogEntry,
 } from '@/services/telegramService'
 
-// ── Mock data for template preview ──
 const MOCK_DATA: Record<string, string> = {
   '{{guestName}}': 'Nguyễn Văn A',
   '{{guestPhone}}': '0901 234 567',
@@ -36,7 +35,6 @@ const TEMPLATE_VARIABLES = [
   '{{status}}',
 ]
 
-// ── Event label mapping ──
 const EVENT_LABELS: Record<string, string> = {
   new_booking: 'Booking mới',
   confirmed: 'Xác nhận',
@@ -46,21 +44,20 @@ const EVENT_LABELS: Record<string, string> = {
   test: 'Test',
 }
 
+/**
+ * Cấu hình Telegram bot — lưu token/chat ID, soạn template tin nhắn, xem nhật ký thông báo
+ */
 export function TelegramConfig() {
-  // ── Section 1: Bot configuration state ──
   const [botToken, setBotToken] = useState(() => telegramService.getConfig()?.botToken ?? '')
   const [chatId, setChatId] = useState(() => telegramService.getConfig()?.chatId ?? '')
   const [showToken, setShowToken] = useState(false)
   const [configSaved, setConfigSaved] = useState(() => !!telegramService.getConfig())
 
-  // ── Section 2: Template editor state ──
   const [template, setTemplate] = useState(() => telegramService.getTemplate())
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // ── Section 3: Notification log state ──
   const [log, setLog] = useState<NotificationLogEntry[]>(() => telegramService.getLog())
 
-  // ── Handlers ──
   const handleSaveConfig = () => {
     const config: TelegramConfigType = { botToken, chatId }
     telegramService.saveConfig(config)
@@ -87,7 +84,6 @@ export function TelegramConfig() {
     const newValue =
       template.slice(0, start) + variable + template.slice(end)
     setTemplate(newValue)
-    // Restore cursor position after the inserted variable
     requestAnimationFrame(() => {
       textarea.focus()
       const newPos = start + variable.length
@@ -95,28 +91,22 @@ export function TelegramConfig() {
     })
   }
 
-  // ── Preview: substitute mock data into template ──
   const previewText = TEMPLATE_VARIABLES.reduce(
     (text, variable) => text.replaceAll(variable, MOCK_DATA[variable]),
     template,
   )
 
-  // ── Extract bot name from token (if available) ──
   const botDisplayName = configSaved && botToken ? '@NhaCamBot' : null
 
   return (
     <div className="flex flex-col gap-8 p-6">
       <h2 className="text-xl font-bold text-foreground">Cấu hình Telegram</h2>
 
-      {/* ══════════════════════════════════════════════
-          Section 1: Bot Configuration
-          ══════════════════════════════════════════════ */}
       <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <h3 className="mb-4 text-base font-semibold text-foreground">
           Cấu hình Bot
         </h3>
 
-        {/* Connection status */}
         <div className="mb-5 flex items-center gap-2">
           <span
             className={cn(
@@ -131,7 +121,6 @@ export function TelegramConfig() {
           </span>
         </div>
 
-        {/* Bot Token */}
         <div className="mb-4 flex flex-col gap-1.5">
           <Label htmlFor="bot-token">Bot Token</Label>
           <div className="relative">
@@ -158,7 +147,6 @@ export function TelegramConfig() {
           </div>
         </div>
 
-        {/* Chat ID */}
         <div className="mb-5 flex flex-col gap-1.5">
           <Label htmlFor="chat-id">Chat ID</Label>
           <Input
@@ -171,7 +159,6 @@ export function TelegramConfig() {
           />
         </div>
 
-        {/* Action buttons */}
         <div className="flex gap-3">
           <Button
             variant="primary"
@@ -187,16 +174,12 @@ export function TelegramConfig() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════
-          Section 2: Template Editor + Preview
-          ══════════════════════════════════════════════ */}
       <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <h3 className="mb-4 text-base font-semibold text-foreground">
           Template tin nhắn
         </h3>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Left: Template editor */}
           <div className="flex flex-col gap-3">
             <Label htmlFor="template-editor">Nội dung template</Label>
             <textarea
@@ -208,7 +191,6 @@ export function TelegramConfig() {
               className="w-full rounded-lg border border-border bg-muted px-3 py-2 font-mono text-sm text-foreground outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/30"
             />
 
-            {/* Variable chips */}
             <div className="flex flex-wrap gap-1.5">
               {TEMPLATE_VARIABLES.map((v) => (
                 <button
@@ -227,13 +209,11 @@ export function TelegramConfig() {
             </Button>
           </div>
 
-          {/* Right: Telegram preview */}
           <div className="flex flex-col">
             <div className="rounded-xl bg-[#0E1621] p-4">
               <p className="mb-3 text-xs font-medium text-slate-400">
                 Preview — Telegram
               </p>
-              {/* Message bubble */}
               <div className="max-w-sm rounded-xl bg-[#182533] px-4 py-3">
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-200">
                   {previewText}
@@ -250,17 +230,12 @@ export function TelegramConfig() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════
-          Section 3: Events + Notification Log
-          ══════════════════════════════════════════════ */}
       <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <h3 className="mb-4 text-base font-semibold text-foreground">
           Sự kiện & Nhật ký thông báo
         </h3>
 
-        {/* Info cards */}
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {/* Green card: auto-send events */}
           <div className="rounded-lg border border-status-success/20 bg-status-success-muted px-4 py-3">
             <p className="text-sm font-medium text-status-success-foreground">
               Tự động gửi khi:
@@ -270,7 +245,6 @@ export function TelegramConfig() {
             </p>
           </div>
 
-          {/* Red card: no-send events */}
           <div className="rounded-lg border border-status-error/20 bg-status-error-muted px-4 py-3">
             <p className="text-sm font-medium text-status-error-foreground">
               Không gửi khi:
@@ -281,7 +255,6 @@ export function TelegramConfig() {
           </div>
         </div>
 
-        {/* Notification log table */}
         {log.length === 0 ? (
           <div className="flex items-center justify-center rounded-lg border border-dashed border-border py-12">
             <p className="text-sm text-muted-foreground">Chưa có thông báo nào.</p>
@@ -334,14 +307,12 @@ export function TelegramConfig() {
   )
 }
 
-// ── Helper: format ISO timestamp to readable string ──
 function formatTimestamp(iso: string): string {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-// ── Helper: status badge for log entries ──
 function LogStatusBadge({
   status,
 }: {

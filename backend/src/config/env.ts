@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+/** Schema xác thực biến môi trường bắt buộc cho ứng dụng */
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   JWT_SECRET: z.string().min(10),
@@ -13,6 +14,10 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
+/**
+ * Tải và xác thực biến môi trường.
+ * Dừng ứng dụng nếu thiếu hoặc sai config.
+ */
 function loadEnv(): Env {
   const result = envSchema.safeParse(process.env);
   if (!result.success) {

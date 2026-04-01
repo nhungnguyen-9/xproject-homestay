@@ -4,15 +4,18 @@ interface SnowfallProps {
     flakes?: number;
 }
 
+/**
+ * Hiệu ứng tuyết rơi trang trí — tạo các bông tuyết CSS animation rơi ngẫu nhiên trong modal
+ */
 export const Snowfall: React.FC<SnowfallProps> = ({ flakes = 20 }) => {
     const snowflakes = React.useMemo(() => {
         return Array.from({ length: flakes }).map((_, i) => {
             const left = Math.random() * 100;
-            const size = 3 + Math.random() * 6; // px (smaller, gentler)
-            const delay = Math.random() * 30; // s, used as negative offset so flakes are staggered
-            const duration = 18 + Math.random() * 18; // s (much slower fall)
+            const size = 3 + Math.random() * 6;
+            const delay = Math.random() * 30;
+            const duration = 18 + Math.random() * 18;
             const opacity = 0.35 + Math.random() * 0.45;
-            const swing = (Math.random() * 20) - 10; // px horizontal offset (subtle)
+            const swing = (Math.random() * 20) - 10;
             return { key: i, left, size, delay, duration, opacity, swing };
         });
     }, [flakes]);

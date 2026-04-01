@@ -20,6 +20,9 @@ interface Step2Props {
     errors: Record<string, string>;
 }
 
+/**
+ * Bước 2 — Nhập thông tin khách hàng, upload giấy tờ tuỳ thân, xem tóm tắt đơn đặt phòng
+ */
 export const Step2: React.FC<Step2Props> = ({
     formData,
     setFormData,
@@ -44,7 +47,6 @@ export const Step2: React.FC<Step2Props> = ({
 
     return (
         <div className="space-y-4 sm:space-y-5">
-            {/* Customer Info Card */}
             <div className="space-y-3 sm:space-y-4">
                 <div>
                     <h4 className="font-bold text-base sm:text-lg text-gray-800 flex items-center gap-2">
@@ -89,7 +91,6 @@ export const Step2: React.FC<Step2Props> = ({
                 </div>
             </div>
 
-            {/* ID Upload */}
             <div className="space-y-3 bg-white border rounded-lg shadow-sm px-3 py-4">
                 <div>
                     <label className="text-sm font-medium text-gray-700">
@@ -108,7 +109,6 @@ export const Step2: React.FC<Step2Props> = ({
                 )}
             </div>
 
-            {/* Booking Summary Card */}
             <div className="bg-muted rounded-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
                 <h4 className="font-semibold text-black text-base sm:text-lg">Thông tin đặt phòng</h4>
 
@@ -184,7 +184,6 @@ export const Step2: React.FC<Step2Props> = ({
                 </div>
             </div>
 
-            {/* Note, Voucher & Terms */}
             <div className="space-y-3">
                 <div>
                     <label className="text-sm font-bold text-black">Ghi chú</label>
@@ -223,7 +222,6 @@ export const Step2: React.FC<Step2Props> = ({
                         )}
                     </div>
                 </div>
-                {/* Terms modal */}
                 <Dialog open={showTerms} onOpenChange={setShowTerms}>
                     <DialogContent className="max-w-3xl">
                         <DialogHeader>

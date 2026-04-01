@@ -4,6 +4,9 @@ import { loadEmittersPlugin } from "tsparticles-plugin-emitters"
 import type { Engine } from "tsparticles-engine"
 import { useCallback } from "react"
 
+/**
+ * Hiệu ứng hạt hình trái tim bay lên — dùng trong thanh header
+ */
 export const HeartParticles = () => {
     const particlesInit = useCallback(async (engine: Engine) => {
         await loadSlim(engine)
@@ -43,7 +46,6 @@ export const HeartParticles = () => {
                     }
                 },
                 emitters: {
-                    // slower emitter so hearts appear less frequently
                     position: { x: 50, y: 100 },
                     rate: { delay: 2.2, quantity: 1 },
                     size: { width: 120, height: 0 }

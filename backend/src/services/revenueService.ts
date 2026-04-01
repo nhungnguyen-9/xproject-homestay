@@ -2,6 +2,7 @@ import { sql, and, eq, gte, lte } from 'drizzle-orm';
 import { db } from '../config/database.js';
 import { bookings, rooms, customers } from '../db/schema/index.js';
 
+/** Xác định khoảng ngày — mặc định là tháng hiện tại nếu không truyền */
 function getDateRange(startDate?: string, endDate?: string) {
   const now = new Date();
   const formatDate = (d: Date) => d.toISOString().split('T')[0];
@@ -14,6 +15,7 @@ function getDateRange(startDate?: string, endDate?: string) {
   return { start: formatDate(monthStart), end: formatDate(monthEnd) };
 }
 
+/** Tính khoảng thời gian trước đó (cùng độ dài) để so sánh tăng trưởng */
 function getPreviousPeriod(start: string, end: string) {
   const startDate = new Date(start);
   const endDate = new Date(end);
@@ -26,6 +28,10 @@ function getPreviousPeriod(start: string, end: string) {
   };
 }
 
+/**
+ * Tổng hợp doanh thu: tổng tiền, số booking, công suất phòng, trung bình/booking.
+ * So sánh với kỳ trước để tính delta tăng trưởng.
+ */
 export async function getSummary(startDate?: string, endDate?: string) {
   const { start, end } = getDateRange(startDate, endDate);
   const { prevStart, prevEnd } = getPreviousPeriod(start, end);
@@ -52,7 +58,6 @@ export async function getSummary(startDate?: string, endDate?: string) {
       totalBookings: sql<number>`COUNT(*)`,
     }).from(bookings).where(prevDateFilter),
 
-    // Occupancy: count total booked hours vs available hours
     db.select({
       totalBookedMinutes: sql<number>`COALESCE(SUM(
         EXTRACT(HOUR FROM (${bookings.endTime}::time - ${bookings.startTime}::time)) * 60 +
@@ -92,6 +97,10 @@ export async function getSummary(startDate?: string, endDate?: string) {
   };
 }
 
+/**
+ * Doanh thu theo ngày — điền 0 cho ngày không có booking.
+ * Dùng cho biểu đồ doanh thu trên dashboard.
+ */
 export async function getDailyRevenue(startDate?: string, endDate?: string) {
   const { start, end } = getDateRange(startDate, endDate);
 
@@ -108,7 +117,6 @@ export async function getDailyRevenue(startDate?: string, endDate?: string) {
   .groupBy(bookings.date)
   .orderBy(bookings.date);
 
-  // Fill in missing dates with 0 revenue
   const result: { date: string; revenue: number }[] = [];
   const revenueMap = new Map(rows.map(r => [r.date, Number(r.revenue)]));
   const current = new Date(start);
@@ -121,6 +129,7 @@ export async function getDailyRevenue(startDate?: string, endDate?: string) {
   return result;
 }
 
+/** Công suất sử dụng từng phòng (% thời gian có booking so với 24h/ngày) */
 export async function getOccupancy(startDate?: string, endDate?: string) {
   const { start, end } = getDateRange(startDate, endDate);
   const daysInPeriod = Math.max(1, Math.ceil(
@@ -157,6 +166,7 @@ export async function getOccupancy(startDate?: string, endDate?: string) {
   }));
 }
 
+/** Top khách hàng chi tiêu nhiều nhất trong khoảng thời gian */
 export async function getTopCustomers(startDate?: string, endDate?: string, limit = 5) {
   const { start, end } = getDateRange(startDate, endDate);
 

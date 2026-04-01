@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+/**
+ * Schema validate tạo phòng mới
+ * - name: bắt buộc
+ * - type: standard/vip/supervip
+ * - hourlyRate/dailyRate/overnightRate/extraHourRate: bảng giá (VNĐ)
+ * - images: tối đa 5 ảnh, amenities: tiện nghi
+ */
 export const createRoomSchema = z.object({
   name: z.string().min(1, 'Room name is required'),
   type: z.enum(['standard', 'vip', 'supervip']),
@@ -14,4 +21,5 @@ export const createRoomSchema = z.object({
   extraHourRate: z.number().int().min(0),
 });
 
+/** Schema cập nhật phòng — tất cả trường optional */
 export const updateRoomSchema = createRoomSchema.partial();

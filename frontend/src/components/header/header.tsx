@@ -2,6 +2,9 @@ import { useState, useEffect } from "react"
 import { Link, NavLink } from "react-router"
 import { HeartParticles } from "@/components/header/header-particle"
 
+/**
+ * Thanh điều hướng chính — logo, menu desktop/mobile, hiệu ứng cố định khi cuộn trang
+ */
 export const Header = ({
     onLogoClick,
 }: {
@@ -51,7 +54,6 @@ export const Header = ({
                     </div>
                 </Link>
 
-                {/* Menu */}
                 <div className="relative hidden lg:flex items-center gap-12 font-semibold">
                     <NavLink className="hover:text-rose-100" to="/chi-nhanh">Chi nhánh</NavLink>
                     <NavLink className="hover:text-rose-100" to="">Tra cứu Booking</NavLink>
@@ -79,7 +81,6 @@ export const Header = ({
                     </button>
                 </div>
 
-                {/* Mobile menu panel */}
                 <div className={`${mobileOpen ? 'block' : 'hidden'} lg:hidden w-full bg-[#ef6666] absolute top-full left-0 z-30`}>
                     <div className="flex flex-col items-center gap-3 py-3 font-semibold">
                         <NavLink className="hover:text-rose-100" to="/chi-nhanh">Chi nhánh</NavLink>

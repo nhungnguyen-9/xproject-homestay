@@ -7,6 +7,9 @@ interface ImageUploadProps {
     maxImages?: number;
 }
 
+/**
+ * Component upload ảnh giấy tờ tuỳ thân (CMND/CCCD/Passport) — hỗ trợ kéo thả, xem trước và xoá ảnh
+ */
 export const ImageUpload: React.FC<ImageUploadProps> = ({
     images,
     onImagesChange,

@@ -3,10 +3,25 @@ import { sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { branches } from './branches';
 
+/**
+ * Bảng rooms — Phòng homestay với bảng giá và tiện ích
+ *
+ * Columns chính:
+ * - id: khóa chính (nanoid)
+ * - name: tên phòng (vd: G01, P102)
+ * - type: loại phòng ('standard' | 'vip' | 'supervip'), có CHECK constraint
+ * - branchId: FK tới branches — phòng thuộc chi nhánh nào
+ * - hourlyRate, dailyRate, overnightRate, extraHourRate: bảng giá (VND, integer)
+ * - amenities: danh sách tiện ích (JSONB array)
+ * - images: ảnh phòng (JSONB array)
+ * - isActive: trạng thái hoạt động
+ *
+ * Indexes: branchId, type
+ */
 export const rooms = pgTable('rooms', {
   id: text('id').primaryKey().$defaultFn(() => nanoid()),
   name: text('name').notNull(),
-  type: text('type').notNull(), // 'standard' | 'vip' | 'supervip'
+  type: text('type').notNull(),
   branchId: text('branch_id').references(() => branches.id),
   description: text('description'),
   images: jsonb('images').$type<string[]>().default([]),

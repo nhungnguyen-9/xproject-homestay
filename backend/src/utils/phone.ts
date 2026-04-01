@@ -1,7 +1,7 @@
 /**
- * Normalize Vietnamese phone numbers:
- * - Remove spaces and dashes
- * - Convert +84 prefix to 0
+ * Chuẩn hóa số điện thoại Việt Nam.
+ * Xóa khoảng trắng, dấu gạch ngang, chuyển +84 thành 0.
+ * @param phone - Số điện thoại gốc
  */
 export function normalizePhone(phone: string): string {
   let normalized = phone.replace(/[\s\-]/g, '');

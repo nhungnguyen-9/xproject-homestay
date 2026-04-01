@@ -31,7 +31,6 @@ export interface DailyRevenue {
   revenue: number;
 }
 
-// Room definitions (duplicated here to avoid importing from data layer)
 const ROOMS: { id: string; name: string; type: RoomType }[] = [
   { id: 'g01', name: 'G01', type: 'standard' },
   { id: 'p102', name: 'P102', type: 'standard' },
@@ -104,7 +103,6 @@ function getPeriodRange(period: 'today' | 'week' | 'month'): {
     };
   }
 
-  // month
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
@@ -127,6 +125,11 @@ function filterByDateRange(
   return bookings.filter((b) => b.date >= start && b.date <= end);
 }
 
+/**
+ * Tính tổng hợp doanh thu theo kỳ, so sánh với kỳ trước
+ * @param period - Kỳ thống kê: 'today', 'week' hoặc 'month'
+ * @returns Tổng hợp doanh thu gồm tổng tiền, số booking, công suất, trung bình và biến động
+ */
 export function getRevenueByPeriod(
   period: 'today' | 'week' | 'month',
 ): RevenueSummary {
@@ -151,7 +154,7 @@ export function getRevenueByPeriod(
   const totalBookings = guestCurrent.length;
   const prevBookings = guestPrevious.length;
 
-  // Occupancy: (total booked hours across all rooms) / (total available hours)
+  // Công suất = tổng giờ đặt trên tất cả phòng / tổng giờ khả dụng
   const daysInPeriod = Math.max(
     1,
     Math.ceil(
@@ -188,6 +191,11 @@ export function getRevenueByPeriod(
   };
 }
 
+/**
+ * Tính phần trăm công suất sử dụng của từng phòng theo kỳ
+ * @param period - Kỳ thống kê: 'today', 'week' hoặc 'month'
+ * @returns Mảng công suất từng phòng
+ */
 export function getOccupancyByRoom(
   period: 'today' | 'week' | 'month',
 ): RoomOccupancy[] {
@@ -224,6 +232,12 @@ export function getOccupancyByRoom(
   });
 }
 
+/**
+ * Lấy danh sách khách hàng chi tiêu nhiều nhất theo kỳ
+ * @param period - Kỳ thống kê: 'today', 'week' hoặc 'month'
+ * @param limit - Số lượng khách hàng tối đa trả về (mặc định 5)
+ * @returns Mảng khách hàng hàng đầu kèm tổng chi tiêu và số lần ghé
+ */
 export function getTopCustomers(
   period: 'today' | 'week' | 'month',
   limit: number = 5,
@@ -236,7 +250,6 @@ export function getTopCustomers(
     (b) => b.category === 'guest' && b.guestPhone,
   );
 
-  // Group by phone
   const phoneMap = new Map<
     string,
     { totalSpent: number; visitCount: number; name: string }
@@ -253,7 +266,6 @@ export function getTopCustomers(
     existing.totalSpent += booking.totalPrice || 0;
     existing.visitCount += 1;
 
-    // Try to get name from customer records
     const customer = customers.find((c) => c.phone === phone);
     if (customer) {
       existing.name = customer.name;
@@ -272,6 +284,12 @@ export function getTopCustomers(
     }));
 }
 
+/**
+ * Lấy doanh thu theo từng ngày trong khoảng thời gian
+ * @param startDate - Ngày bắt đầu (YYYY-MM-DD)
+ * @param endDate - Ngày kết thúc (YYYY-MM-DD)
+ * @returns Mảng doanh thu theo ngày
+ */
 export function getDailyRevenue(
   startDate: string,
   endDate: string,
@@ -281,7 +299,6 @@ export function getDailyRevenue(
     (b) => b.category === 'guest',
   );
 
-  // Build date range
   const result: DailyRevenue[] = [];
   const current = new Date(startDate);
   const end = new Date(endDate);

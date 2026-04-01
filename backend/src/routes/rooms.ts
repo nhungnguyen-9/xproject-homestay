@@ -5,12 +5,12 @@ import { createRoomSchema, updateRoomSchema } from '../validators/room.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { adminOnly } from '../middleware/rbac.js';
 
+/** Router quản lý phòng — yêu cầu xác thực, thao tác CUD chỉ admin */
 const rooms = new Hono();
 
-// All room routes require auth
 rooms.use('*', authMiddleware);
 
-// GET /rooms — list rooms (optionally filter by branchId, type)
+/** GET /rooms — danh sách phòng (lọc theo chi nhánh, loại) */
 rooms.get('/', async (c) => {
   const branchId = c.req.query('branchId');
   const type = c.req.query('type');
@@ -18,27 +18,27 @@ rooms.get('/', async (c) => {
   return c.json(result);
 });
 
-// GET /rooms/:id
+/** GET /rooms/:id — chi tiết phòng */
 rooms.get('/:id', async (c) => {
   const room = await roomService.getById(c.req.param('id'));
   return c.json(room);
 });
 
-// POST /rooms — admin only
+/** POST /rooms — tạo phòng mới (chỉ admin) */
 rooms.post('/', adminOnly, zValidator('json', createRoomSchema), async (c) => {
   const data = c.req.valid('json');
   const room = await roomService.create(data);
   return c.json(room, 201);
 });
 
-// PUT /rooms/:id — admin only
+/** PUT /rooms/:id — cập nhật phòng (chỉ admin) */
 rooms.put('/:id', adminOnly, zValidator('json', updateRoomSchema), async (c) => {
   const data = c.req.valid('json');
   const room = await roomService.update(c.req.param('id'), data);
   return c.json(room);
 });
 
-// DELETE /rooms/:id — soft delete, admin only
+/** DELETE /rooms/:id — vô hiệu hóa phòng (chỉ admin, soft delete) */
 rooms.delete('/:id', adminOnly, async (c) => {
   await roomService.softDelete(c.req.param('id')!);
   return c.json({ message: 'Room deactivated' });

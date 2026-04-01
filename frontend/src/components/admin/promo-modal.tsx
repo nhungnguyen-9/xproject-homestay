@@ -35,6 +35,9 @@ function formatShortDate(dateStr: string): string {
   return `${parts[2]}/${parts[1]}`
 }
 
+/**
+ * Modal tạo/chỉnh sửa mã khuyến mãi — validate với Zod, preview trực tiếp
+ */
 export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
   const isEdit = !!promo
 
@@ -116,10 +119,8 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
       status: 'active' as const,
     }
 
-    // Custom validation
     const newErrors: Record<string, string> = {}
 
-    // Validate with Zod
     const result = promoSchema.safeParse(rawData)
     if (!result.success) {
       for (const issue of result.error.issues) {
@@ -130,7 +131,6 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
       }
     }
 
-    // Additional range validations for discount value
     if (discountType === 'percent') {
       const val = typeof discountValue === 'number' ? discountValue : 0
       if (val < 1 || val > 100) {
@@ -143,12 +143,10 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
       }
     }
 
-    // End date > start date
     if (startDate && endDate && endDate <= startDate) {
       newErrors.endDate = 'Ngày kết thúc phải sau ngày bắt đầu'
     }
 
-    // Unique code check
     const existing = promoService.getByCode(rawData.code)
     if (existing && (!promo || existing.id !== promo.id)) {
       newErrors.code = 'Mã khuyến mãi đã tồn tại'
@@ -175,7 +173,6 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
-          {/* Code */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
               Mã khuyến mãi
@@ -195,7 +192,6 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
             )}
           </div>
 
-          {/* Discount type toggle */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
               Loại giảm giá
@@ -228,7 +224,6 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
             </div>
           </div>
 
-          {/* Discount value */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
               {discountType === 'percent' ? 'Giá trị (%)' : 'Giá trị (VND)'}
@@ -254,7 +249,6 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
             )}
           </div>
 
-          {/* Max uses */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
               Số lần sử dụng tối đa
@@ -278,7 +272,6 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
             )}
           </div>
 
-          {/* Date range */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
@@ -320,7 +313,6 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
             </div>
           </div>
 
-          {/* Room type chips */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
               Loại phòng áp dụng
@@ -360,7 +352,6 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
             </div>
           </div>
 
-          {/* Live preview */}
           <div className="rounded-lg bg-status-success-muted border border-status-success/20 p-3">
             <p className="text-sm text-status-success-foreground">
               <span className="font-semibold">

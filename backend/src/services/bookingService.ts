@@ -5,6 +5,10 @@ import { AppError } from '../middleware/errorHandler.js';
 import { normalizePhone } from '../utils/phone.js';
 import { STATUS_TRANSITIONS, type BookingStatus } from '../types/index.js';
 
+/**
+ * Lấy danh sách booking có phân trang và lọc.
+ * Hỗ trợ lọc theo ngày, phòng, trạng thái, khách hàng.
+ */
 export async function getAll(filters: {
   date?: string;
   roomId?: string;
@@ -40,12 +44,27 @@ export async function getAll(filters: {
   };
 }
 
+/**
+ * Lấy chi tiết booking theo ID
+ * @param id - ID booking
+ * @throws AppError 404 nếu không tìm thấy
+ */
 export async function getById(id: string) {
   const [booking] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
   if (!booking) throw new AppError(404, 'Booking not found');
   return booking;
 }
 
+/**
+ * Kiểm tra trùng lịch phòng
+ * Tìm booking chưa hủy có thời gian chồng chéo trên cùng phòng + ngày
+ * @param roomId - ID phòng
+ * @param date - Ngày kiểm tra (YYYY-MM-DD)
+ * @param startTime - Giờ bắt đầu (HH:mm)
+ * @param endTime - Giờ kết thúc (HH:mm)
+ * @param excludeId - Bỏ qua booking này (dùng khi cập nhật)
+ * @returns true nếu có trùng lịch
+ */
 export async function checkOverlap(
   roomId: string,
   date: string,
@@ -72,6 +91,10 @@ export async function checkOverlap(
   return Number(result.count) > 0;
 }
 
+/**
+ * Đảm bảo khách hàng tồn tại trong hệ thống.
+ * Tìm theo SĐT — nếu chưa có thì tự động tạo mới.
+ */
 async function ensureCustomer(guestName?: string, guestPhone?: string): Promise<string | null> {
   if (!guestPhone) return null;
 
@@ -92,11 +115,18 @@ async function ensureCustomer(guestName?: string, guestPhone?: string): Promise<
   return newCustomer.id;
 }
 
+/**
+ * Tạo booking mới
+ * Kiểm tra trùng lịch, tự động tạo khách hàng từ SĐT nếu là booking guest
+ * @param data - Dữ liệu booking
+ * @param userId - ID user tạo booking
+ * @returns Booking vừa tạo
+ * @throws AppError 409 nếu trùng lịch
+ */
 export async function create(
   data: typeof bookings.$inferInsert,
   userId?: string,
 ) {
-  // Check overlap for non-cancelled bookings
   if (data.startTime && data.endTime && data.date && data.roomId) {
     const hasConflict = await checkOverlap(data.roomId, data.date, data.startTime, data.endTime);
     if (hasConflict) {
@@ -122,8 +152,11 @@ export async function create(
   return booking;
 }
 
+/**
+ * Cập nhật booking — kiểm tra trùng lịch nếu thay đổi thời gian.
+ * Chỉ admin mới được gọi (route đã enforce).
+ */
 export async function update(id: string, data: Partial<typeof bookings.$inferInsert>) {
-  // If changing time slot, check for overlaps
   if (data.startTime && data.endTime && data.date && data.roomId) {
     const hasConflict = await checkOverlap(data.roomId, data.date, data.startTime, data.endTime, id);
     if (hasConflict) {
@@ -141,6 +174,14 @@ export async function update(id: string, data: Partial<typeof bookings.$inferIns
   return booking;
 }
 
+/**
+ * Chuyển trạng thái booking theo ma trận STATUS_TRANSITIONS
+ * @param id - ID booking
+ * @param newStatus - Trạng thái mới
+ * @returns Booking đã cập nhật
+ * @throws AppError 400 nếu chuyển trạng thái không hợp lệ
+ * @throws AppError 404 nếu booking không tồn tại
+ */
 export async function transitionStatus(id: string, newStatus: BookingStatus) {
   const booking = await getById(id);
   const currentStatus = booking.status as BookingStatus;
@@ -159,7 +200,7 @@ export async function transitionStatus(id: string, newStatus: BookingStatus) {
   return updated;
 }
 
+/** Xóa booking = chuyển trạng thái sang cancelled (soft delete) */
 export async function remove(id: string) {
-  // Cancel instead of hard delete
   return transitionStatus(id, 'cancelled');
 }

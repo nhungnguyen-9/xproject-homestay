@@ -6,7 +6,6 @@ import { formatPrice } from '@/utils/helpers'
 import * as customerService from '@/services/customerService'
 import type { CustomerWithStats } from '@/types/customer'
 
-// Avatar background colors - generated from name hash
 const AVATAR_COLORS = [
   'bg-chart-1/10 text-chart-1',
   'bg-chart-2/10 text-chart-2',
@@ -66,6 +65,10 @@ function sortCustomers(
   }
 }
 
+/**
+ * Danh sách khách hàng — tìm kiếm, sắp xếp, phân trang
+ * Khách hàng được tạo tự động khi có booking mới
+ */
 export function CustomerList() {
   const navigate = useNavigate()
   const [customers] = useState<CustomerWithStats[]>(() => 
@@ -76,7 +79,6 @@ export function CustomerList() {
   const [sortBy, setSortBy] = useState<SortOption>('recent')
   const [currentPage, setCurrentPage] = useState(1)
 
-  // Debounce search input (300ms)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery)
@@ -85,7 +87,6 @@ export function CustomerList() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Filtered and sorted customers
   const filteredCustomers = useMemo(() => {
     let result = customers
     if (debouncedQuery.trim()) {
@@ -100,7 +101,6 @@ export function CustomerList() {
     return sortCustomers(result, sortBy)
   }, [customers, debouncedQuery, sortBy])
 
-  // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / PAGE_SIZE))
   const paginatedCustomers = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE
@@ -119,7 +119,6 @@ export function CustomerList() {
     [navigate],
   )
 
-  // Format last visit date for display
   const formatLastVisit = (dateStr: string): string => {
     if (!dateStr) return '--'
     const parts = dateStr.split('-')
@@ -127,7 +126,6 @@ export function CustomerList() {
     return `${parts[2]}/${parts[1]}/${parts[0]}`
   }
 
-  // Page number buttons
   const pageNumbers = useMemo(() => {
     const pages: number[] = []
     const maxVisible = 5
@@ -140,7 +138,6 @@ export function CustomerList() {
     return pages
   }, [currentPage, totalPages])
 
-  // Empty state
   if (customers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -156,7 +153,6 @@ export function CustomerList() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-800">
           Khach hang
@@ -166,9 +162,7 @@ export function CustomerList() {
         </h2>
       </div>
 
-      {/* Search + Sort toolbar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {/* Search bar */}
         <div className="relative flex-1 max-w-md">
           <Search
             size={16}
@@ -183,7 +177,6 @@ export function CustomerList() {
           />
         </div>
 
-        {/* Sort dropdown */}
         <select
           value={sortBy}
           onChange={handleSortChange}
@@ -197,7 +190,6 @@ export function CustomerList() {
         </select>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto rounded-xl border border-border bg-card">
         <table className="w-full text-sm">
           <thead>
@@ -236,7 +228,6 @@ export function CustomerList() {
                   onClick={() => handleRowClick(customer.id)}
                   className="cursor-pointer border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
                 >
-                  {/* Avatar + Name + Email */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div
@@ -260,31 +251,26 @@ export function CustomerList() {
                     </div>
                   </td>
 
-                  {/* Phone */}
                   <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
                     {customer.phone}
                   </td>
 
-                  {/* Visit count badge */}
                   <td className="px-4 py-3 text-center">
                     <span className="inline-flex items-center justify-center rounded-full bg-status-info-muted px-2.5 py-0.5 text-xs font-medium text-status-info-foreground">
                       {customer.visitCount}
                     </span>
                   </td>
 
-                  {/* Total spent */}
                   <td className="px-4 py-3 text-right font-medium text-slate-700 whitespace-nowrap">
                     {customer.totalSpent > 0
                       ? `${formatPrice(customer.totalSpent)}d`
                       : '--'}
                   </td>
 
-                  {/* Last visit */}
                   <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
                     {formatLastVisit(customer.lastVisit)}
                   </td>
 
-                  {/* Note / VIP tag */}
                   <td className="px-4 py-3">
                     {customer.note ? (
                       customer.note.toLowerCase().includes('vip') ? (
@@ -307,7 +293,6 @@ export function CustomerList() {
         </table>
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-2">
           <p className="text-xs text-slate-400">

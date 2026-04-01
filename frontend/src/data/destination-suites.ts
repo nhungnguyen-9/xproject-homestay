@@ -4,6 +4,7 @@ import imageHome1 from "../assets/image_home1.png"
 import imageHome2 from "../assets/image_home2.png"
 import imageHome3 from "../assets/image_home3.png"
 
+/** Thông tin loại phòng hiển thị trên trang đích */
 export type DestinationSuite = {
   id: string
   title: string
@@ -15,6 +16,7 @@ export type DestinationSuite = {
   image: string
 }
 
+/** Danh sách các hạng phòng với giá và tiện ích */
 export const destinationSuites: DestinationSuite[] = [
   {
     id: "standard",

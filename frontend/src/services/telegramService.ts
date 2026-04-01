@@ -28,32 +28,49 @@ const DEFAULT_TEMPLATE = `🏠 Booking mới!
 💰 Giá: {{totalPrice}}
 🏷️ Mã KM: {{promoCode}}`;
 
+/**
+ * Khởi tạo template mặc định và nhật ký rỗng nếu localStorage chưa có
+ */
 export function init(): void {
-  // Seed default template if not set
   if (!localStorage.getItem(TEMPLATE_KEY)) {
     localStorage.setItem(TEMPLATE_KEY, DEFAULT_TEMPLATE);
   }
-  // Initialize empty log if not set
   if (!localStorage.getItem(LOG_KEY)) {
     localStorage.setItem(LOG_KEY, JSON.stringify([]));
   }
 }
 
+/**
+ * Lấy cấu hình Telegram bot (token và chat ID)
+ * @returns Cấu hình Telegram hoặc null nếu chưa thiết lập
+ */
 export function getConfig(): TelegramConfig | null {
   const stored = localStorage.getItem(CONFIG_KEY);
   if (!stored) return null;
   return JSON.parse(stored);
 }
 
+/**
+ * Lưu cấu hình Telegram bot vào localStorage
+ * @param config - Cấu hình chứa botToken và chatId
+ */
 export function saveConfig(config: TelegramConfig): void {
   localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 }
 
+/**
+ * Lấy mẫu tin nhắn thông báo hiện tại
+ * @returns Chuỗi template tin nhắn
+ */
 export function getTemplate(): string {
   const stored = localStorage.getItem(TEMPLATE_KEY);
   return stored || DEFAULT_TEMPLATE;
 }
 
+/**
+ * Lưu mẫu tin nhắn thông báo tuỳ chỉnh
+ * @param template - Chuỗi template mới
+ */
 export function saveTemplate(template: string): void {
   localStorage.setItem(TEMPLATE_KEY, template);
 }
@@ -85,12 +102,18 @@ function saveLog(log: NotificationLogEntry[]): void {
   localStorage.setItem(LOG_KEY, JSON.stringify(log));
 }
 
+/**
+ * Gửi thông báo Telegram cho một booking (hiện tại chạy ở chế độ mô phỏng)
+ * @param booking - Đối tượng booking
+ * @param event - Loại sự kiện (vd: 'new_booking', 'cancelled')
+ * @param roomName - Tên phòng hiển thị
+ */
 export function notify(
   booking: Booking,
   event: string,
   roomName: string,
 ): void {
-  // Skip notifications for internal bookings, cancellations, check-outs
+  // Bỏ qua thông báo cho booking nội bộ, huỷ phòng, trả phòng
   const skipEvents = ['cancelled', 'checked_out'];
   if (booking.category === 'internal' || skipEvents.includes(event)) {
     const log = loadLog();
@@ -106,7 +129,6 @@ export function notify(
     return;
   }
 
-  // Render template (for logging purposes)
   renderTemplate(booking, roomName);
 
   const config = getConfig();
@@ -124,10 +146,17 @@ export function notify(
   saveLog(log);
 }
 
+/**
+ * Lấy toàn bộ nhật ký thông báo đã gửi/mô phỏng
+ * @returns Mảng các mục nhật ký thông báo
+ */
 export function getLog(): NotificationLogEntry[] {
   return loadLog();
 }
 
+/**
+ * Gửi tin nhắn thử nghiệm để kiểm tra cấu hình Telegram
+ */
 export function sendTest(): void {
   const log = loadLog();
   log.unshift({

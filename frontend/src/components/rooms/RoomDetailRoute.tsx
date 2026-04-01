@@ -4,6 +4,9 @@ import { RoomDetailPage } from "./room-detail-page"
 import { destinationSuites } from "../../data/destination-suites"
 import { locationBranches } from "../../data/locations"
 
+/**
+ * Route chi tiết phòng — phân giải suiteId và locationId từ URL rồi render trang chi tiết
+ */
 export default function RoomDetailRoute() {
   const params = useParams()
   const location = useLocation()

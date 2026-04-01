@@ -43,6 +43,9 @@ interface Step1Props {
     onOpenFoodModal?: () => void;
 }
 
+/**
+ * Bước 1 — Chọn phòng, hình thức đặt (giờ/ngày/qua đêm), thời gian nhận trả, và dịch vụ ăn uống
+ */
 export const Step1: React.FC<Step1Props> = ({
     formData,
     setFormData,
@@ -50,7 +53,7 @@ export const Step1: React.FC<Step1Props> = ({
     price,
     onOpenFoodModal,
 }) => {
-    // Store separate data for each mode to avoid interference
+    // Lưu riêng thời gian nhận/trả cho mỗi chế độ để chuyển mode không bị mất dữ liệu
     const [modeData, setModeData] = React.useState<Record<BookingMode, { checkInDate: Date; checkInTime: string; checkOutDate: Date; checkOutTime: string }>>(() => ({
         hourly: {
             checkInDate: formData.checkInDate,
@@ -90,9 +93,7 @@ export const Step1: React.FC<Step1Props> = ({
         }
     };
 
-    // Handle mode change with auto-fill times
     const handleModeChange = (mode: BookingMode) => {
-        // Save current mode data before switching
         setModeData(prev => ({
             ...prev,
             [formData.mode]: {
@@ -103,7 +104,6 @@ export const Step1: React.FC<Step1Props> = ({
             },
         }));
 
-        // Load saved data for the new mode
         const savedData = modeData[mode];
 
         updateFormData({
@@ -115,7 +115,6 @@ export const Step1: React.FC<Step1Props> = ({
         });
     };
 
-    // For daily mode, auto-update checkout when checkin changes
     const handleCheckInDateChange = (date: Date) => {
         const updates: Partial<BookingFormData> = { checkInDate: date };
 
@@ -127,7 +126,6 @@ export const Step1: React.FC<Step1Props> = ({
 
         updateFormData(updates);
 
-        // Update mode data
         setModeData(prev => ({
             ...prev,
             [formData.mode]: {
@@ -138,7 +136,6 @@ export const Step1: React.FC<Step1Props> = ({
         }));
     };
 
-    // Helper to update time and save to mode data
     const handleTimeChange = (field: 'checkInTime' | 'checkOutTime', value: string) => {
         updateFormData({ [field]: value });
         setModeData(prev => ({
@@ -170,7 +167,7 @@ export const Step1: React.FC<Step1Props> = ({
     const comboTotal = selectedCombos.reduce((sum, combo) => sum + combo.price, 0);
     const foodTotal = foodItemsTotal + comboTotal;
 
-    // Calculate display duration based on mode
+    // Hiển thị thời lượng theo đơn vị phù hợp: ngày/đêm/giờ tuỳ chế độ đặt
     const displayDuration = () => {
         if (formData.mode === 'daily') {
             const daysDiff = Math.ceil((formData.checkOutDate.getTime() - formData.checkInDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -179,7 +176,6 @@ export const Step1: React.FC<Step1Props> = ({
             const nightsDiff = Math.ceil((formData.checkOutDate.getTime() - formData.checkInDate.getTime()) / (1000 * 60 * 60 * 24));
             return `${nightsDiff} đêm`;
         } else {
-            // Hourly mode - calculate from times
             const duration = calculateDuration(
                 formData.checkInDate,
                 formData.checkInTime,
@@ -226,7 +222,6 @@ export const Step1: React.FC<Step1Props> = ({
                 </div>
 
                 <div className="p-3 sm:p-4">
-                    {/* Desktop header */}
                     <div className="hidden lg:grid grid-cols-15 gap-3 items-center text-xs xl:text-sm text-gray-700 mb-3">
                         <div className="col-span-2 font-medium">Hạng phòng</div>
                         <div className="col-span-2 font-medium">Phòng</div>
@@ -236,7 +231,6 @@ export const Step1: React.FC<Step1Props> = ({
                         <div className="col-span-2 font-medium text-right">Thành tiền</div>
                     </div>
 
-                    {/* Mobile & Tablet: Stack layout */}
                     <div className="lg:hidden space-y-4">
                         <div className="space-y-2">
                             <label className="text-xs font-medium text-gray-700">Hạng phòng & Phòng</label>
@@ -381,7 +375,6 @@ export const Step1: React.FC<Step1Props> = ({
                         </div>
                     </div>
 
-                    {/* Desktop: Grid layout */}
                     <div className="hidden lg:grid grid-cols-15 gap-3 items-center">
                         <div className="col-span-2">
                             {ROOM_TYPE_LABELS[formData.roomType]}
@@ -523,7 +516,6 @@ export const Step1: React.FC<Step1Props> = ({
                 </div>
             </div>
 
-            {/* Food & Drinks Section */}
             <div className="bg-white border rounded-lg shadow-sm px-3 sm:px-4 py-4 sm:py-5">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
                     <div className="flex-1">
@@ -589,7 +581,6 @@ export const Step1: React.FC<Step1Props> = ({
                         })}
                     </div>
 
-                    {/* Additional Food Items */}
                     {selectedFoodItems.length > 0 && (
                         <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t space-y-2">
                             {selectedFoodItems.map((item) => (
@@ -605,7 +596,6 @@ export const Step1: React.FC<Step1Props> = ({
                         </div>
                     )}
 
-                    {/* Total */}
                     {((formData.selectedComboIds?.length || 0) > 0 || selectedFoodItems.length > 0) && (
                         <div className="flex justify-end pt-2 sm:pt-3 mt-2 sm:mt-3 border-t">
                             <span className="text-xs sm:text-sm">

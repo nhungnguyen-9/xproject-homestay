@@ -12,6 +12,9 @@ interface FoodModalProps {
     onConfirm: (items: FoodItem[]) => void;
 }
 
+/**
+ * Modal chọn đồ ăn & nước uống — hiển thị danh sách sản phẩm dạng grid, cho phép tăng giảm số lượng
+ */
 export const FoodModal: React.FC<FoodModalProps> = ({ open, onOpenChange, items, onConfirm }) => {
     const [localItems, setLocalItems] = React.useState<FoodItem[]>([]);
 
@@ -33,12 +36,10 @@ export const FoodModal: React.FC<FoodModalProps> = ({ open, onOpenChange, items,
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-3xl w-[90vw] sm:w-[86vw] max-h-[80vh] flex flex-col p-0 overflow-hidden" style={{ maxWidth: 980 }}>
-                {/* Header */}
                 <DialogHeader className="bg-primary text-primary-foreground p-3 sm:p-4 rounded-t-md">
                     <DialogTitle className="font-semibold text-base sm:text-lg">Đồ ăn & uống</DialogTitle>
                 </DialogHeader>
 
-                {/* Grid */}
                 <div className="p-2 sm:p-3 flex-1 overflow-y-auto">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {localItems.map((item) => (
@@ -87,7 +88,6 @@ export const FoodModal: React.FC<FoodModalProps> = ({ open, onOpenChange, items,
                     </div>
                 </div>
 
-                {/* Footer — sticky */}
                 <Separator />
                 <div className="sticky bottom-0 bg-card p-3 sm:p-4">
                     <div style={{ maxWidth: 980 }} className="mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3">

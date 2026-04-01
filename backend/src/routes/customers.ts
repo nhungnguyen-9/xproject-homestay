@@ -5,11 +5,12 @@ import { createCustomerSchema, updateCustomerSchema } from '../validators/custom
 import { authMiddleware } from '../middleware/auth.js';
 import { adminOnly } from '../middleware/rbac.js';
 
+/** Router quản lý khách hàng — yêu cầu xác thực */
 const customersRouter = new Hono();
 
 customersRouter.use('*', authMiddleware);
 
-// GET /customers
+/** GET /customers — danh sách khách hàng (tìm kiếm, phân trang, kèm thống kê) */
 customersRouter.get('/', async (c) => {
   const search = c.req.query('search');
   const withStats = c.req.query('stats') === 'true';
@@ -25,26 +26,26 @@ customersRouter.get('/', async (c) => {
   return c.json(result);
 });
 
-// GET /customers/:id
+/** GET /customers/:id — chi tiết khách hàng */
 customersRouter.get('/:id', async (c) => {
   const customer = await customerService.getById(c.req.param('id'));
   return c.json(customer);
 });
 
-// GET /customers/:id/stats
+/** GET /customers/:id/stats — thống kê chi tiêu và số lần ghé */
 customersRouter.get('/:id/stats', async (c) => {
   const stats = await customerService.getStats(c.req.param('id'));
   return c.json(stats);
 });
 
-// POST /customers
+/** POST /customers — tạo khách hàng mới */
 customersRouter.post('/', zValidator('json', createCustomerSchema), async (c) => {
   const data = c.req.valid('json');
   const customer = await customerService.create(data);
   return c.json(customer, 201);
 });
 
-// PUT /customers/:id — admin only
+/** PUT /customers/:id — cập nhật khách hàng (chỉ admin) */
 customersRouter.put('/:id', adminOnly, zValidator('json', updateCustomerSchema), async (c) => {
   const data = c.req.valid('json');
   const customer = await customerService.update(c.req.param('id'), data);

@@ -1,5 +1,6 @@
 import type { Customer } from '@/types/customer';
 
+/** Dữ liệu mẫu danh sách khách hàng */
 export const demoCustomers: Customer[] = [
   { id: 'c1', name: 'Nguyễn Văn A', phone: '0901234567', email: 'nguyenvana@gmail.com', note: 'VIP — Thích phòng yên tĩnh', createdAt: '2026-01-15' },
   { id: 'c2', name: 'Trần Thị B', phone: '0912345678', email: 'tranthib@yahoo.com', createdAt: '2026-02-01' },

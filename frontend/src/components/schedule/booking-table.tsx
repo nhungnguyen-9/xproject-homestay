@@ -2,11 +2,10 @@ import React, { useState } from "react"
 import { Badge, BOOKING_STATUS_LABELS, type BadgeVariant } from "@/components/ui/badge"
 import type { Booking, Room } from "@/types/schedule"
 
-// Map trạng thái booking → variant màu badge
 const STATUS_TO_VARIANT: Record<string, BadgeVariant> = {
   pending: "pending",
   confirmed: "confirmed",
-  "checked-in": "confirmed",   // checked-in dùng màu xanh như confirmed
+  "checked-in": "confirmed",
   "checked-out": "checked-out",
   cancelled: "cancelled",
 }
@@ -14,25 +13,20 @@ const STATUS_TO_VARIANT: Record<string, BadgeVariant> = {
 interface BookingTableProps {
   bookings: Booking[]
   rooms: Room[]
-  /** Tiêu đề bảng - mặc định "Danh sách Booking" */
   title?: string
 }
 
 /**
- * BookingTable - Bảng hiển thị danh sách đặt phòng
- * Columns: Phòng | Giờ vào | Giờ ra | Trạng thái | Khách | Tổng tiền
- * Responsive: scroll ngang trên mobile
+ * Bảng hiển thị danh sách đặt phòng — hỗ trợ lọc theo trạng thái, cuộn ngang trên mobile
  */
 export function BookingTable({ bookings, rooms, title = "Danh sách Booking" }: BookingTableProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all")
 
-  // Map roomId → room name để tra cứu nhanh
   const roomMap = React.useMemo(
     () => Object.fromEntries(rooms.map(r => [r.id, r])),
     [rooms]
   )
 
-  // Lọc bookings theo trạng thái được chọn
   const filtered = statusFilter === "all"
     ? bookings
     : bookings.filter(b => b.status === statusFilter)
@@ -42,11 +36,9 @@ export function BookingTable({ bookings, rooms, title = "Danh sách Booking" }: 
 
   return (
     <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
-      {/* Header bảng */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-border">
         <h2 className="font-semibold text-secondary text-base">{title}</h2>
 
-        {/* Bộ lọc trạng thái */}
         <div className="flex flex-wrap gap-2">
           {["all", "pending", "confirmed", "checked-out"].map(status => (
             <button
@@ -65,7 +57,6 @@ export function BookingTable({ bookings, rooms, title = "Danh sách Booking" }: 
         </div>
       </div>
 
-      {/* Bảng dữ liệu - scroll ngang trên mobile */}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[600px] text-sm">
           <thead>
@@ -96,7 +87,6 @@ export function BookingTable({ bookings, rooms, title = "Danh sách Booking" }: 
                     key={booking.id}
                     className="hover:bg-card transition-colors"
                   >
-                    {/* Tên phòng + loại phòng */}
                     <td className="px-4 py-3">
                       <div className="font-medium text-secondary">
                         {room?.name ?? booking.roomId}
@@ -106,31 +96,26 @@ export function BookingTable({ bookings, rooms, title = "Danh sách Booking" }: 
                       )}
                     </td>
 
-                    {/* Giờ vào */}
                     <td className="px-4 py-3 font-mono text-slate-700">
                       {booking.startTime}
                     </td>
 
-                    {/* Giờ ra */}
                     <td className="px-4 py-3 font-mono text-slate-700">
                       {booking.endTime}
                     </td>
 
-                    {/* Tên khách */}
                     <td className="px-4 py-3 text-slate-600">
                       {booking.guestName ?? (
                         <span className="text-slate-300 italic">Chưa có</span>
                       )}
                     </td>
 
-                    {/* Badge trạng thái */}
                     <td className="px-4 py-3">
                       <Badge variant={variant}>
                         {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
                       </Badge>
                     </td>
 
-                    {/* Tổng tiền */}
                     <td className="px-4 py-3 font-medium text-secondary">
                       {formatCurrency(booking.totalPrice)}
                     </td>
@@ -142,7 +127,6 @@ export function BookingTable({ bookings, rooms, title = "Danh sách Booking" }: 
         </table>
       </div>
 
-      {/* Footer: tổng số bản ghi */}
       <div className="px-5 py-3 border-t border-border bg-card">
         <p className="text-xs text-slate-400">
           Hiển thị <span className="font-semibold text-slate-600">{filtered.length}</span> / {bookings.length} đơn đặt phòng

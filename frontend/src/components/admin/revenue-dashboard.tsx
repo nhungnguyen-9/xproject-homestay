@@ -51,7 +51,6 @@ function getPeriodDateRange(period: Period): { start: string; end: string } {
     return { start: formatDate(weekStart), end: formatDate(weekEnd) }
   }
 
-  // month
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
   return { start: formatDate(monthStart), end: formatDate(monthEnd) }
@@ -70,6 +69,10 @@ function formatDisplayDate(dateStr: string): string {
   return `${day}/${month}/${year}`
 }
 
+/**
+ * Bảng tổng quan doanh thu — biểu đồ xu hướng, tỷ lệ lấp đầy, top khách hàng
+ * Lọc theo kỳ: hôm nay / tuần / tháng. Chỉ admin mới truy cập được
+ */
 export function RevenueDashboard() {
   const [period, setPeriod] = useState<Period>('week')
 
@@ -105,7 +108,6 @@ export function RevenueDashboard() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* Period Selector */}
       <div className="flex items-center gap-2">
         {PERIOD_LABELS.map((p) => (
           <button
@@ -123,9 +125,7 @@ export function RevenueDashboard() {
         ))}
       </div>
 
-      {/* 4 Stat Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Total Revenue */}
         <div className="rounded-xl bg-primary/5 p-5">
           <p className="text-sm font-medium text-primary">
             Tổng doanh thu
@@ -147,7 +147,6 @@ export function RevenueDashboard() {
           </div>
         </div>
 
-        {/* Total Bookings */}
         <div className="rounded-xl bg-status-success-muted p-5">
           <p className="text-sm font-medium text-status-success-foreground">
             Tổng booking
@@ -169,7 +168,6 @@ export function RevenueDashboard() {
           </div>
         </div>
 
-        {/* Occupancy Rate */}
         <div className="rounded-xl bg-status-info-muted p-5">
           <p className="text-sm font-medium text-status-info-foreground">
             Tỷ lệ lấp đầy
@@ -185,7 +183,6 @@ export function RevenueDashboard() {
           </div>
         </div>
 
-        {/* Average per Booking */}
         <div className="rounded-xl bg-status-warning-muted p-5">
           <p className="text-sm font-medium text-status-warning-foreground">TB / booking</p>
           <p className="mt-2 text-2xl font-bold text-status-warning-foreground">
@@ -194,7 +191,6 @@ export function RevenueDashboard() {
         </div>
       </div>
 
-      {/* Revenue Trend Chart */}
       <div className="rounded-xl border border-border bg-card p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-bold text-slate-800">
@@ -264,9 +260,7 @@ export function RevenueDashboard() {
         )}
       </div>
 
-      {/* Bottom Section: Occupancy by Room + Top Customers */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Occupancy by Room */}
         <div className="rounded-xl border border-border bg-card p-7">
           <h3 className="mb-5 text-[18px] font-bold text-slate-800">
             Tỷ lệ lấp đầy theo phòng
@@ -297,7 +291,6 @@ export function RevenueDashboard() {
           </div>
         </div>
 
-        {/* Top Customers */}
         <div className="rounded-xl border border-border bg-card p-7">
           <h3 className="mb-5 text-[18px] font-bold text-slate-800">
             Top khách hàng chi tiêu
@@ -316,7 +309,6 @@ export function RevenueDashboard() {
                       isTop ? 'bg-status-warning-muted' : 'bg-muted/50',
                     )}
                   >
-                    {/* Rank circle */}
                     <div
                       className={cn(
                         'flex size-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold',
@@ -328,7 +320,6 @@ export function RevenueDashboard() {
                       {rank}
                     </div>
 
-                    {/* Name and visit count */}
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[15px] font-bold text-slate-800">
                         {customer.name}
@@ -338,7 +329,6 @@ export function RevenueDashboard() {
                       </p>
                     </div>
 
-                    {/* Amount */}
                     <p className="flex-shrink-0 text-[16px] font-extrabold text-primary">
                       {formatPrice(customer.totalSpent)}đ
                     </p>

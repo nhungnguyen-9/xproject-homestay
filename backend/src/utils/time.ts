@@ -1,5 +1,6 @@
 /**
- * Convert "HH:mm" string to total minutes since midnight.
+ * Chuyển chuỗi "HH:mm" thành tổng số phút kể từ nửa đêm.
+ * @param time - Chuỗi thời gian định dạng "HH:mm"
  */
 export function timeToMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number);
@@ -7,8 +8,8 @@ export function timeToMinutes(time: string): number {
 }
 
 /**
- * Check if two time ranges overlap.
- * Ranges are [startA, endA) and [startB, endB) in "HH:mm" format.
+ * Kiểm tra hai khoảng thời gian có trùng lặp hay không.
+ * Sử dụng khoảng nửa mở [start, end) với định dạng "HH:mm".
  */
 export function hasTimeOverlap(
   startA: string,
@@ -24,7 +25,9 @@ export function hasTimeOverlap(
 }
 
 /**
- * Calculate duration in hours (ceiling) between two times.
+ * Tính thời lượng (giờ, làm tròn lên) giữa hai mốc thời gian.
+ * @param startTime - Giờ bắt đầu "HH:mm"
+ * @param endTime - Giờ kết thúc "HH:mm"
  */
 export function durationHours(startTime: string, endTime: string): number {
   const startMin = timeToMinutes(startTime);

@@ -1,5 +1,6 @@
 import { timeToMinutes } from './time.js';
 
+/** Cấu hình bảng giá phòng */
 interface PriceConfig {
   hourlyRate: number;
   dailyRate: number;
@@ -7,14 +8,22 @@ interface PriceConfig {
   extraHourRate: number;
 }
 
+/** Snapshot món ăn/thức uống kèm theo booking */
 interface FoodItemSnapshot {
   price: number;
   qty?: number;
 }
 
 /**
- * Calculate booking price server-side.
- * mode: 'hourly' | 'daily' | 'overnight'
+ * Tính giá booking phía server.
+ * Hỗ trợ 3 chế độ: theo giờ (hourly), theo ngày (daily), qua đêm (overnight).
+ * Bao gồm cộng tiền đồ ăn và trừ khuyến mãi.
+ * @param mode - Chế độ tính giá
+ * @param startTime - Giờ nhận phòng "HH:mm"
+ * @param endTime - Giờ trả phòng "HH:mm"
+ * @param priceConfig - Bảng giá phòng
+ * @param foodItems - Danh sách đồ ăn kèm theo
+ * @param discountAmount - Số tiền giảm giá
  */
 export function calculatePrice(
   mode: string,

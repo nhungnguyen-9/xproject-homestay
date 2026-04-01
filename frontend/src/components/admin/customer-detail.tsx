@@ -20,7 +20,6 @@ import type { Booking } from '@/types/schedule'
 import { Badge, BOOKING_STATUS_LABELS } from '@/components/ui/badge'
 import type { BadgeVariant } from '@/components/ui/badge'
 
-// Avatar background colors - same as customer-list
 const AVATAR_COLORS = [
   'bg-chart-1/10 text-chart-1',
   'bg-chart-2/10 text-chart-2',
@@ -107,12 +106,14 @@ interface RoomFrequency {
   count: number
 }
 
+/**
+ * Chi tiết khách hàng — thống kê chi tiêu, phòng hay đặt, lịch sử booking
+ * Cho phép chỉnh sửa ghi chú khách hàng
+ */
 export function CustomerDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  // Use state with initializers to avoid cascading renders
-  // key={id} in parent ensures fresh state on ID change
   const [customer, setCustomer] = useState<CustomerWithStats | null>(() => {
     if (!id) return null
     const raw = customerService.getById(id)
@@ -131,7 +132,6 @@ export function CustomerDetail() {
         b.guestPhone &&
         customerService.normalizePhone(b.guestPhone) === normalizedPhone,
     )
-    // Sort by date descending
     matched.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
     return matched
   })
@@ -139,7 +139,6 @@ export function CustomerDetail() {
   const [isEditingNote, setIsEditingNote] = useState(false)
   const [noteValue, setNoteValue] = useState(customer?.note ?? '')
 
-  // Top 3 most booked rooms
   const topRooms = useMemo<RoomFrequency[]>(() => {
     const counts = new Map<string, number>()
     for (const b of bookings) {
@@ -155,7 +154,6 @@ export function CustomerDetail() {
       .slice(0, 3)
   }, [bookings])
 
-  // Handle save note
   const handleSaveNote = () => {
     if (!customer || !id) return
     customerService.update(id, { note: noteValue })
@@ -198,7 +196,6 @@ export function CustomerDetail() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Back button */}
       <button
         onClick={() => navigate('/admin/customers')}
         className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
@@ -207,7 +204,6 @@ export function CustomerDetail() {
         Quay lai danh sach
       </button>
 
-      {/* Header: avatar, name, phone, email, edit note button */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-border bg-card p-5">
         <div className="flex items-center gap-4">
           <div
@@ -239,9 +235,7 @@ export function CustomerDetail() {
         )}
       </div>
 
-      {/* 4 Stat cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Total spent */}
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary/5">
@@ -256,7 +250,6 @@ export function CustomerDetail() {
           </p>
         </div>
 
-        {/* Visit count */}
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             <div className="flex size-7 items-center justify-center rounded-lg bg-status-info-muted">
@@ -267,7 +260,6 @@ export function CustomerDetail() {
           <p className="text-xl font-bold text-slate-800">{customer.visitCount}</p>
         </div>
 
-        {/* Last visit */}
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             <div className="flex size-7 items-center justify-center rounded-lg bg-status-success-muted">
@@ -280,7 +272,6 @@ export function CustomerDetail() {
           </p>
         </div>
 
-        {/* Note (editable) */}
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             <div className="flex size-7 items-center justify-center rounded-lg bg-status-warning-muted">
@@ -324,7 +315,6 @@ export function CustomerDetail() {
         </div>
       </div>
 
-      {/* Top rooms section */}
       {topRooms.length > 0 && (
         <div className="rounded-xl border border-border bg-card p-5">
           <h3 className="text-sm font-semibold text-slate-700 mb-3">
@@ -364,7 +354,6 @@ export function CustomerDetail() {
         </div>
       )}
 
-      {/* Booking history table */}
       <div className="rounded-xl border border-border bg-card">
         <div className="px-5 py-4 border-b border-border">
           <h3 className="text-sm font-semibold text-slate-700">
@@ -413,12 +402,10 @@ export function CustomerDetail() {
                     key={booking.id}
                     className="border-b border-border last:border-b-0"
                   >
-                    {/* Date */}
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
                       {formatDateDisplay(booking.date)}
                     </td>
 
-                    {/* Room name with type badge */}
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className="font-medium text-slate-700">
                         {getRoomName(booking.roomId)}
@@ -426,12 +413,10 @@ export function CustomerDetail() {
                       {getRoomTypeBadge(booking.roomId)}
                     </td>
 
-                    {/* Time range */}
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
                       {booking.startTime} - {booking.endTime}
                     </td>
 
-                    {/* Price (with voucher handling) */}
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       {booking.voucher ? (
                         <div className="flex flex-col items-end">
@@ -449,14 +434,12 @@ export function CustomerDetail() {
                       )}
                     </td>
 
-                    {/* Status badge */}
                     <td className="px-4 py-3 text-center">
                       <Badge variant={getStatusVariant(booking.status)}>
                         {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
                       </Badge>
                     </td>
 
-                    {/* Promo code badge */}
                     <td className="px-4 py-3 text-center">
                       {booking.voucher ? (
                         <span className="inline-flex items-center rounded-full bg-status-success-muted px-2 py-0.5 text-[10px] font-semibold text-status-success-foreground border border-status-success/20 font-mono">

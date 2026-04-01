@@ -1,5 +1,6 @@
 import type { RoomType } from './schedule';
 
+/** Mã khuyến mãi cho đặt phòng */
 export interface PromoCode {
   id: string;
   code: string;

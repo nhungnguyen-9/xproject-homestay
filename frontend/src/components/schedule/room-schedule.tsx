@@ -10,26 +10,26 @@ import type {
 import { HelpCircle } from 'lucide-react';
 import { BookingModal } from '@/components/booking-calendar-form/booking-modal';
 
-// ==================== CONSTANTS ====================
-const HOUR_WIDTH = 80; // pixels per hour
+const HOUR_WIDTH = 80;
 const ROOM_LABEL_WIDTH = 80;
 const HEADER_HEIGHT = 50;
 const INDICATOR_ROW_HEIGHT = 30;
 const ROW_HEIGHT = 50;
 
-// Highlighted hours (có icon đặc biệt)
 const HIGHLIGHTED_HOURS = [6, 8, 10, 12, 14, 16];
 
-// ==================== HELPER FUNCTIONS ====================
 const timeToMinutes = (time: string): number => {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
 };
 
 const formatTime = (time: string): string => {
-    return time; // Already in HH:mm format
+    return time;
 };
 
+/**
+ * Tính toán vị trí pixel (left, width) của khối booking trên timeline
+ */
 const getBookingPosition = (
     startTime: string,
     endTime: string,
@@ -45,9 +45,6 @@ const getBookingPosition = (
     return { left, width };
 };
 
-// ==================== SUB COMPONENTS ====================
-
-// Filter Button Component
 interface FilterButtonProps {
     label: string;
     active: boolean;
@@ -91,7 +88,6 @@ const FilterButton: React.FC<FilterButtonProps> = ({
     );
 };
 
-// Date Picker Component
 interface DatePickerProps {
     date: Date;
     onChange: (date: Date) => void;
@@ -110,7 +106,6 @@ const DatePicker: React.FC<DatePickerProps> = ({ date, onChange }) => {
         <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-2 lg:px-3 py-1.5 lg:py-2">
             <span className="text-black text-xs lg:text-sm font-semibold whitespace-nowrap">Chọn ngày:</span>
             <div className="flex items-center gap-2">
-                {/* <Calendar className="w-4 h-4 text-rose-500" /> */}
                 <input
                     type="date"
                     value={date.toISOString().split('T')[0]}
@@ -122,7 +117,6 @@ const DatePicker: React.FC<DatePickerProps> = ({ date, onChange }) => {
     );
 };
 
-// Timeline Header Component
 interface TimelineHeaderProps {
     startHour: number;
     endHour: number;
@@ -138,6 +132,7 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
         hours.push(i);
     }
 
+    /** Trả về emoji thời tiết tương ứng với khung giờ trong ngày */
     const getWeatherIcon = (hour: number) => {
         if (hour === 6) return '🌅';
         if (hour === 8) return '☀️';
@@ -153,7 +148,6 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
             className="flex bg-muted/50 border-b border-border"
             style={{ height: HEADER_HEIGHT }}
         >
-            {/* Room label column */}
             <div
                 className="flex items-center justify-center text-black font-bold text-md shrink-0 rounded-md m-1"
                 style={{ width: ROOM_LABEL_WIDTH, background: 'linear-gradient(90deg, #F8E1EE 0%, #FFF1E1 100%)' }}
@@ -161,7 +155,6 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
                 Phòng
             </div>
 
-            {/* Timeline */}
             <div className="flex-1 flex relative">
                 {hours.map((hour, index) => {
                     const weatherIcon = getWeatherIcon(hour);
@@ -172,9 +165,7 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
                             className={`flex flex-col items-center justify-center border-l border-border text-sm text-black gap-0.5 ${isLastColumn ? 'border-r' : ''}`}
                             style={{ width: HOUR_WIDTH * 2 }}
                         >
-                            {/* Time row - always at same position */}
                             <span className="font-bold text-sm">{String(hour).padStart(2, '0')}h</span>
-                            {/* Icon row - fixed height */}
                             <div className="h-5 flex items-center justify-center">
                                 {weatherIcon && (
                                     <span className="text-lg leading-none">{weatherIcon}</span>
@@ -188,7 +179,6 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
     );
 };
 
-// Booking Block Component
 interface BookingBlockProps {
     booking: Booking;
     startHour: number;
@@ -206,7 +196,6 @@ const BookingBlock: React.FC<BookingBlockProps> = ({
         startHour
     );
 
-    // Handle bookings that span across days
     if (width <= 0) return null;
 
     return (
@@ -236,7 +225,6 @@ const BookingBlock: React.FC<BookingBlockProps> = ({
     );
 };
 
-// Room Row Component
 interface RoomRowProps {
     room: Room;
     bookings: Booking[];
@@ -262,7 +250,6 @@ const RoomRow: React.FC<RoomRowProps> = ({
         supervip: 'rounded-md m-1 bg-room-supervip text-primary-foreground font-medium text-sm shrink-0',
     };
 
-    // Check if a time is within a booking
     const isTimeBooked = (minutes: number): boolean => {
         return bookings.some(booking => {
             const bookingStart = timeToMinutes(booking.startTime);
@@ -271,16 +258,14 @@ const RoomRow: React.FC<RoomRowProps> = ({
         });
     };
 
-    // Handle click on timeline (not on booking)
     const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left;
 
-        // Convert pixels to minutes
         const minutes = (x / HOUR_WIDTH) * 60 + startHour * 60;
-        const roundedMinutes = Math.floor(minutes / 30) * 30; // Round to nearest 30 min
+        // Làm tròn xuống bội số 30 phút
+        const roundedMinutes = Math.floor(minutes / 30) * 30;
 
-        // Check if this time slot is available
         if (!isTimeBooked(roundedMinutes)) {
             const hours = Math.floor(roundedMinutes / 60);
             const mins = roundedMinutes % 60;
@@ -291,7 +276,6 @@ const RoomRow: React.FC<RoomRowProps> = ({
 
     return (
         <div className="flex border-b border-border" style={{ height: ROW_HEIGHT }}>
-            {/* Room label */}
             <div
                 className={cn(
                     'flex items-center justify-center font-bold text-md shrink-0',
@@ -308,12 +292,10 @@ const RoomRow: React.FC<RoomRowProps> = ({
                 {room.name}
             </div>
 
-            {/* Timeline slots */}
             <div
                 className="flex-1 relative bg-card cursor-pointer hover:bg-accent/50 transition-colors"
                 onClick={handleTimelineClick}
             >
-                {/* Grid lines */}
                 <div className="absolute inset-0 pointer-events-none">
                     {Array.from({ length: (endHour - startHour) / 2 }).map((_, i) => (
                         <div
@@ -322,14 +304,12 @@ const RoomRow: React.FC<RoomRowProps> = ({
                             style={{ left: `${i * HOUR_WIDTH * 2}px` }}
                         />
                     ))}
-                    {/* Last border on the right */}
                     <div
                         className="absolute top-0 bottom-0 border-r border-border/50"
                         style={{ right: 0 }}
                     />
                 </div>
 
-                {/* Bookings */}
                 <div className="absolute inset-0" style={{ width: totalWidth }}>
                     {bookings.map((booking) => (
                         <BookingBlock
@@ -345,7 +325,6 @@ const RoomRow: React.FC<RoomRowProps> = ({
     );
 };
 
-// Current Time Indicator
 interface CurrentTimeIndicatorProps {
     currentTime: Date;
     startHour: number;
@@ -368,7 +347,6 @@ const CurrentTimeIndicator: React.FC<CurrentTimeIndicatorProps> = ({
             className="absolute z-20 pointer-events-none"
             style={{ left: `${left}px`, top: 0, bottom: 0 }}
         >
-            {/* Time label in indicator row */}
             <div
                 className="absolute bg-[#03c068] text-white text-xs px-2.5 py-1.5 rounded-xl flex items-center justify-center gap-0.5 font-bold -translate-x-1/2"
                 style={{ top: '2px' }}
@@ -376,7 +354,6 @@ const CurrentTimeIndicator: React.FC<CurrentTimeIndicatorProps> = ({
                 ⏰
                 <span>{timeLabel}</span>
             </div>
-            {/* Vertical line starts below indicator row */}
             <div
                 className="w-0.5 bg-[#03c068] absolute"
                 style={{
@@ -389,7 +366,9 @@ const CurrentTimeIndicator: React.FC<CurrentTimeIndicatorProps> = ({
     );
 };
 
-// ==================== MAIN COMPONENT ====================
+/**
+ * Lịch trình phòng — hiển thị timeline theo giờ, khối booking, bộ lọc loại phòng, và hỗ trợ tạo booking mới
+ */
 export const RoomSchedule: React.FC<ScheduleProps> = ({
     date,
     rooms,
@@ -408,28 +387,23 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
         { value: 'supervip', label: 'SuperVip', active: true },
     ]);
 
-    // Booking modal state
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
     const [selectedTime, setSelectedTime] = useState<string>('06:00');
     const [localBookings, setLocalBookings] = useState<Booking[]>(bookings);
 
-    // Update local bookings when prop changes
     useEffect(() => {
         setLocalBookings(bookings);
     }, [bookings]);
 
-    // Set demo time to 02:00 (change this to new Date() for real time)
     const [currentTime, setCurrentTime] = useState(() => {
         const demoTime = new Date();
         demoTime.setHours(2, 0, 0, 0);
         return demoTime;
     });
 
-    // Update current time every minute
     useEffect(() => {
         const interval = setInterval(() => {
-            // For demo: keep at 02:00, for real time use: setCurrentTime(new Date());
             const demoTime = new Date();
             demoTime.setHours(2, 0, 0, 0);
             setCurrentTime(demoTime);
@@ -437,7 +411,6 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
         return () => clearInterval(interval);
     }, []);
 
-    // Filter rooms based on selected filters
     const filteredRooms = useMemo(() => {
         const activeTypes = filters
             .filter((f) => f.active)
@@ -445,25 +418,21 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
         return rooms.filter((room) => activeTypes.includes(room.type));
     }, [rooms, filters]);
 
-    // Get bookings for each room
     const getBookingsForRoom = (roomId: string): Booking[] => {
         return localBookings.filter((b) => b.roomId === roomId);
     };
 
-    // Handle date change
     const handleDateChange = (newDate: Date) => {
         setSelectedDate(newDate);
         onDateChange?.(newDate);
     };
 
-    // Toggle filter
     const toggleFilter = (value: RoomType | 'all') => {
         setFilters((prev) =>
             prev.map((f) => (f.value === value ? { ...f, active: !f.active } : f))
         );
     };
 
-    // Handle empty slot click - open booking modal
     const handleEmptySlotClick = useCallback((roomId: string, time: string) => {
         const room = rooms.find(r => r.id === roomId);
         setSelectedRoom(room || null);
@@ -472,7 +441,6 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
         onEmptySlotClick?.(roomId, time);
     }, [rooms, onEmptySlotClick]);
 
-    // Handle booking creation
     const handleBookingCreate = useCallback((newBooking: Omit<Booking, 'id'>) => {
         const booking: Booking = {
             ...newBooking,
@@ -508,10 +476,8 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                 <p className='text-amber-500 font-semibold mx-1 my-1.5 sm:my-2 text-[11px] sm:text-xs lg:text-sm'>⏰ Phí thêm giờ: 40k/giờ</p>
             </div>
             <div className="w-full bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-                {/* Header Controls */}
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-3 lg:p-4 border-b border-border">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-                        {/* Help Button */}
                         <button
                             className="flex items-center gap-2 px-3 lg:px-4 py-2 text-white rounded-lg transition-transform"
                             style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary-hover))' }}
@@ -520,11 +486,9 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                             <span className="text-xs lg:text-sm font-medium">🎯 Hướng dẫn</span>
                         </button>
 
-                        {/* Date Picker */}
                         <DatePicker date={selectedDate} onChange={handleDateChange} />
                     </div>
 
-                    {/* Filters - scrollable on mobile */}
                     <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 -mx-3 px-3 lg:mx-0 lg:px-0">
                         <FilterButton
                             label="Tiêu chuẩn"
@@ -547,26 +511,21 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                     </div>
                 </div>
 
-                {/* Schedule Grid */}
                 <div className="overflow-x-auto relative">
                     <div style={{ minWidth: totalWidth }}>
-                        {/* Timeline Header */}
                         <TimelineHeader
                             startHour={startHour}
                             endHour={endHour}
                             currentTime={currentTime}
                         />
 
-                        {/* Wrapper for indicator row + room rows */}
                         <div className="relative">
-                            {/* Empty row for CurrentTimeIndicator */}
                             <div
                                 className="flex bg-card border-b border-border/50 relative"
                                 style={{ height: INDICATOR_ROW_HEIGHT }}
                             >
                                 <div style={{ width: ROOM_LABEL_WIDTH }} className="shrink-0" />
                                 <div className="flex-1 relative">
-                                    {/* Grid lines for indicator row */}
                                     <div className="absolute inset-0 pointer-events-none">
                                         {Array.from({ length: (endHour - startHour) / 2 }).map((_, i) => (
                                             <div
@@ -575,7 +534,6 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                                                 style={{ left: `${i * HOUR_WIDTH * 2}px` }}
                                             />
                                         ))}
-                                        {/* Last border on the right */}
                                         <div
                                             className="absolute top-0 bottom-0 border-r border-border/50"
                                             style={{ right: 0 }}
@@ -584,7 +542,6 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                                 </div>
                             </div>
 
-                            {/* Room Rows */}
                             {filteredRooms.map((room) => (
                                 <RoomRow
                                     key={room.id}
@@ -597,7 +554,6 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                                 />
                             ))}
 
-                            {/* Current Time Indicator */}
                             <CurrentTimeIndicator
                                 currentTime={currentTime}
                                 startHour={startHour}
@@ -607,7 +563,6 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                 </div>
             </div>
 
-            {/* Booking Modal */}
             <BookingModal
                 open={bookingModalOpen}
                 onOpenChange={setBookingModalOpen}
@@ -622,5 +577,4 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
     );
 };
 
-// Export default
 export default RoomSchedule;

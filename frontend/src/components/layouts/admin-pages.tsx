@@ -1,5 +1,8 @@
 import { Link } from "react-router"
 
+/**
+ * Trang cài đặt quản trị — liên kết đến các trang quản lý nâng cao
+ */
 export function AdminSettingsPage() {
   return (
     <section className="flex flex-col gap-6">

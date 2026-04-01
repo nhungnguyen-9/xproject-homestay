@@ -4,11 +4,13 @@ import { telegramConfig, notificationTemplates } from '../db/schema/index.js';
 import { notificationLog } from '../db/schema/notificationLog.js';
 import { AppError } from '../middleware/errorHandler.js';
 
+/** Lấy cấu hình Telegram bot (singleton, id='default') */
 export async function getConfig() {
   const [config] = await db.select().from(telegramConfig).where(eq(telegramConfig.id, 'default')).limit(1);
   return config || { id: 'default', botToken: '', chatId: '', enabled: false };
 }
 
+/** Cập nhật cấu hình Telegram — upsert (tạo nếu chưa có) */
 export async function updateConfig(data: { botToken?: string; chatId?: string; enabled?: boolean }) {
   const [config] = await db
     .insert(telegramConfig)
@@ -28,10 +30,12 @@ export async function updateConfig(data: { botToken?: string; chatId?: string; e
   return config;
 }
 
+/** Lấy tất cả template thông báo */
 export async function getTemplates() {
   return db.select().from(notificationTemplates);
 }
 
+/** Lấy template theo loại sự kiện (new_booking, confirmed, checked_in, ...) */
 export async function getTemplate(eventType: string) {
   const [template] = await db
     .select()
@@ -41,6 +45,7 @@ export async function getTemplate(eventType: string) {
   return template;
 }
 
+/** Cập nhật nội dung hoặc trạng thái template thông báo */
 export async function updateTemplate(eventType: string, data: { content?: string; isActive?: boolean }) {
   const [template] = await db
     .update(notificationTemplates)
@@ -51,6 +56,7 @@ export async function updateTemplate(eventType: string, data: { content?: string
   return template;
 }
 
+/** Thay thế placeholder {{key}} trong template bằng giá trị thực */
 function renderTemplate(
   templateContent: string,
   vars: Record<string, string>,
@@ -62,6 +68,7 @@ function renderTemplate(
   return result;
 }
 
+/** Gửi tin nhắn qua Telegram Bot API — trả true nếu thành công */
 async function sendTelegramMessage(botToken: string, chatId: string, text: string): Promise<boolean> {
   try {
     const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -76,6 +83,14 @@ async function sendTelegramMessage(botToken: string, chatId: string, text: strin
   }
 }
 
+/**
+ * Gửi thông báo Telegram cho sự kiện booking
+ * Nếu Telegram chưa cấu hình → ghi log dạng 'simulated'
+ * Nếu template không tồn tại hoặc tắt → bỏ qua
+ * @param eventType - Loại sự kiện (new_booking, confirmed, checked_in, ...)
+ * @param vars - Biến thay thế cho template (guestName, roomName, ...)
+ * @param roomId - ID phòng (ghi log)
+ */
 export async function notify(
   eventType: string,
   vars: Record<string, string>,
@@ -99,7 +114,6 @@ export async function notify(
   const message = renderTemplate(template.content, vars);
 
   if (!config.enabled || !config.botToken || !config.chatId) {
-    // Simulate — log but don't send
     await db.insert(notificationLog).values({
       eventType,
       guestName: vars.guestName || null,
@@ -110,7 +124,6 @@ export async function notify(
     return;
   }
 
-  // Actually send via Telegram Bot API
   const success = await sendTelegramMessage(config.botToken, config.chatId, message);
 
   await db.insert(notificationLog).values({
@@ -123,6 +136,7 @@ export async function notify(
   });
 }
 
+/** Gửi tin nhắn test qua Telegram — dùng để kiểm tra cấu hình bot */
 export async function sendTest() {
   const config = await getConfig();
 
@@ -154,6 +168,7 @@ export async function sendTest() {
   };
 }
 
+/** Lấy lịch sử thông báo có phân trang — sắp xếp mới nhất trước */
 export async function getLog(page = 1, limit = 20) {
   const offset = (page - 1) * limit;
 

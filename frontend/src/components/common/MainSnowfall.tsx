@@ -4,11 +4,13 @@ interface SnowfallProps {
     flakes?: number
 }
 
+/**
+ * Hiệu ứng tuyết rơi toàn trang — mỗi bông tuyết có vị trí, kích thước, tốc độ ngẫu nhiên
+ */
 export const MainSnowfall: React.FC<SnowfallProps> = ({ flakes = 24 }) => {
     const snowflakes = React.useMemo(() => {
         return Array.from({ length: flakes }).map((_, i) => {
             const left = Math.random() * 100
-            // slightly increase base size/range to make flakes a bit more visible
             const size = 6 + Math.random() * 10
             const delay = Math.random() * 10
             const duration = 10 + Math.random() * 14

@@ -2,6 +2,9 @@ import Particles from "react-tsparticles"
 import { loadSlim } from "tsparticles-slim"
 import { useCallback } from "react"
 
+/**
+ * Hiệu ứng hạt hình trái tim nổi nhẹ — dùng làm nền cho chân trang
+ */
 export const FooterParticles = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const particlesInit = useCallback(async (engine: any) => {

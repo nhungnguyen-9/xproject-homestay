@@ -6,6 +6,9 @@ import { locationBranches } from "../../data/locations"
 
 const VISIBLE_CARDS = 4
 
+/**
+ * Trang danh sách chi nhánh — hiển thị carousel các chi nhánh homestay với điều hướng trái/phải
+ */
 export function LocationPage({ onSelectLocation }: { onSelectLocation?: (location: { name: string }) => void }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
@@ -67,7 +70,6 @@ export function LocationPage({ onSelectLocation }: { onSelectLocation?: (locatio
                   onMouseEnter={() => setHoverIndex(idx)}
                   onMouseLeave={() => setHoverIndex(null)}
                   style={{
-                    // responsive width: when exactly 2 cards, use percentage so they scale on small screens
                     minWidth: isTwo ? "min(48%, 320px)" : "320px",
                     maxWidth: isTwo ? "min(48%, 320px)" : "320px",
                     transform: hoverIndex === idx ? "scale(1.05)" : undefined,

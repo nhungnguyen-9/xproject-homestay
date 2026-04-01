@@ -1,5 +1,6 @@
 import type { PromoCode } from '@/types/promo';
 
+/** Dữ liệu mẫu danh sách mã khuyến mãi */
 export const demoPromos: PromoCode[] = [
   {
     id: 'pr1', code: 'SUMMER20', discountType: 'percent', discountValue: 20,

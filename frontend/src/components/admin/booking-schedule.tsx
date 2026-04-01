@@ -21,10 +21,8 @@ import { BookingModal } from '@/components/admin/booking-modal'
 import type { Booking, InternalTag } from '@/types/schedule'
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 
-// Time slots: 0-24 in 2-hour increments
 const TIME_SLOTS = Array.from({ length: 12 }, (_, i) => i * 2)
 
-// Status color mapping
 const STATUS_COLORS: Record<string, string> = {
   confirmed: 'bg-booking-confirmed-bg border-l-4 border-l-booking-confirmed text-booking-confirmed-text',
   pending: 'bg-booking-pending-bg border-l-4 border-l-booking-pending text-booking-pending-text',
@@ -33,7 +31,6 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: 'bg-booking-cancelled-bg border-l-4 border-l-booking-cancelled text-booking-cancelled-text',
 }
 
-// Internal tag colors
 const TAG_COLORS: Record<InternalTag, string> = {
   cleaning: 'bg-tag-cleaning-bg border-l-4 border-l-tag-cleaning text-tag-cleaning-text',
   maintenance: 'bg-tag-maintenance-bg border-l-4 border-l-tag-maintenance text-tag-maintenance-text',
@@ -74,11 +71,14 @@ function formatDateISO(d: Date): string {
   return `${year}-${month}-${day}`
 }
 
+/**
+ * Lịch đặt phòng theo ngày — hiển thị timeline 24h cho từng phòng
+ * Hỗ trợ tạo/sửa/xoá booking, gắn tag nội bộ, và gửi thông báo Telegram
+ */
 export function BookingSchedule() {
   const isAdmin = authService.isAdmin()
   const role = authService.getRole()
 
-  // State
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [showModal, setShowModal] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
@@ -87,11 +87,9 @@ export function BookingSchedule() {
   const [prefillStartTime, setPrefillStartTime] = useState<string | undefined>(undefined)
   const [prefillEndTime, setPrefillEndTime] = useState<string | undefined>(undefined)
 
-  // Cleaning prompt
   const [showCleaningPrompt, setShowCleaningPrompt] = useState(false)
   const [cleaningAfterBooking, setCleaningAfterBooking] = useState<Booking | null>(null)
 
-  // Context menu
   const [contextMenu, setContextMenu] = useState<{
     x: number
     y: number
@@ -115,7 +113,6 @@ export function BookingSchedule() {
     refreshBookings()
   }, [refreshBookings])
 
-  // Close context menu on click outside
   useEffect(() => {
     const handleClick = () => setContextMenu(null)
     if (contextMenu) {
@@ -194,11 +191,10 @@ export function BookingSchedule() {
     let saved: Booking
 
     if ('id' in bookingData) {
-      // Edit mode
       const { id, ...rest } = bookingData
       saved = bookingService.update(id, rest)
 
-      // Check for checkout -> cleaning prompt
+      // Khi chuyển sang checked-out → đề xuất thêm dọn phòng
       if (
         saved.category === 'guest' &&
         saved.status === 'checked-out' &&
@@ -208,7 +204,6 @@ export function BookingSchedule() {
         setShowCleaningPrompt(true)
       }
 
-      // Telegram notifications on status change
       if (saved.category === 'guest') {
         const room = demoRooms.find((r) => r.id === saved.roomId)
         if (saved.status === 'confirmed' && selectedBooking?.status !== 'confirmed') {
@@ -220,10 +215,9 @@ export function BookingSchedule() {
 
       toast.success('Da cap nhat booking')
     } else {
-      // Create mode
       saved = bookingService.create(bookingData)
 
-      // Cross-service: auto-create customer + telegram notify for guest bookings
+      // Tự động tạo khách hàng + gửi Telegram khi booking mới là khách
       if (saved.category === 'guest') {
         if (saved.guestPhone && saved.guestName) {
           customerService.ensureCustomerExists(saved.guestName, saved.guestPhone)
@@ -268,7 +262,7 @@ export function BookingSchedule() {
     refreshBookings()
   }
 
-  // Calculate booking position and width as percentages of the 24h timeline
+  /** Tính vị trí và chiều rộng booking theo phần trăm trên timeline 24h */
   const getBookingPosition = (booking: Booking) => {
     const startMins = timeToMinutes(booking.startTime)
     const endMins = timeToMinutes(booking.endTime)
@@ -278,7 +272,6 @@ export function BookingSchedule() {
     return { left: `${leftPct}%`, width: `${widthPct}%` }
   }
 
-  // Check if a time slot has any booking overlapping
   const isSlotOccupied = (roomId: string, slotHour: number) => {
     const slotStart = slotHour * 60
     const slotEnd = (slotHour + 2) * 60
@@ -290,7 +283,6 @@ export function BookingSchedule() {
     })
   }
 
-  // Render a booking block
   const renderBookingBlock = (booking: Booking) => {
     const isInternal = booking.category === 'internal'
     const isStaff = role === 'staff'
@@ -334,7 +326,6 @@ export function BookingSchedule() {
       )
     }
 
-    // Guest booking
     const statusClass = STATUS_COLORS[booking.status] || STATUS_COLORS['pending']
     return (
       <div
@@ -361,7 +352,6 @@ export function BookingSchedule() {
 
   return (
     <div className="p-4 sm:p-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h2 className="text-xl font-bold text-slate-800">Lich phong</h2>
 
@@ -389,7 +379,6 @@ export function BookingSchedule() {
         </div>
       </div>
 
-      {/* Legend */}
       <div className="flex flex-wrap gap-3 mb-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
           <span className="size-3 rounded bg-booking-confirmed inline-block" /> Xac nhan
@@ -420,10 +409,8 @@ export function BookingSchedule() {
         )}
       </div>
 
-      {/* Schedule grid */}
       <div className="overflow-x-auto border border-border rounded-lg bg-card">
         <div className="min-w-[900px]">
-          {/* Header row */}
           <div className="flex bg-muted/50 border-b border-border">
             <div className="w-24 shrink-0 px-3 py-2 text-xs font-semibold text-muted-foreground border-r border-border">
               Phong
@@ -440,7 +427,6 @@ export function BookingSchedule() {
             </div>
           </div>
 
-          {/* Room rows */}
           {demoRooms.map((room) => {
             const roomBookings = bookings.filter((b) => b.roomId === room.id)
 
@@ -449,7 +435,6 @@ export function BookingSchedule() {
                 key={room.id}
                 className="flex border-b border-border last:border-b-0 hover:bg-muted/20"
               >
-                {/* Room name cell */}
                 <div className="w-24 shrink-0 px-3 py-2 border-r border-border bg-card">
                   <div className="font-semibold text-sm text-slate-800">{room.name}</div>
                   <div
@@ -466,9 +451,7 @@ export function BookingSchedule() {
                   </div>
                 </div>
 
-                {/* Timeline area */}
                 <div className="flex-1 relative h-12">
-                  {/* Grid lines for time slots */}
                   <div className="absolute inset-0 flex">
                     {TIME_SLOTS.map((slotHour) => {
                       const occupied = isSlotOccupied(room.id, slotHour)
@@ -492,7 +475,6 @@ export function BookingSchedule() {
                     })}
                   </div>
 
-                  {/* Booking blocks overlay */}
                   {roomBookings.map((booking) => renderBookingBlock(booking))}
                 </div>
               </div>
@@ -501,7 +483,6 @@ export function BookingSchedule() {
         </div>
       </div>
 
-      {/* Empty state */}
       {bookings.length === 0 && (
         <div className="text-center py-12 text-slate-400">
           <p className="text-sm">Khong co booking nao cho ngay nay.</p>
@@ -509,7 +490,6 @@ export function BookingSchedule() {
         </div>
       )}
 
-      {/* Booking Modal */}
       <BookingModal
         key={selectedBooking?.id || `new-${prefillRoomId}-${dateStr}`}
         open={showModal}
@@ -527,7 +507,6 @@ export function BookingSchedule() {
         onDelete={handleDelete}
       />
 
-      {/* Cleaning prompt after checkout */}
       <AlertDialog open={showCleaningPrompt} onOpenChange={setShowCleaningPrompt}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -555,7 +534,6 @@ export function BookingSchedule() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Context menu (right-click) */}
       {contextMenu && (
         <div
           ref={contextRef}

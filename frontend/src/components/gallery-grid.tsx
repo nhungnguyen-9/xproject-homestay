@@ -18,6 +18,9 @@ const containerVariants: Variants = {
   }
 }
 
+/**
+ * Lưới phòng — hiển thị danh sách RoomCard theo dạng grid responsive với hiệu ứng stagger
+ */
 export function GalleryGrid({ items }: GalleryGridProps) {
   return (
     <div className="mx-auto flex w-full flex-col px-8">

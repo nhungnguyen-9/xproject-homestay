@@ -9,6 +9,7 @@ import { revenueRoutes } from './revenue.js';
 import { foodItemRoutes } from './foodItems.js';
 import { branchRoutes } from './branches.js';
 
+/** Gom tất cả router con vào /api/v1/* */
 const apiRoutes = new Hono();
 
 apiRoutes.route('/auth', authRoutes);

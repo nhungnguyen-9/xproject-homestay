@@ -83,6 +83,10 @@ const internalSchema = z.object({
   internalTag: z.enum(['cleaning', 'maintenance', 'locked', 'custom']),
 })
 
+/**
+ * Modal tạo/chỉnh sửa booking — hai tab: khách hàng (guest) và nội bộ (internal)
+ * Validate với Zod, kiểm tra trùng lịch, áp dụng mã khuyến mãi
+ */
 export function BookingModal({
   open,
   onClose,
@@ -98,12 +102,10 @@ export function BookingModal({
   const isAdmin = authService.isAdmin()
   const isEdit = mode === 'edit'
 
-  // Tab state
   const [activeTab, setActiveTab] = useState<'guest' | 'internal'>(
     booking?.category === 'internal' ? 'internal' : 'guest'
   )
 
-  // Shared fields
   const [roomId, setRoomId] = useState(booking?.roomId || prefillRoomId || demoRooms[0].id)
   const [date, setDate] = useState(
     booking?.date || prefillDate || new Date().toISOString().split('T')[0]
@@ -111,27 +113,23 @@ export function BookingModal({
   const [startTime, setStartTime] = useState(booking?.startTime || prefillStartTime || '08:00')
   const [endTime, setEndTime] = useState(booking?.endTime || prefillEndTime || '10:00')
 
-  // Guest fields
   const [guestName, setGuestName] = useState(booking?.guestName || '')
   const [guestPhone, setGuestPhone] = useState(booking?.guestPhone || '')
   const [status, setStatus] = useState<BookingStatus>(booking?.status || 'pending')
   const [voucher, setVoucher] = useState(booking?.voucher || '')
   const [note, setNote] = useState(booking?.note || '')
 
-  // Internal fields
   const [internalTag, setInternalTag] = useState<InternalTag>(
     booking?.internalTag || 'cleaning'
   )
   const [internalNote, setInternalNote] = useState(booking?.internalNote || '')
 
-  // Validation & promo
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [voucherStatus, setVoucherStatus] = useState<{
     valid: boolean
     message: string
   } | null>(null)
 
-  // Delete confirmation
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const validateVoucher = useCallback(() => {
@@ -161,12 +159,10 @@ export function BookingModal({
   const handleSave = () => {
     const newErrors: Record<string, string> = {}
 
-    // Validate times
     if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
       newErrors.endTime = 'Gio ket thuc phai sau gio bat dau'
     }
 
-    // Tab-specific validation
     if (activeTab === 'guest') {
       const result = guestSchema.safeParse({ guestName, guestPhone, startTime, endTime })
       if (!result.success) {
@@ -190,14 +186,12 @@ export function BookingModal({
       return
     }
 
-    // Conflict check
     const excludeId = isEdit && booking ? booking.id : undefined
     if (bookingService.hasConflict(roomId, date, startTime, endTime, excludeId)) {
       toast.error('Trung lich! Da co booking trong khung gio nay.')
       return
     }
 
-    // Build booking data
     const isGuest = activeTab === 'guest'
 
     const bookingData: Omit<Booking, 'id'> = {
@@ -238,7 +232,6 @@ export function BookingModal({
     const hours = Math.max(0, minutes / 60)
     let price = Math.round(hours * priceConfig.hourlyRate)
 
-    // Apply voucher discount
     if (voucher.trim()) {
       const roomType: RoomType = room.type
       const result = promoService.validate(voucher.trim().toUpperCase(), roomType)
@@ -290,7 +283,6 @@ export function BookingModal({
               </TabsTrigger>
             </TabsList>
 
-            {/* Shared fields */}
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div className="col-span-2">
                 <Label htmlFor="room">Phong</Label>
@@ -349,7 +341,6 @@ export function BookingModal({
               </div>
             </div>
 
-            {/* Guest tab */}
             <TabsContent value="guest" className="mt-3 flex flex-col gap-3">
               <div>
                 <Label htmlFor="guestName">Ten khach hang</Label>
@@ -446,7 +437,6 @@ export function BookingModal({
               </div>
             </TabsContent>
 
-            {/* Internal tab */}
             <TabsContent value="internal" className="mt-3 flex flex-col gap-3">
               <div>
                 <Label>Loai noi bo</Label>
@@ -507,7 +497,6 @@ export function BookingModal({
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirmation */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>

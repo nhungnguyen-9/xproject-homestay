@@ -3,12 +3,13 @@ import * as revenueService from '../services/revenueService.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { adminOnly } from '../middleware/rbac.js';
 
+/** Router báo cáo doanh thu — chỉ admin được truy cập */
 const revenue = new Hono();
 
 revenue.use('*', authMiddleware);
 revenue.use('*', adminOnly);
 
-// GET /revenue/summary
+/** GET /revenue/summary — tổng hợp doanh thu + so sánh kỳ trước */
 revenue.get('/summary', async (c) => {
   const startDate = c.req.query('startDate');
   const endDate = c.req.query('endDate');
@@ -16,7 +17,7 @@ revenue.get('/summary', async (c) => {
   return c.json(result);
 });
 
-// GET /revenue/daily
+/** GET /revenue/daily — doanh thu theo ngày (cho biểu đồ) */
 revenue.get('/daily', async (c) => {
   const startDate = c.req.query('startDate');
   const endDate = c.req.query('endDate');
@@ -24,7 +25,7 @@ revenue.get('/daily', async (c) => {
   return c.json(result);
 });
 
-// GET /revenue/occupancy
+/** GET /revenue/occupancy — công suất sử dụng phòng */
 revenue.get('/occupancy', async (c) => {
   const startDate = c.req.query('startDate');
   const endDate = c.req.query('endDate');
@@ -32,7 +33,7 @@ revenue.get('/occupancy', async (c) => {
   return c.json(result);
 });
 
-// GET /revenue/top-customers
+/** GET /revenue/top-customers — top khách hàng chi tiêu nhiều nhất */
 revenue.get('/top-customers', async (c) => {
   const startDate = c.req.query('startDate');
   const endDate = c.req.query('endDate');
