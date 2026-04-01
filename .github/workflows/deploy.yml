@@ -15,9 +15,10 @@ jobs:
             username: ${{ secrets.VPS_USER }}                                                                      
             key: ${{ secrets.SSH_PRIVATE_KEY }}
             port: ${{ secrets.VPS_PORT }}
-            script: |                                                                                                
-              cd /var/www/xproject-homestay
-              git pull origin dev-vu                                                                                 
-              docker compose up -d --build                                                                         
-              docker image prune -f
+            script: |
+              cd /var/www/xproject-homestay                                                                          
+              git pull origin dev-vu
+              docker compose up -d --build
+              docker exec nhacam_backend node_modules/.bin/drizzle-kit migrate
+              docker image prune -f                                                                                  
               echo "Deploy completed at $(date)"
