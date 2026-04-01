@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Database PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: nhacam_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-nhacam_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nhacam_password}
+      POSTGRES_DB: ${DB_NAME:-nhacam_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # Backend API
+  backend:
+    build: ./backend
+    container_name: nhacam_backend
+    restart: always
+    environment:
+      DATABASE_URL: postgres://${DB_USER:-nhacam_user}:${DB_PASSWORD:-nhacam_password}@db:5432/${DB_NAME:-nhacam_db}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 3000
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+
+  # Frontend Web
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    container_name: nhacam_frontend
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
