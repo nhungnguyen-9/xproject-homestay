@@ -67,6 +67,19 @@ export function RoomManagement() {
     }
   }, [updateRoomImages]);
 
+  /** Thay thế ảnh — chuyển URL tuyệt đối về tương đối rồi gọi API */
+  const handleReplace = useCallback(async (roomId: string, displayUrl: string, newFile: File) => {
+    const imageUrl = displayUrl.replace(roomService.BACKEND_ORIGIN, '');
+    try {
+      const res = await roomService.replaceImage(roomId, imageUrl, newFile);
+      updateRoomImages(roomId, res.images);
+      toast.success('Đã thay thế ảnh');
+    } catch (err) {
+      toast.error(`Thay thế ảnh thất bại: ${err instanceof Error ? err.message : 'Lỗi'}`);
+      throw err;
+    }
+  }, [updateRoomImages]);
+
   /** Sắp xếp lại ảnh — optimistic UI rồi đồng bộ server */
   const handleReorder = useCallback(async (roomId: string, newImages: string[]) => {
     // Chuyển URL tuyệt đối về path tương đối
@@ -121,6 +134,7 @@ export function RoomManagement() {
               onUpload={(files) => handleUpload(room.id, files)}
               onRemove={(url) => handleRemove(room.id, url)}
               onReorder={(imgs) => handleReorder(room.id, imgs)}
+              onReplace={(url, file) => handleReplace(room.id, url, file)}
             />
           ))}
         </div>
@@ -135,11 +149,13 @@ function RoomImageCard({
   onUpload,
   onRemove,
   onReorder,
+  onReplace,
 }: {
   room: RoomDetail;
   onUpload: (files: File[]) => Promise<void>;
   onRemove: (imageUrl: string) => Promise<void>;
   onReorder: (images: string[]) => void;
+  onReplace: (imageUrl: string, newFile: File) => Promise<void>;
 }) {
   return (
     <div className="rounded-lg border bg-white p-5 shadow-sm">
@@ -164,6 +180,7 @@ function RoomImageCard({
         onUpload={onUpload}
         onRemove={onRemove}
         onReorder={onReorder}
+        onReplace={onReplace}
       />
     </div>
   );

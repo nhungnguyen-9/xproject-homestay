@@ -70,3 +70,16 @@ export async function reorderImages(roomId: string, images: string[]): Promise<I
     body: { images },
   });
 }
+
+/**
+ * Thay thế 1 ảnh phòng bằng ảnh mới — giữ nguyên vị trí
+ */
+export async function replaceImage(roomId: string, oldImageUrl: string, newFile: File): Promise<ImagesResponse> {
+  const formData = new FormData();
+  formData.append('oldImageUrl', oldImageUrl);
+  formData.append('file', newFile);
+  return apiFetch<ImagesResponse>(`/rooms/${roomId}/images/replace`, {
+    method: 'PUT',
+    body: formData,
+  });
+}

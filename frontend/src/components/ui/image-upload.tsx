@@ -9,6 +9,7 @@ export interface ImageUploadProps {
   onUpload: (files: File[]) => Promise<void>
   onRemove: (imageUrl: string) => Promise<void>
   onReorder: (images: string[]) => void
+  onReplace?: (oldImageUrl: string, newFile: File) => Promise<void>
   maxImages?: number
   disabled?: boolean
 }
@@ -17,6 +18,7 @@ export interface ImageUploadProps {
  * Component quản lý danh sách ảnh của Admin
  * - Hiển thị tối đa `maxImages` (mặc định 5).
  * - Chọn file → preview → nhấn nút "Tải lên" mới gọi API.
+ * - Click ảnh đã upload → chọn file mới → thay thế tại chỗ.
  * - Hỗ trợ kéo thả thay đổi thứ tự ảnh đã upload.
  */
 export function ImageUpload({
@@ -24,13 +26,16 @@ export function ImageUpload({
   onUpload,
   onRemove,
   onReorder,
+  onReplace,
   maxImages = 5,
   disabled = false,
 }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const replaceInputRef = useRef<HTMLInputElement>(null)
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
   const [uploading, setUploading] = useState(false)
   const [removingUrl, setRemovingUrl] = useState<string | null>(null)
+  const [replacingUrl, setReplacingUrl] = useState<string | null>(null)
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
 
   /** Blob URL preview cho ảnh pending — revoke khi thay đổi để tránh memory leak */
@@ -96,6 +101,42 @@ export function ImageUpload({
     }
   }
 
+  /** Click ảnh đã upload → mở file picker để thay thế */
+  const handleReplaceClick = (imageUrl: string) => {
+    if (isDisabled || !onReplace) return
+    setReplacingUrl(imageUrl)
+    replaceInputRef.current?.click()
+  }
+
+  /** File picker trả về file mới → gọi API replace */
+  const handleReplaceFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !replacingUrl || !onReplace) {
+      setReplacingUrl(null)
+      return
+    }
+
+    const isValidType = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
+    const isValidSize = file.size <= 2 * 1024 * 1024
+    if (!isValidType || !isValidSize) {
+      toast.error('File không hợp lệ (chỉ JPG/PNG/WEBP, tối đa 2MB)')
+      setReplacingUrl(null)
+      if (replaceInputRef.current) replaceInputRef.current.value = ''
+      return
+    }
+
+    setUploading(true)
+    try {
+      await onReplace(replacingUrl, file)
+    } catch {
+      // Error toast handled by parent
+    } finally {
+      setReplacingUrl(null)
+      setUploading(false)
+      if (replaceInputRef.current) replaceInputRef.current.value = ''
+    }
+  }
+
   // Luồng xử lý Kéo/Thả ảnh đã upload để Reorder
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIdx(index)
@@ -129,6 +170,7 @@ export function ImageUpload({
           if (index < images.length) {
             const url = images[index]
             const isRemoving = url === removingUrl
+            const isReplacing = url === replacingUrl
             return (
               <div
                 key={url}
@@ -136,13 +178,24 @@ export function ImageUpload({
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, index)}
-                className="group/slot relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-lg transition-all border-2 border-solid border-gray-200 bg-gray-50"
+                onClick={() => handleReplaceClick(url)}
+                className={`group/slot relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-lg transition-all border-2 border-solid border-gray-200 bg-gray-50 ${onReplace ? 'cursor-pointer' : ''}`}
               >
-                <div className="absolute left-1 top-1 z-10 cursor-grab rounded-md bg-black/40 p-1 text-white opacity-0 transition-opacity hover:bg-black/60 active:cursor-grabbing group-hover/slot:opacity-100">
+                <div
+                  className="absolute left-1 top-1 z-10 cursor-grab rounded-md bg-black/40 p-1 text-white opacity-0 transition-opacity hover:bg-black/60 active:cursor-grabbing group-hover/slot:opacity-100"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <GripVertical size={14} />
                 </div>
                 <img src={url} alt={`Ảnh phòng ${index + 1}`} className="h-full w-full object-cover" />
-                {isRemoving && (
+                {onReplace && !isRemoving && !isReplacing && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover/slot:bg-black/20">
+                    <span className="rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white opacity-0 transition-opacity group-hover/slot:opacity-100">
+                      Thay thế
+                    </span>
+                  </div>
+                )}
+                {(isRemoving || isReplacing) && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                     <Loader2 size={24} className="animate-spin text-white" />
                   </div>
@@ -222,13 +275,23 @@ export function ImageUpload({
         Kéo thả ảnh để thay đổi thứ tự. Hỗ trợ JPG, PNG, WEBP (Tối đa 2MB/ảnh).
       </p>
 
-      {/* Input File ẩn, được trigger khi click vào slot trống */}
+      {/* Input File ẩn — upload nhiều ảnh mới */}
       <input
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
         accept="image/jpeg, image/png, image/webp"
         multiple
+        disabled={isDisabled}
+        className="hidden"
+      />
+
+      {/* Input File ẩn — thay thế 1 ảnh (single file) */}
+      <input
+        type="file"
+        ref={replaceInputRef}
+        onChange={handleReplaceFile}
+        accept="image/jpeg, image/png, image/webp"
         disabled={isDisabled}
         className="hidden"
       />

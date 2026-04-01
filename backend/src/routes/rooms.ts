@@ -117,6 +117,53 @@ rooms.delete('/:id/images', authMiddleware, adminOnly, zValidator('json', delete
 });
 
 /**
+ * PUT /rooms/:id/images/replace — Thay thế 1 ảnh phòng (chỉ admin)
+ * Multipart form: field "oldImageUrl" (string) + field "file" (File)
+ * Giữ nguyên vị trí ảnh trong mảng, thay URL cũ bằng URL mới.
+ * @returns Danh sách images sau khi thay thế
+ */
+rooms.put('/:id/images/replace', authMiddleware, adminOnly, async (c) => {
+  const roomId = c.req.param('id')!;
+  const room = await roomService.getById(roomId);
+  const currentImages = (room.images as string[]) || [];
+
+  const body = await c.req.parseBody();
+  const oldImageUrl = body['oldImageUrl'];
+  const file = body['file'];
+
+  if (typeof oldImageUrl !== 'string' || !oldImageUrl) {
+    throw new AppError(400, 'Thiếu oldImageUrl');
+  }
+  if (!(file instanceof File)) {
+    throw new AppError(400, 'Thiếu file ảnh mới');
+  }
+
+  const oldIndex = currentImages.indexOf(oldImageUrl);
+  if (oldIndex === -1) {
+    throw new AppError(400, 'Ảnh cũ không tồn tại trong phòng này');
+  }
+
+  try {
+    // Lưu ảnh mới
+    const filename = await saveRoomImage(file, roomId, 0);
+    const newUrl = `/uploads/rooms/${filename}`;
+
+    // Thay thế tại cùng vị trí
+    const updatedImages = [...currentImages];
+    updatedImages[oldIndex] = newUrl;
+
+    await roomService.update(roomId, { images: updatedImages });
+
+    // Xóa file ảnh cũ khỏi disk
+    await deleteRoomImage(oldImageUrl);
+
+    return c.json({ images: updatedImages });
+  } catch (err: any) {
+    throw new AppError(400, err.message);
+  }
+});
+
+/**
  * PUT /rooms/:id/images/reorder — Sắp xếp lại thứ tự ảnh phòng (chỉ admin)
  * Body JSON: { images: string[] } — mảng URL theo thứ tự mới.
  * Tất cả URLs phải tồn tại trong danh sách ảnh hiện tại (cùng set, khác thứ tự).
