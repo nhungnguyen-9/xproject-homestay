@@ -5,6 +5,7 @@ export const BOOKING_MODES: { value: BookingMode; label: string }[] = [
     { value: "hourly", label: "Theo giờ" },
     { value: "daily", label: "Theo ngày (14:00-12:00)" },
     { value: "overnight", label: "Qua đêm (22:00-09:00)" },
+    { value: "combo6h", label: "Combo 6H" },
 ];
 
 /** Nhãn tiếng Việt cho từng hạng phòng */

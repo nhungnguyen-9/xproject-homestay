@@ -50,7 +50,7 @@ export const FoodModal: React.FC<FoodModalProps> = ({ open, onOpenChange, items,
                                     (item.qty || 0) > 0 ? "border-primary" : "border-border/50",
                                 )}
                             >
-                                <div className="absolute top-3 right-3"><span className="bg-status-info-muted text-xs text-status-info-foreground px-2 py-1 rounded-full">Sản phẩm</span></div>
+                                {/* <div className="absolute top-3 right-3"><span className="bg-status-info-muted text-xs text-status-info-foreground px-2 py-1 rounded-full">Sản phẩm</span></div> */}
 
                                 <div className="h-48 flex items-center justify-center bg-muted/50 rounded-md overflow-hidden mb-3">
                                     {item.image ? (

@@ -19,7 +19,7 @@ export const Footer = () => {
                         className="rounded-full w-12 h-12 mx-auto md:mx-0"
                     />
                     <p className="mt-3 italic text-sm text-slate-600">
-                        Chốn lặng thinh - Vị đậm tình
+                        Nhà Cam Homestay - Stay.Chill.Repeat
                     </p>
                 </div>
 

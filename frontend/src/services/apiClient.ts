@@ -1,6 +1,6 @@
 import * as authService from './authService';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://103.57.220.186/api/v1';
 
 type FetchOptions = Omit<RequestInit, 'body'> & {
   body?: unknown;

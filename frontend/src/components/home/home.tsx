@@ -1,52 +1,47 @@
-import React, { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { HeroBanner } from '../hero/hero-banner'
 import { GalleryGrid } from '../gallery-grid'
-import * as roomService from '@/services/roomService'
-import type { RoomDetail } from '@/types/room'
-import { formatPrice } from '@/utils/helpers'
-import { Loader2 } from 'lucide-react'
+import { ReviewsSection } from './reviews-section'
 
-const filterCategories = ["Tất cả", "Tiêu chuẩn", "VIP", "Super VIP"]
+const filterCategories = ["Hôm nay", "Giá thấp"]
 
-/** Map bộ lọc UI → giá trị type trong DB */
-const FILTER_TYPE_MAP: Record<string, string | null> = {
-  "Tất cả": null,
-  "Tiêu chuẩn": "standard",
-  "VIP": "vip",
-  "Super VIP": "supervip",
-}
+const MOCK_ROOMS = [
+  {
+    title: "Chi Nhánh Cam 01",
+    price: "3 tiếng/199K • Qua đêm/299K",
+    images: [
+      "/images/generated-1773763911137.png",
+      "/images/generated-1773764116868.png",
+      "/images/generated-1773764146153.png",
+      "/images/generated-1773764166795.png",
+      "/images/generated-1773764183697.png",
+    ],
+  },
+  {
+    title: "Chi Nhánh Cam 02",
+    price: "3 tiếng/219K • Qua đêm/319K",
+    images: [
+      "/images/generated-1773764199921.png",
+      "/images/generated-1773764218357.png",
+      "/images/generated-1773764255793.png",
+      "/images/generated-1773764270784.png",
+      "/images/generated-1773764296856.png",
+    ],
+  },
+  {
+    title: "Chi Nhánh Cam 03",
+    price: "3 tiếng/249K • Qua đêm/349K",
+    images: [
+      "/images/generated-1773764315880.png",
+      "/images/generated-1773764350601.png",
+      "/images/generated-1773764375449.png",
+      "/images/generated-1773764415086.png",
+    ],
+  },
+]
 
-/** Chuyển dữ liệu phòng từ API thành props cho GalleryGrid */
-function toGalleryItem(room: RoomDetail) {
-  const images = room.images.length > 0
-    ? room.images.map(roomService.imageUrl)
-    : ['/images/placeholder-room.png']
-  return {
-    title: room.name,
-    price: `3 tiếng/${formatPrice(room.hourlyRate * 3)} • Qua đêm/${formatPrice(room.overnightRate)}`,
-    images,
-  }
-}
-
-/**
- * Trang chủ — hiển thị hero banner, bộ lọc danh mục phòng, và lưới phòng từ API
- */
 export const Home = () => {
-  const [activeFilter, setActiveFilter] = useState("Tất cả")
-  const [rooms, setRooms] = useState<RoomDetail[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    roomService.getAll()
-      .then(setRooms)
-      .catch(() => setRooms([]))
-      .finally(() => setLoading(false))
-  }, [])
-
-  const filteredRooms = rooms.filter(room => {
-    const filterType = FILTER_TYPE_MAP[activeFilter]
-    return filterType === null || room.type === filterType
-  })
+  const [activeFilter, setActiveFilter] = useState("Hôm nay")
 
   return (
     <div className="flex flex-col gap-6 pb-20">
@@ -55,7 +50,7 @@ export const Home = () => {
       <div className="px-8 mt-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-[28px] font-extrabold text-[#2B2B2B] tracking-tight">
-            Danh sách phòng
+            Danh sách chi nhánh
           </h2>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -79,17 +74,9 @@ export const Home = () => {
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="size-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : filteredRooms.length === 0 ? (
-        <div className="flex items-center justify-center py-20">
-          <p className="text-muted-foreground">Không có phòng nào.</p>
-        </div>
-      ) : (
-        <GalleryGrid items={filteredRooms.map(toGalleryItem)} />
-      )}
+      <GalleryGrid items={MOCK_ROOMS} />
+
+      <ReviewsSection />
     </div>
   )
 }

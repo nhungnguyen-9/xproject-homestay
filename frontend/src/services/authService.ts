@@ -1,7 +1,7 @@
 import type { UserRole, User, AuthTokens, AuthState, LoginResponse, RefreshResponse } from '@/types/auth';
 
 const AUTH_STORAGE_KEY = 'nhacam_auth';
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://103.57.220.186/api/v1';
 
 function loadState(): AuthState {
   try {

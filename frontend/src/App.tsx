@@ -2,8 +2,6 @@ import { Toaster } from "sonner"
 import { Footer } from "./components/footer/footer"
 import { Header } from "./components/header/header"
 import { Outlet } from "react-router";
-import MainHearts from "./components/common/MainHearts"
-import MainSnowfall from "./components/common/MainSnowfall"
 
 /**
  * Layout chính của ứng dụng, bao gồm Header, nội dung và Footer
@@ -16,7 +14,7 @@ function App() {
           onLogoClick={() => (window.location.hash = "#locations")}
         />
 
-        <main className="relative">
+        <main className="relative bg-background flex-1">
           {/* <MainHearts />
           <MainSnowfall flakes={30} /> */}
           <Outlet />

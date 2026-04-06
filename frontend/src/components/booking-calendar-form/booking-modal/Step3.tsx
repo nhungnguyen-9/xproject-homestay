@@ -28,12 +28,12 @@ export const Step3: React.FC<Step3Props> = ({ formData, price }) => {
 
     const { bankId, bankAccount, accountName } = BANK_CONFIG;
     const phoneSuffix = formData.guestPhone.slice(-4);
-    
+
     // Định dạng ngày DDMM để nội dung CK ngắn gọn (VD: 2003 cho ngày 20/03)
     const day = String(formData.checkInDate.getDate()).padStart(2, '0');
     const month = String(formData.checkInDate.getMonth() + 1).padStart(2, '0');
     const dateCompact = `${day}${month}`;
-    
+
     // Nội dung CK: "DP [tên phòng] [4 số cuối SĐT] [DDMM]" để đối soát tự động dễ dàng
     const transferContent = `DP ${formData.roomName} ${phoneSuffix} ${dateCompact}`;
     const qrUrl = `https://img.vietqr.io/image/${bankId}-${bankAccount}-compact2.png?amount=${totalPrice}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountName)}`;
@@ -56,6 +56,11 @@ export const Step3: React.FC<Step3Props> = ({ formData, price }) => {
                     </div>
                     <div className="mt-4">
                         <p className="text-sm text-gray-600">Hoặc quét mã QR bên cạnh để thanh toán nhanh.</p>
+                    </div>
+                    <div className="mt-4">
+                        <p className="text-sm text-gray-600">
+                            Bước 3: Gửi ảnh chuyển khoản thành công cho page nhé.
+                        </p>
                     </div>
                 </div>
 

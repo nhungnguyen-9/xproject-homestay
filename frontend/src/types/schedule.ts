@@ -68,7 +68,7 @@ export interface TimeSlot {
 }
 
 /** Chế độ đặt phòng: theo giờ, theo ngày, hoặc qua đêm */
-export type BookingMode = 'hourly' | 'daily' | 'overnight';
+export type BookingMode = 'hourly' | 'daily' | 'overnight' | 'combo6h';
 
 /** Món ăn/đồ uống kèm theo đặt phòng */
 export interface FoodItem {

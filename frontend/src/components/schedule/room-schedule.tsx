@@ -7,16 +7,14 @@ import type {
     ScheduleProps,
     FilterOption,
 } from '@/types/schedule';
-import { HelpCircle } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { BookingModal } from '@/components/booking-calendar-form/booking-modal';
 
 const HOUR_WIDTH = 80;
 const ROOM_LABEL_WIDTH = 80;
 const HEADER_HEIGHT = 50;
 const INDICATOR_ROW_HEIGHT = 30;
-const ROW_HEIGHT = 50;
-
-const HIGHLIGHTED_HOURS = [6, 8, 10, 12, 14, 16];
+const ROW_HEIGHT = 60;
 
 const timeToMinutes = (time: string): number => {
     const [hours, minutes] = time.split(':').map(Number);
@@ -60,18 +58,18 @@ const FilterButton: React.FC<FilterButtonProps> = ({
 }) => {
     const variantStyles = {
         standard: active
-            ? 'text-white'
-            : 'bg-card text-foreground border-primary/30 hover:border-primary/20',
+            ? 'text-black hover:cursor-pointer'
+            : 'bg-gray-100 text-foreground border-black/30 hover:border-black/20 ',
         vip: active
-            ? 'text-white'
-            : 'bg-card text-foreground border-primary/30 hover:border-primary/20',
+            ? 'text-black hover:cursor-pointer'
+            : 'bg-gray-100 text-foreground border-black/30 hover:border-black/20',
         supervip: active
-            ? 'text-white'
-            : 'bg-card text-foreground border-primary/30 hover:border-primary/20',
+            ? 'text-black hover:cursor-pointer'
+            : 'bg-gray-100 text-foreground border-black/30 hover:border-black/20',
     };
 
     const activeGradientStyle = active
-        ? { background: 'linear-gradient(135deg, var(--primary), #FFB199)' }
+        ? { background: 'white' }
         : undefined;
 
     return (
@@ -132,32 +130,20 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
         hours.push(i);
     }
 
-    /** Trả về emoji thời tiết tương ứng với khung giờ trong ngày */
-    const getWeatherIcon = (hour: number) => {
-        if (hour === 6) return '🌅';
-        if (hour === 8) return '☀️';
-        if (hour === 10) return '☁';
-        if (hour === 12) return '🌤️';
-        if (hour === 14) return '⛅';
-        if (hour === 16) return '🌥️';
-        return '';
-    };
-
     return (
         <div
             className="flex bg-muted/50 border-b border-border"
             style={{ height: HEADER_HEIGHT }}
         >
             <div
-                className="flex items-center justify-center text-black font-bold text-md shrink-0 rounded-md m-1"
-                style={{ width: ROOM_LABEL_WIDTH, background: 'linear-gradient(90deg, #F8E1EE 0%, #FFF1E1 100%)' }}
+                className="flex items-center justify-center text-black font-semibold text-md shrink-0 rounded-md m-1"
+                style={{ width: ROOM_LABEL_WIDTH }}
             >
                 Phòng
             </div>
 
             <div className="flex-1 flex relative">
                 {hours.map((hour, index) => {
-                    const weatherIcon = getWeatherIcon(hour);
                     const isLastColumn = index === hours.length - 1;
                     return (
                         <div
@@ -165,12 +151,7 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
                             className={`flex flex-col items-center justify-center border-l border-border text-sm text-black gap-0.5 ${isLastColumn ? 'border-r' : ''}`}
                             style={{ width: HOUR_WIDTH * 2 }}
                         >
-                            <span className="font-bold text-sm">{String(hour).padStart(2, '0')}h</span>
-                            <div className="h-5 flex items-center justify-center">
-                                {weatherIcon && (
-                                    <span className="text-lg leading-none">{weatherIcon}</span>
-                                )}
-                            </div>
+                            <span className="font-medium text-sm">{String(hour).padStart(2, '0')}h</span>
                         </div>
                     );
                 })}
@@ -245,9 +226,9 @@ const RoomRow: React.FC<RoomRowProps> = ({
     const totalWidth = (endHour - startHour) * HOUR_WIDTH;
 
     const roomTypeColors = {
-        standard: 'rounded-md m-1 bg-room-standard text-primary-foreground font-medium text-sm shrink-0',
-        vip: 'rounded-md m-1 bg-room-vip text-primary-foreground font-medium text-sm shrink-0',
-        supervip: 'rounded-md m-1 bg-room-supervip text-primary-foreground font-medium text-sm shrink-0',
+        standard: 'rounded-md m-1 text-black font-medium text-sm shrink-0',
+        vip: 'rounded-md m-1 text-black font-medium text-sm shrink-0',
+        supervip: 'rounded-md m-1 text-black font-medium text-sm shrink-0',
     };
 
     const isTimeBooked = (minutes: number): boolean => {
@@ -278,24 +259,20 @@ const RoomRow: React.FC<RoomRowProps> = ({
         <div className="flex border-b border-border" style={{ height: ROW_HEIGHT }}>
             <div
                 className={cn(
-                    'flex items-center justify-center font-bold text-md shrink-0',
+                    'flex items-center justify-center text-[#374151] text-sm shrink-0 font-semibold',
                     roomTypeColors[room.type]
                 )}
                 style={{
                     width: ROOM_LABEL_WIDTH,
-                    background: 'linear-gradient(135deg, #FFB9A7 0%, #FFDFD3 100%)',
-                    color: '#F06E6E',
-                    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
-                    fontWeight: 'bold'
                 }}
             >
                 {room.name}
             </div>
 
             <div
-                className="flex-1 relative bg-card cursor-pointer hover:bg-accent/50 transition-colors"
-                onClick={handleTimelineClick}
+                className="flex-1 relative bg-card transition-colors"
             >
+                {/* Grid lines */}
                 <div className="absolute inset-0 pointer-events-none">
                     {Array.from({ length: (endHour - startHour) / 2 }).map((_, i) => (
                         <div
@@ -310,6 +287,44 @@ const RoomRow: React.FC<RoomRowProps> = ({
                     />
                 </div>
 
+                {/* Slot buttons với + icon khi hover */}
+                <div className="absolute inset-0 flex" style={{ width: totalWidth }}>
+                    {Array.from({ length: (endHour - startHour) / 2 }).map((_, i) => {
+                        const slotHour = startHour + i * 2
+                        const slotStart = slotHour * 60
+                        const slotEnd = (slotHour + 2) * 60
+                        const occupied = bookings.some(b => {
+                            const bs = timeToMinutes(b.startTime)
+                            const be = timeToMinutes(b.endTime) + 10 // +10 phút buffer
+                            return bs < slotEnd && be > slotStart
+                        })
+                        return (
+                            <div
+                                key={i}
+                                className="relative"
+                                style={{ width: HOUR_WIDTH * 2 }}
+                            >
+                                {occupied ? (
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity z-[5] cursor-not-allowed">
+                                    </div>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const timeString = `${String(slotHour).padStart(2, '0')}:00`
+                                            onEmptySlotClick?.(room.id, timeString)
+                                        }}
+                                        className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary z-[5] hover:cursor-pointer"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                    </button>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+
+                {/* Booking blocks */}
                 <div className="absolute inset-0" style={{ width: totalWidth }}>
                     {bookings.map((booking) => (
                         <BookingBlock
@@ -348,14 +363,7 @@ const CurrentTimeIndicator: React.FC<CurrentTimeIndicatorProps> = ({
             style={{ left: `${left}px`, top: 0, bottom: 0 }}
         >
             <div
-                className="absolute bg-[#03c068] text-white text-xs px-2.5 py-1.5 rounded-xl flex items-center justify-center gap-0.5 font-bold -translate-x-1/2"
-                style={{ top: '2px' }}
-            >
-                ⏰
-                <span>{timeLabel}</span>
-            </div>
-            <div
-                className="w-0.5 bg-[#03c068] absolute"
+                className="w-0.5 h-full bg-[#03c068]"
                 style={{
                     top: `${INDICATOR_ROW_HEIGHT}px`,
                     bottom: 0,
@@ -454,36 +462,16 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
 
     return (
         <div className="max-w-7xl mx-auto">
-            <div className='w-full bg-card rounded-xl shadow-sm border border-border overflow-hidden text-center mb-4 lg:mb-8'>
-                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 lg:gap-6 p-2 sm:p-3 lg:p-4 border-t border-gray-200">
-                    <div className="flex items-center gap-1 sm:gap-2">
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded bg-primary" />
-                        <span className="text-[10px] sm:text-xs lg:text-sm text-gray-600">Đã đặt</span>
-                    </div>
-                    <div className="flex items-center gap-1 sm:gap-2">
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded bg-white border border-border" />
-                        <span className="text-[10px] sm:text-xs lg:text-sm text-gray-600">Trống</span>
-                    </div>
-                    <div className="flex items-center gap-1 sm:gap-2">
-                        <div className="w-0.5 h-2.5 sm:h-3 lg:h-4 bg-[#03c068]" />
-                        <span className="text-[10px] sm:text-xs lg:text-sm text-gray-600">Thời gian hiện tại</span>
-                    </div>
-                </div>
-                <div className='text-center text-blue-500 w-full px-2 sm:px-4 text-[11px] sm:text-xs lg:text-sm'>
-                    <span className='font-bold'>💡 Hướng dẫn:</span>
-                    <span> Kéo trên timeline để xem phòng trống. Nhấn vào khung thời gian trống <span className="inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded bg-white border border-border align-middle mx-0.5" /> để bắt đầu đặt phòng</span>
-                </div>
-                <p className='text-amber-500 font-semibold mx-1 my-1.5 sm:my-2 text-[11px] sm:text-xs lg:text-sm'>⏰ Phí thêm giờ: 40k/giờ</p>
-            </div>
-            <div className="w-full bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-3 lg:p-4 border-b border-border">
+
+            {/* 1. Top bar: Instructions + date | filters */}
+            <div className="w-full bg-card rounded-xl shadow-sm border border-border overflow-hidden mb-3">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-3 lg:p-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
                         <button
                             className="flex items-center gap-2 px-3 lg:px-4 py-2 text-white rounded-lg transition-transform"
-                            style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary-hover))' }}
+                            style={{ background: '#f87171f2' }}
                         >
-
-                            <span className="text-xs lg:text-sm font-medium">🎯 Hướng dẫn</span>
+                            <span className="text-xs lg:text-sm font-medium">Hướng dẫn</span>
                         </button>
 
                         <DatePicker date={selectedDate} onChange={handleDateChange} />
@@ -510,7 +498,18 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                         />
                     </div>
                 </div>
+            </div>
 
+            {/* 2. Amenities bar */}
+            <div className="w-full bg-card rounded-xl shadow-sm border border-border px-4 py-6 mb-3">
+                <p className="text-sm font-bold text-foreground mb-2">Tổng Quan Tiện Nghi Phòng</p>
+                <p className="text-sm text-muted-foreground">
+                    Tiện nghi: 🛏️ Bộ đồ giường cao cấp • 🚿 Vòi sen nước nóng • 📶 Wi-Fi tốc độ cao • ❄️ Máy điều hòa • ☕ Bữa sáng theo yêu cầu
+                </p>
+            </div>
+
+            {/* 3. Timeline */}
+            <div className="w-full bg-card rounded-xl shadow-sm border border-border overflow-hidden p-3">
                 <div className="overflow-x-auto relative">
                     <div style={{ minWidth: totalWidth }}>
                         <TimelineHeader
@@ -520,28 +519,6 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                         />
 
                         <div className="relative">
-                            <div
-                                className="flex bg-card border-b border-border/50 relative"
-                                style={{ height: INDICATOR_ROW_HEIGHT }}
-                            >
-                                <div style={{ width: ROOM_LABEL_WIDTH }} className="shrink-0" />
-                                <div className="flex-1 relative">
-                                    <div className="absolute inset-0 pointer-events-none">
-                                        {Array.from({ length: (endHour - startHour) / 2 }).map((_, i) => (
-                                            <div
-                                                key={i}
-                                                className="absolute top-0 bottom-0 border-l border-border/50"
-                                                style={{ left: `${i * HOUR_WIDTH * 2}px` }}
-                                            />
-                                        ))}
-                                        <div
-                                            className="absolute top-0 bottom-0 border-r border-border/50"
-                                            style={{ right: 0 }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
                             {filteredRooms.map((room) => (
                                 <RoomRow
                                     key={room.id}
@@ -560,6 +537,14 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                             />
                         </div>
                     </div>
+                </div>
+
+                {/* 4. Footer notes */}
+                <div className="border-t border-border px-4 py-3 bg-muted/20 mt-5">
+                    <p className="text-xs font-bold text-foreground mb-0.5">Ghi chú tiện nghị</p>
+                    <p className="text-xs text-muted-foreground">
+                        🛏️ G01: 1 giường đôi • 🌿 P102: ban công thoáng • 🛁 P103: bồn tắm • 📺 G02: Smart TV • ❄️ P202: máy lạnh 2 chiều
+                    </p>
                 </div>
             </div>
 

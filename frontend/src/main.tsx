@@ -25,6 +25,11 @@ import * as bookingService from './services/bookingService';
 import * as customerService from './services/customerService';
 import * as promoService from './services/promoService';
 import * as telegramService from './services/telegramService';
+import { BookingPage } from './components/booking/BookingPage.tsx';
+import { ImageLibraryPage } from './components/images-library/ImageLibraryPage.tsx';
+import { RestRoomPage } from './components/rest-room/RestRoomPage.tsx';
+import { ComingSoonPage } from './components/common/ComingSoonPage.tsx';
+import { InstructionPage } from './components/instruction/InstructionPage.tsx';
 
 /** Khởi tạo các service (nạp dữ liệu mẫu vào localStorage lần đầu) */
 bookingService.init();
@@ -40,9 +45,12 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<App />}>
           <Route path="/" element={<Home />} />
-          <Route path="/chi-nhanh" element={<LocationPage />} />
-          <Route path="/chi-nhanh/:id" element={<DestinationPage />} />
-          <Route path="/hang-phong/:id" element={<RoomDetailRoute />} />
+          <Route path="/phong-nghi" element={<RestRoomPage />} />
+          <Route path="/huong-dan" element={<InstructionPage />} />
+          <Route path="/dat-phong" element={<BookingPage />} />
+          <Route path="/thu-vien-anh" element={<ImageLibraryPage />} />
+          <Route path="/chinh-sach" element={<ComingSoonPage />} />
+          <Route path="/huong-dan" element={<InstructionPage />} />
         </Route>
 
         <Route path="/admin/login" element={<LoginPage />} />

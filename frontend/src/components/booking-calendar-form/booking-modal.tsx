@@ -221,10 +221,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         <>
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent
-                    className="relative max-w-6xl w-[95vw] max-h-[90vh] sm:max-h-[85vh] flex flex-col p-0 gap-0"
+                    className="relative max-w-6xl w-[95vw] max-h-[90vh] sm:max-h-[85vh] flex flex-col p-0 gap-0 bg-white"
                     style={{ maxWidth: "1150px", width: "95vw" }}
                 >
-                    {open && <Snowfall />}
+                    {/* {open && <Snowfall />} */}
 
                     <div className="relative flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 border-b">
                         <DialogTitle className="text-lg sm:text-2xl font-bold text-gray-800">
