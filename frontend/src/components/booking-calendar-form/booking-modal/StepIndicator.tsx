@@ -7,6 +7,9 @@ interface StepIndicatorProps {
     totalSteps: number;
 }
 
+/**
+ * Thanh chỉ báo bước hiện tại trong quy trình đặt phòng (1 → 2 → 3)
+ */
 export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
     const steps = [
         { num: 1, label: "Chọn phòng" },
@@ -23,8 +26,8 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => 
                             className={cn(
                                 "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all",
                                 currentStep >= step.num
-                                    ? "bg-rose-400 text-white"
-                                    : "bg-gray-200 text-gray-500",
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted text-muted-foreground",
                             )}
                         >
                             {currentStep > step.num ? (
@@ -36,7 +39,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => 
                         <span
                             className={cn(
                                 "text-xs font-medium hidden md:block",
-                                currentStep >= step.num ? "text-rose-500" : "text-gray-400",
+                                currentStep >= step.num ? "text-primary" : "text-muted-foreground",
                             )}
                         >
                             {step.label}
@@ -46,7 +49,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => 
                         <div
                             className={cn(
                                 "w-6 h-0.5 mx-1",
-                                currentStep > step.num ? "bg-rose-400" : "bg-gray-200",
+                                currentStep > step.num ? "bg-primary" : "bg-muted",
                             )}
                         />
                     )}

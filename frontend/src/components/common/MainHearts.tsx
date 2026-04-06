@@ -11,13 +11,15 @@ type Props = {
     className?: string
 }
 
+/**
+ * Hiệu ứng trái tim bay lên toàn trang — số lượng ngẫu nhiên nếu không truyền count
+ */
 export default function MainHearts({ count, emitterY = 95, speed = 0.7, className = "" }: Props) {
     const particlesInit = useCallback(async (engine: Engine) => {
         await loadSlim(engine)
         await loadEmittersPlugin(engine)
     }, [])
 
-    // show a random 10-12 hearts by default if `count` not provided
     const heartCount = useMemo(() => {
         if (typeof count === "number") return count
         return 8 + Math.floor(Math.random() * 3)
@@ -32,7 +34,6 @@ export default function MainHearts({ count, emitterY = 95, speed = 0.7, classNam
                 fullScreen: false,
                 fpsLimit: 60,
                 particles: {
-                    // spawn a fixed number of hearts which drift upwards
                     number: { value: heartCount, density: { enable: false, area: 10000 } },
                     shape: { type: "character", character: { value: ["❤", "💕", "💖"], font: "Verdana" } },
                     color: { value: ["#ffdce6", "#ffeef6", "#fff5f8", "#ffffff"] },

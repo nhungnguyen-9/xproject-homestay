@@ -13,10 +13,12 @@ import {
     ChevronLeft,
     ChevronRight,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
     calculateDuration,
-    timeToMinutes,
+    calculateBookingPrice,
 } from "@/utils/helpers";
+import * as customerService from "@/services/customerService";
 import {
     StepIndicator,
     PaymentModal,
@@ -25,9 +27,9 @@ import {
     Step2,
     Step3,
     FoodModal,
+    validateStep1 as sharedValidateStep1,
 } from "./booking-modal/index";
 
-// ==================== PROPS ====================
 interface BookingModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -39,10 +41,9 @@ interface BookingModalProps {
     onBookingCreate?: (booking: Omit<Booking, "id">) => void;
 }
 
-// ==================== SUB COMPONENTS ====================
-// Step components are now in separate files: Step1.tsx, Step2.tsx, Step3.tsx
-
-// ==================== MAIN COMPONENT ====================
+/**
+ * Modal đặt phòng đa bước — quản lý quy trình chọn phòng, nhập thông tin khách, xác nhận thanh toán
+ */
 export const BookingModal: React.FC<BookingModalProps> = ({
     open,
     onOpenChange,
@@ -60,7 +61,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         useState<BookingFormData | null>(null);
     const [showFoodModal, setShowFoodModal] = useState(false);
 
-    // Initialize form data
     const initialFormData = useMemo((): BookingFormData => {
         const checkInHour = selectedTime.split(":")[0] || "06";
         const checkOutHour = String(
@@ -90,7 +90,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
     const [formData, setFormData] = useState<BookingFormData>(initialFormData);
 
-    // Reset form when modal opens
     React.useEffect(() => {
         if (open) {
             setFormData(initialFormData);
@@ -99,14 +98,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         }
     }, [open, initialFormData]);
 
-    // Update form when selected slot changes while modal is open
     React.useEffect(() => {
         if (open) {
             setFormData(initialFormData);
         }
     }, [open, selectedDate, selectedTime, room, initialFormData]);
 
-    // Calculate duration and price
     const duration = useMemo(() => {
         return calculateDuration(
             formData.checkInDate,
@@ -121,20 +118,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         formData.checkOutTime,
     ]);
 
+    // Tính giá phòng bằng helper tập trung để đảm bảo tính đúng đắn cho các ca phụ thu
     const price = useMemo(() => {
-        const priceConfig = ROOM_PRICES[formData.roomType];
-        if (formData.mode === "daily") {
-            // Calculate number of days
-            const days = Math.ceil(duration / 24);
-            return priceConfig.dailyRate * days;
-        }
-        if (formData.mode === "overnight") {
-            // Calculate number of nights
-            const nights = Math.ceil(duration / 24);
-            return priceConfig.overnightRate * nights;
-        }
-        // Hourly rate
-        return Math.ceil(duration) * priceConfig.hourlyRate;
+        return calculateBookingPrice(formData.mode, duration, ROOM_PRICES[formData.roomType]);
     }, [formData.roomType, formData.mode, duration]);
 
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);
@@ -144,36 +130,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     );
     const totalPrice = price + foodTotal;
 
-    // Validation
     const validateStep1 = useCallback((): boolean => {
-        const newErrors: Record<string, string> = {};
-
-        if (duration < 0.5) {
-            newErrors.duration = "Thời gian đặt phòng tối thiểu 30 phút";
-        }
-
-        // Check for overlapping bookings
-        const roomBookings = bookings.filter((b) => b.roomId === formData.roomId);
-        const checkInMinutes = timeToMinutes(formData.checkInTime);
-        const checkOutMinutes = timeToMinutes(formData.checkOutTime);
-
-        for (const booking of roomBookings) {
-            const bookingStart = timeToMinutes(booking.startTime);
-            const bookingEnd = timeToMinutes(booking.endTime);
-
-            // Check overlap (same day only for now)
-            if (formData.checkInDate.toDateString() === selectedDate.toDateString()) {
-                if (
-                    (checkInMinutes >= bookingStart && checkInMinutes < bookingEnd) ||
-                    (checkOutMinutes > bookingStart && checkOutMinutes <= bookingEnd) ||
-                    (checkInMinutes <= bookingStart && checkOutMinutes >= bookingEnd)
-                ) {
-                    newErrors.time = "Khung giờ này đã có người đặt";
-                    break;
-                }
-            }
-        }
-
+        const newErrors = sharedValidateStep1(formData, bookings, duration, selectedDate);
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     }, [formData, bookings, duration, selectedDate]);
@@ -191,7 +149,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             newErrors.guestPhone = "Số điện thoại không hợp lệ";
         }
 
-        if (formData.idImages.length === 0) {
+        // Chỉ yêu cầu upload nếu khách chưa có ảnh CCCD trong hệ thống
+        const hasExistingImages = formData.customerLookup?.hasIdImages === true;
+        if (!hasExistingImages && formData.idImages.length === 0) {
             newErrors.idImages = "Vui lòng upload ảnh CMND/CCCD";
         }
 
@@ -210,14 +170,21 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         return Object.keys(newErrors).length === 0;
     }, [formData]);
 
-    // Handlers
-    const handleNext = () => {
+    const handleNext = async () => {
         if (currentStep === 1 && validateStep1()) {
             setCurrentStep(2);
         } else if (currentStep === 2 && validateStep2()) {
             setCurrentStep(3);
         } else if (currentStep === 3 && validateStep3()) {
-            // Create booking
+            // Upload ảnh CCCD nếu có ảnh mới và biết customerId
+            if (formData.idImages.length > 0 && formData.customerLookup?.id) {
+                try {
+                    await customerService.uploadIdImages(formData.customerLookup.id, formData.idImages);
+                } catch {
+                    // Non-blocking: booking vẫn được tạo dù upload ảnh fail
+                }
+            }
+
             const newBooking: Omit<Booking, "id"> = {
                 roomId: formData.roomId,
                 startTime: formData.checkInTime,
@@ -229,6 +196,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 adults: formData.adults,
                 foodItems: selectedFoodItems,
                 totalPrice,
+                date: formData.checkInDate.toISOString().split('T')[0],
+                category: 'guest' as const,
             };
             onBookingCreate?.(newBooking);
             setSubmittedFormData({ ...formData });
@@ -252,59 +221,81 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         <>
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent
-                    className="relative max-w-6xl w-[95vw] max-h-[90vh] sm:max-h-[85vh] flex flex-col p-0 gap-0"
+                    className="relative max-w-6xl w-[95vw] max-h-[90vh] sm:max-h-[85vh] flex flex-col p-0 gap-0 bg-white"
                     style={{ maxWidth: "1150px", width: "95vw" }}
                 >
-                    {open && <Snowfall />}
-                    {/* Header */}
+                    {/* {open && <Snowfall />} */}
+
                     <div className="relative flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 border-b">
                         <DialogTitle className="text-lg sm:text-2xl font-bold text-gray-800">
                             Đặt phòng
                         </DialogTitle>
 
-                        {/* centered indicator - hidden on mobile */}
                         <div className="hidden sm:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
                             <StepIndicator currentStep={currentStep} totalSteps={3} />
                         </div>
                     </div>
 
-                    {/* Mobile step indicator */}
-                    <div className="sm:hidden px-3 py-2 border-b bg-gray-50 flex justify-center">
+                    <div className="sm:hidden px-3 py-2 border-b bg-muted/50 flex justify-center">
                         <StepIndicator currentStep={currentStep} totalSteps={3} />
                     </div>
 
-                    {/* Scrollable Content */}
                     <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-3 sm:py-4">
-                        {currentStep === 1 && (
-                            <Step1
-                                formData={formData}
-                                setFormData={setFormData}
-                                rooms={rooms}
-                                bookings={bookings}
-                                selectedDate={selectedDate}
-                                price={price}
-                                onOpenFoodModal={() => setShowFoodModal(true)}
-                            />
-                        )}
-                        {currentStep === 2 && (
-                            <Step2
-                                formData={formData}
-                                setFormData={setFormData}
-                                price={price}
-                                duration={duration}
-                                errors={errors}
-                            />
-                        )}
-                        {currentStep === 3 && (
-                            <Step3
-                                formData={formData}
-                                price={price}
-                            />
-                        )}
+                        <AnimatePresence mode="wait">
+                            {currentStep === 1 && (
+                                <motion.div
+                                    key="step-1"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                >
+                                    <Step1
+                                        formData={formData}
+                                        setFormData={setFormData}
+                                        rooms={rooms}
+                                        bookings={bookings}
+                                        selectedDate={selectedDate}
+                                        price={price}
+                                        onOpenFoodModal={() => setShowFoodModal(true)}
+                                    />
+                                </motion.div>
+                            )}
+                            {currentStep === 2 && (
+                                <motion.div
+                                    key="step-2"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                >
+                                    <Step2
+                                        formData={formData}
+                                        setFormData={setFormData}
+                                        price={price}
+                                        duration={duration}
+                                        errors={errors}
+                                    />
+                                </motion.div>
+                            )}
+                            {currentStep === 3 && (
+                                <motion.div
+                                    key="step-3"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                >
+                                    <Step3
+                                        formData={formData}
+                                        price={price}
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
-                        {/* Error messages */}
                         {(errors.duration || errors.time) && (
-                            <div className="mt-3 p-3 bg-red-50 rounded-lg">
+                            <div className="mt-3 p-3 bg-status-error-muted rounded-lg">
                                 {errors.duration && (
                                     <p className="text-sm text-red-600">{errors.duration}</p>
                                 )}
@@ -315,12 +306,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                         )}
                     </div>
 
-                    {/* Footer */}
                     <div className="flex items-center justify-between sm:justify-end px-3 sm:px-5 py-3 sm:py-4 border-t gap-2">
                         <Button
                             variant="ghost"
                             onClick={handleCancel}
-                            className="text-gray-500 hover:text-gray-700 text-sm sm:text-base px-3 sm:px-4"
+                            className="min-h-[44px] text-gray-500 hover:text-gray-700 text-sm sm:text-base px-3 sm:px-4"
                         >
                             Huỷ
                         </Button>
@@ -329,7 +319,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                                 <Button
                                     variant="outline"
                                     onClick={handleBack}
-                                    className="gap-1 text-sm sm:text-base px-3 sm:px-4"
+                                    className="min-h-[44px] gap-1 text-sm sm:text-base px-3 sm:px-4"
                                 >
                                     <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
                                     <span className="hidden sm:inline">Quay lại</span>
@@ -337,8 +327,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                                 </Button>
                             )}
                             <Button
+                                variant="primary"
                                 onClick={handleNext}
-                                className="bg-rose-400 hover:bg-rose-500 text-white gap-1 min-w-24 sm:min-w-30 text-sm sm:text-base px-3 sm:px-4"
+                                className="min-h-[44px] gap-1 min-w-24 sm:min-w-30 text-sm sm:text-base px-3 sm:px-4"
                             >
                                 {currentStep === 3 ? (
                                     <>
@@ -356,12 +347,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     </div>
                 </DialogContent>
             </Dialog>
+
             <FoodModal
                 open={showFoodModal}
                 onOpenChange={setShowFoodModal}
                 items={formData.foodItems}
                 onConfirm={(items) => setFormData((prev) => ({ ...prev, foodItems: items }))}
             />
+
             {submittedFormData && (
                 <PaymentModal
                     open={showPayment}

@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { type BookingFormData, type Booking, ROOM_PRICES } from "@/types/schedule";
-import { calculateDuration } from "@/utils/helpers";
+import { calculateDuration, calculateBookingPrice } from "@/utils/helpers";
 import { validateStep1, validateStep2, validateStep3 } from "./validation";
 
 interface UseBookingFormProps {
@@ -9,12 +9,17 @@ interface UseBookingFormProps {
     selectedDate: Date;
 }
 
+/**
+ * Hook quản lý state và logic form đặt phòng — chuyển bước, tính giá, validate dữ liệu
+ * @param initialFormData - Dữ liệu form ban đầu (phòng, thời gian, chế độ đặt)
+ * @param bookings - Danh sách booking hiện tại để kiểm tra trùng lịch
+ * @param selectedDate - Ngày được chọn trên calendar
+ */
 export const useBookingForm = ({ initialFormData, bookings, selectedDate }: UseBookingFormProps) => {
     const [formData, setFormData] = useState<BookingFormData>(initialFormData);
     const [currentStep, setCurrentStep] = useState(1);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    // Calculate duration and price
     const duration = useMemo(() => {
         return calculateDuration(
             formData.checkInDate,
@@ -29,17 +34,9 @@ export const useBookingForm = ({ initialFormData, bookings, selectedDate }: UseB
         formData.checkOutTime,
     ]);
 
+    // Tính giá phòng bằng helper tập trung để đảm bảo tính đúng đắn cho các ca phụ thu
     const price = useMemo(() => {
-        const priceConfig = ROOM_PRICES[formData.roomType];
-        if (formData.mode === "daily") {
-            const days = Math.ceil(duration / 24);
-            return priceConfig.dailyRate * days;
-        }
-        if (formData.mode === "overnight") {
-            const nights = Math.ceil(duration / 24);
-            return priceConfig.overnightRate * nights;
-        }
-        return Math.ceil(duration) * priceConfig.hourlyRate;
+        return calculateBookingPrice(formData.mode, duration, ROOM_PRICES[formData.roomType]);
     }, [formData.roomType, formData.mode, duration]);
 
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);
@@ -49,7 +46,6 @@ export const useBookingForm = ({ initialFormData, bookings, selectedDate }: UseB
     );
     const totalPrice = price + foodTotal;
 
-    // Validation functions
     const validateCurrentStep = useCallback((): boolean => {
         let newErrors: Record<string, string> = {};
 
@@ -65,7 +61,6 @@ export const useBookingForm = ({ initialFormData, bookings, selectedDate }: UseB
         return Object.keys(newErrors).length === 0;
     }, [currentStep, formData, bookings, duration, selectedDate]);
 
-    // Reset form
     const resetForm = useCallback(() => {
         setFormData(initialFormData);
         setCurrentStep(1);

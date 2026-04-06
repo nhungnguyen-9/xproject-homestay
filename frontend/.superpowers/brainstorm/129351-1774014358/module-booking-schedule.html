@@ -1,0 +1,216 @@
+<h2>Module 1: Lịch đặt phòng</h2>
+<p class="subtitle">CRUD booking trên grid giờ × phòng + phân quyền Admin/Staff</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">Booking Schedule — Grid View</div>
+    <div class="mockup-body" style="padding: 0; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: #F1F5F9;">
+            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #E2E8F0; position: sticky; left: 0; background: #F1F5F9; min-width: 100px;">
+              Phòng
+            </th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 50px; text-align: center;">06:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 50px; text-align: center;">08:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 50px; text-align: center;">10:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 50px; text-align: center;">12:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 50px; text-align: center;">14:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 50px; text-align: center;">16:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 50px; text-align: center;">18:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 50px; text-align: center;">20:00</th>
+            <th style="padding: 10px 8px; border-bottom: 2px solid #E2E8F0; min-width: 50px; text-align: center;">22:00</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Room G01 -->
+          <tr>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9; font-weight: 600; position: sticky; left: 0; background: white;">
+              G01 <span style="font-size: 10px; color: #94A3B8; font-weight: normal;">Standard</span>
+            </td>
+            <td colspan="2" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #DCFCE7; border-left: 3px solid #22C55E; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">
+                ✓ Nguyễn Văn A<br><span style="color: #64748B;">06:00–10:00</span>
+              </div>
+            </td>
+            <td style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #F1F5F9; border-radius: 4px; padding: 8px; text-align: center; cursor: pointer; color: #94A3B8; font-size: 16px;" title="Click để thêm booking">+</div>
+            </td>
+            <td colspan="2" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #FEF9C3; border-left: 3px solid #EAB308; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">
+                ⏳ Trần Thị B<br><span style="color: #64748B;">12:00–16:00</span>
+              </div>
+            </td>
+            <td colspan="3" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #F1F5F9; border-radius: 4px; padding: 8px; text-align: center; cursor: pointer; color: #94A3B8; font-size: 16px;">+</div>
+            </td>
+          </tr>
+          <!-- Room P102 -->
+          <tr>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9; font-weight: 600; position: sticky; left: 0; background: white;">
+              P102 <span style="font-size: 10px; color: #94A3B8; font-weight: normal;">Standard</span>
+            </td>
+            <td colspan="3" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #DBEAFE; border-left: 3px solid #3B82F6; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">
+                🏠 Lê Văn C<br><span style="color: #64748B;">06:00–12:00 (checked-in)</span>
+              </div>
+            </td>
+            <td colspan="2" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #F1F5F9; border-radius: 4px; padding: 8px; text-align: center; cursor: pointer; color: #94A3B8; font-size: 16px;">+</div>
+            </td>
+            <td colspan="4" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #DCFCE7; border-left: 3px solid #22C55E; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">
+                ✓ Phạm D<br><span style="color: #64748B;">16:00–22:00</span>
+              </div>
+            </td>
+          </tr>
+          <!-- Room P104 VIP -->
+          <tr>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9; font-weight: 600; position: sticky; left: 0; background: white;">
+              P104 <span style="font-size: 10px; background: #FEF3C7; color: #92400E; padding: 1px 6px; border-radius: 4px; font-weight: normal;">VIP</span>
+            </td>
+            <td colspan="9" style="padding: 4px; border-bottom: 1px solid #F1F5F9;">
+              <div style="background: #F1F5F9; border-radius: 4px; padding: 8px; text-align: center; cursor: pointer; color: #94A3B8; font-size: 16px;">+ Trống cả ngày — click để thêm booking</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Booking Status Legend -->
+<div class="section" style="margin-top: 16px;">
+  <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 12px;">
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <div style="width: 12px; height: 12px; background: #22C55E; border-radius: 2px;"></div> Confirmed
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <div style="width: 12px; height: 12px; background: #EAB308; border-radius: 2px;"></div> Pending
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <div style="width: 12px; height: 12px; background: #3B82F6; border-radius: 2px;"></div> Checked-in
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <div style="width: 12px; height: 12px; background: #94A3B8; border-radius: 2px;"></div> Checked-out
+    </div>
+  </div>
+</div>
+
+<!-- CRUD Actions -->
+<div class="section" style="margin-top: 24px;">
+  <h3>Thao tác CRUD</h3>
+  <div class="mockup">
+    <div class="mockup-header">Booking Modal — Thêm / Sửa booking</div>
+    <div class="mockup-body" style="padding: 24px; max-width: 480px;">
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Phòng</label>
+        <div class="mock-input" style="padding: 8px 12px; background: #F8FAFC;">P102 — Standard</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div>
+          <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Giờ vào</label>
+          <div class="mock-input" style="padding: 8px 12px;">14:00</div>
+        </div>
+        <div>
+          <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Giờ ra</label>
+          <div class="mock-input" style="padding: 8px 12px;">18:00</div>
+        </div>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Tên khách</label>
+        <div class="mock-input" style="padding: 8px 12px;">Nguyễn Văn E</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div>
+          <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">SĐT</label>
+          <div class="mock-input" style="padding: 8px 12px;">0901234567</div>
+        </div>
+        <div>
+          <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Trạng thái</label>
+          <div class="mock-input" style="padding: 8px 12px; background: #F8FAFC;">▾ Confirmed</div>
+        </div>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Mã khuyến mãi</label>
+        <div class="mock-input" style="padding: 8px 12px;">SUMMER20 <span style="color: #22C55E; font-size: 11px;">(-20%)</span></div>
+      </div>
+      <div style="margin-bottom: 20px;">
+        <label style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Ghi chú</label>
+        <div class="mock-input" style="padding: 8px 12px; min-height: 48px;">Cần thêm nệm phụ</div>
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button class="mock-button" style="background: #F1F5F9; color: #334155; border: 1px solid #E2E8F0;">Hủy</button>
+        <button class="mock-button" style="background: #F87171; color: white; border: none;">Lưu booking</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Permission matrix -->
+<div class="section" style="margin-top: 24px;">
+  <h3>Phân quyền</h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    <thead>
+      <tr style="background: #F1F5F9;">
+        <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #E2E8F0;">Thao tác</th>
+        <th style="padding: 10px 12px; text-align: center; border-bottom: 2px solid #E2E8F0;">Admin</th>
+        <th style="padding: 10px 12px; text-align: center; border-bottom: 2px solid #E2E8F0;">Staff</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9;">Xem lịch phòng</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #22C55E;">✓</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #22C55E;">✓</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9;">Thêm booking</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #22C55E;">✓</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #22C55E;">✓</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9;">Sửa booking</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #22C55E;">✓</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #EF4444;">✗</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9;">Xóa booking</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #22C55E;">✓</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #EF4444;">✗</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9;">Đổi trạng thái (confirm, check-in/out)</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #22C55E;">✓</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #22C55E;">✓</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9;">Xem doanh thu</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #22C55E;">✓</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #EF4444;">✗</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #F1F5F9;">Quản lý khuyến mãi</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #22C55E;">✓</td>
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid #F1F5F9; color: #EF4444;">✗</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px;">Cấu hình Telegram / Settings</td>
+        <td style="padding: 8px 12px; text-align: center; color: #22C55E;">✓</td>
+        <td style="padding: 8px 12px; text-align: center; color: #EF4444;">✗</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Interaction Flow</h3>
+  <div style="font-size: 13px; line-height: 2; background: #F8FAFC; padding: 16px; border-radius: 8px;">
+    <strong>Thêm:</strong> Click ô trống (+) → Modal mở với phòng & giờ pre-filled → Điền thông tin → Lưu<br>
+    <strong>Sửa:</strong> Click booking block → Modal mở với data hiện tại → Sửa → Lưu <span style="color: #EF4444;">(Admin only)</span><br>
+    <strong>Xóa:</strong> Click booking → Modal → nút "Xóa" với confirm dialog <span style="color: #EF4444;">(Admin only)</span><br>
+    <strong>Đổi trạng thái:</strong> Click booking → Quick action buttons (Confirm / Check-in / Check-out)<br>
+    <strong>Chọn ngày:</strong> Date picker phía trên grid → load booking theo ngày được chọn<br>
+    <strong>Validation:</strong> Kiểm tra trùng giờ, giờ ra > giờ vào, SĐT hợp lệ (Zod)
+  </div>
+</div>

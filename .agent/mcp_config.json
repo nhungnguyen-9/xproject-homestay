@@ -1,0 +1,36 @@
+{
+    "mcpServers": {
+        "context7": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@upstash/context7-mcp",
+                "--api-key",
+                "YOUR_API_KEY"
+            ]
+        },
+        "shadcn": {
+            "command": "npx",
+            "args": [
+                "shadcn@latest",
+                "mcp"
+            ]
+        },
+        "pencil": {
+            "command": "/home/tav/.antigravity/extensions/highagency.pencildev-0.6.33-universal/out/mcp-server-linux-x64",
+            "args": [
+                "--app",
+                "antigravity"
+            ],
+            "env": {}
+        }
+    }
+}
+
+// Active MCPs (configured in ~/.gemini/antigravity/mcp_config.json):
+// - context7: Up-to-date library docs (active, API key set)
+// - shadcn: shadcn/ui component registry (active)
+// - pencil: Design/asset tool (active)
+//
+// Setup: Copy the above config to ~/.gemini/antigravity/mcp_config.json
+// and replace YOUR_API_KEY with your actual Context7 API key.

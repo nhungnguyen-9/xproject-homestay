@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { Upload, X } from "lucide-react";
+import { toast } from "sonner";
 
 interface ImageUploadProps {
     images: File[];
@@ -7,6 +8,11 @@ interface ImageUploadProps {
     maxImages?: number;
 }
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+/**
+ * Component upload ảnh giấy tờ tuỳ thân (CMND/CCCD/Passport) — hỗ trợ kéo thả, xem trước và xoá ảnh
+ */
 export const ImageUpload: React.FC<ImageUploadProps> = ({
     images,
     onImagesChange,
@@ -16,12 +22,20 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        const validFiles = files.filter((file) =>
-            ["image/jpeg", "image/png", "image/heic", "image/webp"].includes(
-                file.type,
-            ),
-        );
-        const newImages = [...images, ...validFiles].slice(0, maxImages);
+        
+        const invalidType = files.find(file => !["image/jpeg", "image/png", "image/heic", "image/webp"].includes(file.type));
+        if (invalidType) {
+            toast.error(`File ${invalidType.name} không đúng định dạng ảnh`);
+            return;
+        }
+
+        const oversized = files.find(file => file.size > MAX_FILE_SIZE);
+        if (oversized) {
+            toast.error(`File ${oversized.name} quá lớn (tối đa 5MB)`);
+            return;
+        }
+
+        const newImages = [...images, ...files].slice(0, maxImages);
         onImagesChange(newImages);
         if (inputRef.current) inputRef.current.value = "";
     };
@@ -33,13 +47,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     return (
         <div className="space-y-3">
             <div
-                className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-rose-400 hover:bg-green-50/30 transition-all duration-200"
+                className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary hover:bg-status-success-muted/30 transition-all duration-200"
                 onClick={() => inputRef.current?.click()}
             >
                 <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                 <p className="text-sm text-gray-600">
                     Kéo thả ảnh vào đây hoặc{" "}
-                    <span className="text-rose-400 font-medium hover:underline">
+                    <span className="text-primary font-medium hover:underline">
                         chọn file
                     </span>
                 </p>
@@ -64,7 +78,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                             />
                             <button
                                 onClick={() => removeImage(index)}
-                                className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center"
+                                className="absolute -top-2 -right-2 size-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
                                 type="button"
                             >
                                 <X className="w-3 h-3" />

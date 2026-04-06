@@ -7,29 +7,27 @@ import type {
     ScheduleProps,
     FilterOption,
 } from '@/types/schedule';
-import { HelpCircle } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { BookingModal } from '@/components/booking-calendar-form/booking-modal';
 
-// ==================== CONSTANTS ====================
-const HOUR_WIDTH = 80; // pixels per hour
+const HOUR_WIDTH = 80;
 const ROOM_LABEL_WIDTH = 80;
 const HEADER_HEIGHT = 50;
 const INDICATOR_ROW_HEIGHT = 30;
-const ROW_HEIGHT = 50;
+const ROW_HEIGHT = 60;
 
-// Highlighted hours (có icon đặc biệt)
-const HIGHLIGHTED_HOURS = [6, 8, 10, 12, 14, 16];
-
-// ==================== HELPER FUNCTIONS ====================
 const timeToMinutes = (time: string): number => {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
 };
 
 const formatTime = (time: string): string => {
-    return time; // Already in HH:mm format
+    return time;
 };
 
+/**
+ * Tính toán vị trí pixel (left, width) của khối booking trên timeline
+ */
 const getBookingPosition = (
     startTime: string,
     endTime: string,
@@ -45,9 +43,6 @@ const getBookingPosition = (
     return { left, width };
 };
 
-// ==================== SUB COMPONENTS ====================
-
-// Filter Button Component
 interface FilterButtonProps {
     label: string;
     active: boolean;
@@ -63,18 +58,18 @@ const FilterButton: React.FC<FilterButtonProps> = ({
 }) => {
     const variantStyles = {
         standard: active
-            ? 'text-white'
-            : 'bg-white text-black border-rose-300 hover:border-rose-200',
+            ? 'text-black hover:cursor-pointer'
+            : 'bg-gray-100 text-foreground border-black/30 hover:border-black/20 ',
         vip: active
-            ? 'text-white'
-            : 'bg-white text-black border-rose-300 hover:border-rose-200',
+            ? 'text-black hover:cursor-pointer'
+            : 'bg-gray-100 text-foreground border-black/30 hover:border-black/20',
         supervip: active
-            ? 'text-white'
-            : 'bg-white text-black border-rose-300 hover:border-rose-200',
+            ? 'text-black hover:cursor-pointer'
+            : 'bg-gray-100 text-foreground border-black/30 hover:border-black/20',
     };
 
     const activeGradientStyle = active
-        ? { background: 'linear-gradient(135deg, #FF5A5F, #FFB199)' }
+        ? { background: 'white' }
         : undefined;
 
     return (
@@ -91,7 +86,6 @@ const FilterButton: React.FC<FilterButtonProps> = ({
     );
 };
 
-// Date Picker Component
 interface DatePickerProps {
     date: Date;
     onChange: (date: Date) => void;
@@ -107,10 +101,9 @@ const DatePicker: React.FC<DatePickerProps> = ({ date, onChange }) => {
     };
 
     return (
-        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 lg:px-3 py-1.5 lg:py-2">
+        <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-2 lg:px-3 py-1.5 lg:py-2">
             <span className="text-black text-xs lg:text-sm font-semibold whitespace-nowrap">Chọn ngày:</span>
             <div className="flex items-center gap-2">
-                {/* <Calendar className="w-4 h-4 text-rose-500" /> */}
                 <input
                     type="date"
                     value={date.toISOString().split('T')[0]}
@@ -122,7 +115,6 @@ const DatePicker: React.FC<DatePickerProps> = ({ date, onChange }) => {
     );
 };
 
-// Timeline Header Component
 interface TimelineHeaderProps {
     startHour: number;
     endHour: number;
@@ -138,48 +130,28 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
         hours.push(i);
     }
 
-    const getWeatherIcon = (hour: number) => {
-        if (hour === 6) return '🌅';
-        if (hour === 8) return '☀️';
-        if (hour === 10) return '☁';
-        if (hour === 12) return '🌤️';
-        if (hour === 14) return '⛅';
-        if (hour === 16) return '🌥️';
-        return '';
-    };
-
     return (
         <div
-            className="flex bg-gray-50 border-b border-gray-200"
+            className="flex bg-muted/50 border-b border-border"
             style={{ height: HEADER_HEIGHT }}
         >
-            {/* Room label column */}
             <div
-                className="flex items-center justify-center text-black font-bold text-md shrink-0 rounded-md m-1"
-                style={{ width: ROOM_LABEL_WIDTH, background: 'linear-gradient(90deg, #F8E1EE 0%, #FFF1E1 100%)' }}
+                className="flex items-center justify-center text-black font-semibold text-md shrink-0 rounded-md m-1"
+                style={{ width: ROOM_LABEL_WIDTH }}
             >
                 Phòng
             </div>
 
-            {/* Timeline */}
             <div className="flex-1 flex relative">
                 {hours.map((hour, index) => {
-                    const weatherIcon = getWeatherIcon(hour);
                     const isLastColumn = index === hours.length - 1;
                     return (
                         <div
                             key={hour}
-                            className={`flex flex-col items-center justify-center border-l border-gray-200 text-sm text-black gap-0.5 ${isLastColumn ? 'border-r' : ''}`}
+                            className={`flex flex-col items-center justify-center border-l border-border text-sm text-black gap-0.5 ${isLastColumn ? 'border-r' : ''}`}
                             style={{ width: HOUR_WIDTH * 2 }}
                         >
-                            {/* Time row - always at same position */}
-                            <span className="font-bold text-sm">{String(hour).padStart(2, '0')}h</span>
-                            {/* Icon row - fixed height */}
-                            <div className="h-5 flex items-center justify-center">
-                                {weatherIcon && (
-                                    <span className="text-lg leading-none">{weatherIcon}</span>
-                                )}
-                            </div>
+                            <span className="font-medium text-sm">{String(hour).padStart(2, '0')}h</span>
                         </div>
                     );
                 })}
@@ -188,7 +160,6 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
     );
 };
 
-// Booking Block Component
 interface BookingBlockProps {
     booking: Booking;
     startHour: number;
@@ -206,7 +177,6 @@ const BookingBlock: React.FC<BookingBlockProps> = ({
         startHour
     );
 
-    // Handle bookings that span across days
     if (width <= 0) return null;
 
     return (
@@ -236,7 +206,6 @@ const BookingBlock: React.FC<BookingBlockProps> = ({
     );
 };
 
-// Room Row Component
 interface RoomRowProps {
     room: Room;
     bookings: Booking[];
@@ -257,12 +226,11 @@ const RoomRow: React.FC<RoomRowProps> = ({
     const totalWidth = (endHour - startHour) * HOUR_WIDTH;
 
     const roomTypeColors = {
-        standard: 'rounded-md m-1 bg-rose-400 text-white font-medium text-sm shrink-0',
-        vip: 'rounded-md m-1 bg-rose-400 text-white font-medium text-sm shrink-0',
-        supervip: 'rounded-md m-1 bg-rose-400 text-white font-medium text-sm shrink-0',
+        standard: 'rounded-md m-1 text-black font-medium text-sm shrink-0',
+        vip: 'rounded-md m-1 text-black font-medium text-sm shrink-0',
+        supervip: 'rounded-md m-1 text-black font-medium text-sm shrink-0',
     };
 
-    // Check if a time is within a booking
     const isTimeBooked = (minutes: number): boolean => {
         return bookings.some(booking => {
             const bookingStart = timeToMinutes(booking.startTime);
@@ -271,16 +239,14 @@ const RoomRow: React.FC<RoomRowProps> = ({
         });
     };
 
-    // Handle click on timeline (not on booking)
     const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left;
 
-        // Convert pixels to minutes
         const minutes = (x / HOUR_WIDTH) * 60 + startHour * 60;
-        const roundedMinutes = Math.floor(minutes / 30) * 30; // Round to nearest 30 min
+        // Làm tròn xuống bội số 30 phút
+        const roundedMinutes = Math.floor(minutes / 30) * 30;
 
-        // Check if this time slot is available
         if (!isTimeBooked(roundedMinutes)) {
             const hours = Math.floor(roundedMinutes / 60);
             const mins = roundedMinutes % 60;
@@ -290,46 +256,75 @@ const RoomRow: React.FC<RoomRowProps> = ({
     };
 
     return (
-        <div className="flex border-b border-gray-200" style={{ height: ROW_HEIGHT }}>
-            {/* Room label */}
+        <div className="flex border-b border-border" style={{ height: ROW_HEIGHT }}>
             <div
                 className={cn(
-                    'flex items-center justify-center font-bold text-md shrink-0',
+                    'flex items-center justify-center text-[#374151] text-sm shrink-0 font-semibold',
                     roomTypeColors[room.type]
                 )}
                 style={{
                     width: ROOM_LABEL_WIDTH,
-                    background: 'linear-gradient(135deg, #FFB9A7 0%, #FFDFD3 100%)',
-                    color: '#F06E6E',
-                    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
-                    fontWeight: 'bold'
                 }}
             >
                 {room.name}
             </div>
 
-            {/* Timeline slots */}
             <div
-                className="flex-1 relative bg-white cursor-pointer hover:bg-gray-50/50 transition-colors"
-                onClick={handleTimelineClick}
+                className="flex-1 relative bg-card transition-colors"
             >
                 {/* Grid lines */}
                 <div className="absolute inset-0 pointer-events-none">
                     {Array.from({ length: (endHour - startHour) / 2 }).map((_, i) => (
                         <div
                             key={i}
-                            className="absolute top-0 bottom-0 border-l border-gray-100"
+                            className="absolute top-0 bottom-0 border-l border-border/50"
                             style={{ left: `${i * HOUR_WIDTH * 2}px` }}
                         />
                     ))}
-                    {/* Last border on the right */}
                     <div
-                        className="absolute top-0 bottom-0 border-r border-gray-100"
+                        className="absolute top-0 bottom-0 border-r border-border/50"
                         style={{ right: 0 }}
                     />
                 </div>
 
-                {/* Bookings */}
+                {/* Slot buttons với + icon khi hover */}
+                <div className="absolute inset-0 flex" style={{ width: totalWidth }}>
+                    {Array.from({ length: (endHour - startHour) / 2 }).map((_, i) => {
+                        const slotHour = startHour + i * 2
+                        const slotStart = slotHour * 60
+                        const slotEnd = (slotHour + 2) * 60
+                        const occupied = bookings.some(b => {
+                            const bs = timeToMinutes(b.startTime)
+                            const be = timeToMinutes(b.endTime) + 10 // +10 phút buffer
+                            return bs < slotEnd && be > slotStart
+                        })
+                        return (
+                            <div
+                                key={i}
+                                className="relative"
+                                style={{ width: HOUR_WIDTH * 2 }}
+                            >
+                                {occupied ? (
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity z-[5] cursor-not-allowed">
+                                    </div>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const timeString = `${String(slotHour).padStart(2, '0')}:00`
+                                            onEmptySlotClick?.(room.id, timeString)
+                                        }}
+                                        className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary z-[5] hover:cursor-pointer"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                    </button>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+
+                {/* Booking blocks */}
                 <div className="absolute inset-0" style={{ width: totalWidth }}>
                     {bookings.map((booking) => (
                         <BookingBlock
@@ -345,7 +340,6 @@ const RoomRow: React.FC<RoomRowProps> = ({
     );
 };
 
-// Current Time Indicator
 interface CurrentTimeIndicatorProps {
     currentTime: Date;
     startHour: number;
@@ -368,17 +362,8 @@ const CurrentTimeIndicator: React.FC<CurrentTimeIndicatorProps> = ({
             className="absolute z-20 pointer-events-none"
             style={{ left: `${left}px`, top: 0, bottom: 0 }}
         >
-            {/* Time label in indicator row */}
             <div
-                className="absolute bg-[#03c068] text-white text-xs px-2.5 py-1.5 rounded-xl flex items-center justify-center gap-0.5 font-bold -translate-x-1/2"
-                style={{ top: '2px' }}
-            >
-                ⏰
-                <span>{timeLabel}</span>
-            </div>
-            {/* Vertical line starts below indicator row */}
-            <div
-                className="w-0.5 bg-[#03c068] absolute"
+                className="w-0.5 h-full bg-[#03c068]"
                 style={{
                     top: `${INDICATOR_ROW_HEIGHT}px`,
                     bottom: 0,
@@ -389,7 +374,9 @@ const CurrentTimeIndicator: React.FC<CurrentTimeIndicatorProps> = ({
     );
 };
 
-// ==================== MAIN COMPONENT ====================
+/**
+ * Lịch trình phòng — hiển thị timeline theo giờ, khối booking, bộ lọc loại phòng, và hỗ trợ tạo booking mới
+ */
 export const RoomSchedule: React.FC<ScheduleProps> = ({
     date,
     rooms,
@@ -408,28 +395,23 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
         { value: 'supervip', label: 'SuperVip', active: true },
     ]);
 
-    // Booking modal state
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
     const [selectedTime, setSelectedTime] = useState<string>('06:00');
     const [localBookings, setLocalBookings] = useState<Booking[]>(bookings);
 
-    // Update local bookings when prop changes
     useEffect(() => {
         setLocalBookings(bookings);
     }, [bookings]);
 
-    // Set demo time to 02:00 (change this to new Date() for real time)
     const [currentTime, setCurrentTime] = useState(() => {
         const demoTime = new Date();
         demoTime.setHours(2, 0, 0, 0);
         return demoTime;
     });
 
-    // Update current time every minute
     useEffect(() => {
         const interval = setInterval(() => {
-            // For demo: keep at 02:00, for real time use: setCurrentTime(new Date());
             const demoTime = new Date();
             demoTime.setHours(2, 0, 0, 0);
             setCurrentTime(demoTime);
@@ -437,7 +419,6 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
         return () => clearInterval(interval);
     }, []);
 
-    // Filter rooms based on selected filters
     const filteredRooms = useMemo(() => {
         const activeTypes = filters
             .filter((f) => f.active)
@@ -445,25 +426,21 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
         return rooms.filter((room) => activeTypes.includes(room.type));
     }, [rooms, filters]);
 
-    // Get bookings for each room
     const getBookingsForRoom = (roomId: string): Booking[] => {
         return localBookings.filter((b) => b.roomId === roomId);
     };
 
-    // Handle date change
     const handleDateChange = (newDate: Date) => {
         setSelectedDate(newDate);
         onDateChange?.(newDate);
     };
 
-    // Toggle filter
     const toggleFilter = (value: RoomType | 'all') => {
         setFilters((prev) =>
             prev.map((f) => (f.value === value ? { ...f, active: !f.active } : f))
         );
     };
 
-    // Handle empty slot click - open booking modal
     const handleEmptySlotClick = useCallback((roomId: string, time: string) => {
         const room = rooms.find(r => r.id === roomId);
         setSelectedRoom(room || null);
@@ -472,7 +449,6 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
         onEmptySlotClick?.(roomId, time);
     }, [rooms, onEmptySlotClick]);
 
-    // Handle booking creation
     const handleBookingCreate = useCallback((newBooking: Omit<Booking, 'id'>) => {
         const booking: Booking = {
             ...newBooking,
@@ -486,45 +462,21 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
 
     return (
         <div className="max-w-7xl mx-auto">
-            <div className='w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden text-center mb-4 lg:mb-8'>
-                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 lg:gap-6 p-2 sm:p-3 lg:p-4 border-t border-gray-200">
-                    <div className="flex items-center gap-1 sm:gap-2">
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded bg-rose-400" />
-                        <span className="text-[10px] sm:text-xs lg:text-sm text-gray-600">Đã đặt</span>
-                    </div>
-                    <div className="flex items-center gap-1 sm:gap-2">
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded bg-white border border-gray-200" />
-                        <span className="text-[10px] sm:text-xs lg:text-sm text-gray-600">Trống</span>
-                    </div>
-                    <div className="flex items-center gap-1 sm:gap-2">
-                        <div className="w-0.5 h-2.5 sm:h-3 lg:h-4 bg-[#03c068]" />
-                        <span className="text-[10px] sm:text-xs lg:text-sm text-gray-600">Thời gian hiện tại</span>
-                    </div>
-                </div>
-                <div className='text-center text-blue-500 w-full px-2 sm:px-4 text-[11px] sm:text-xs lg:text-sm'>
-                    <span className='font-bold'>💡 Hướng dẫn:</span>
-                    <span> Kéo trên timeline để xem phòng trống. Nhấn vào khung thời gian trống <span className="inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded bg-white border border-gray-200 align-middle mx-0.5" /> để bắt đầu đặt phòng</span>
-                </div>
-                <p className='text-amber-500 font-semibold mx-1 my-1.5 sm:my-2 text-[11px] sm:text-xs lg:text-sm'>⏰ Phí thêm giờ: 40k/giờ</p>
-            </div>
-            <div className="w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                {/* Header Controls */}
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-3 lg:p-4 border-b border-gray-200">
+
+            {/* 1. Top bar: Instructions + date | filters */}
+            <div className="w-full bg-card rounded-xl shadow-sm border border-border overflow-hidden mb-3">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-3 lg:p-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-                        {/* Help Button */}
                         <button
                             className="flex items-center gap-2 px-3 lg:px-4 py-2 text-white rounded-lg transition-transform"
-                            style={{ background: 'linear-gradient(135deg, #FF5A5F, #FF7A6E)' }}
+                            style={{ background: '#f87171f2' }}
                         >
-
-                            <span className="text-xs lg:text-sm font-medium">🎯 Hướng dẫn</span>
+                            <span className="text-xs lg:text-sm font-medium">Hướng dẫn</span>
                         </button>
 
-                        {/* Date Picker */}
                         <DatePicker date={selectedDate} onChange={handleDateChange} />
                     </div>
 
-                    {/* Filters - scrollable on mobile */}
                     <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 -mx-3 px-3 lg:mx-0 lg:px-0">
                         <FilterButton
                             label="Tiêu chuẩn"
@@ -546,45 +498,27 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                         />
                     </div>
                 </div>
+            </div>
 
-                {/* Schedule Grid */}
+            {/* 2. Amenities bar */}
+            <div className="w-full bg-card rounded-xl shadow-sm border border-border px-4 py-6 mb-3">
+                <p className="text-sm font-bold text-foreground mb-2">Tổng Quan Tiện Nghi Phòng</p>
+                <p className="text-sm text-muted-foreground">
+                    Tiện nghi: 🛏️ Bộ đồ giường cao cấp • 🚿 Vòi sen nước nóng • 📶 Wi-Fi tốc độ cao • ❄️ Máy điều hòa • ☕ Bữa sáng theo yêu cầu
+                </p>
+            </div>
+
+            {/* 3. Timeline */}
+            <div className="w-full bg-card rounded-xl shadow-sm border border-border overflow-hidden p-3">
                 <div className="overflow-x-auto relative">
                     <div style={{ minWidth: totalWidth }}>
-                        {/* Timeline Header */}
                         <TimelineHeader
                             startHour={startHour}
                             endHour={endHour}
                             currentTime={currentTime}
                         />
 
-                        {/* Wrapper for indicator row + room rows */}
                         <div className="relative">
-                            {/* Empty row for CurrentTimeIndicator */}
-                            <div
-                                className="flex bg-white border-b border-gray-100 relative"
-                                style={{ height: INDICATOR_ROW_HEIGHT }}
-                            >
-                                <div style={{ width: ROOM_LABEL_WIDTH }} className="shrink-0" />
-                                <div className="flex-1 relative">
-                                    {/* Grid lines for indicator row */}
-                                    <div className="absolute inset-0 pointer-events-none">
-                                        {Array.from({ length: (endHour - startHour) / 2 }).map((_, i) => (
-                                            <div
-                                                key={i}
-                                                className="absolute top-0 bottom-0 border-l border-gray-100"
-                                                style={{ left: `${i * HOUR_WIDTH * 2}px` }}
-                                            />
-                                        ))}
-                                        {/* Last border on the right */}
-                                        <div
-                                            className="absolute top-0 bottom-0 border-r border-gray-100"
-                                            style={{ right: 0 }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Room Rows */}
                             {filteredRooms.map((room) => (
                                 <RoomRow
                                     key={room.id}
@@ -597,7 +531,6 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                                 />
                             ))}
 
-                            {/* Current Time Indicator */}
                             <CurrentTimeIndicator
                                 currentTime={currentTime}
                                 startHour={startHour}
@@ -605,9 +538,16 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                         </div>
                     </div>
                 </div>
+
+                {/* 4. Footer notes */}
+                <div className="border-t border-border px-4 py-3 bg-muted/20 mt-5">
+                    <p className="text-xs font-bold text-foreground mb-0.5">Ghi chú tiện nghị</p>
+                    <p className="text-xs text-muted-foreground">
+                        🛏️ G01: 1 giường đôi • 🌿 P102: ban công thoáng • 🛁 P103: bồn tắm • 📺 G02: Smart TV • ❄️ P202: máy lạnh 2 chiều
+                    </p>
+                </div>
             </div>
 
-            {/* Booking Modal */}
             <BookingModal
                 open={bookingModalOpen}
                 onOpenChange={setBookingModalOpen}
@@ -622,5 +562,4 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
     );
 };
 
-// Export default
 export default RoomSchedule;

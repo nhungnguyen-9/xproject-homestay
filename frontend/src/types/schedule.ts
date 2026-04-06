@@ -1,33 +1,46 @@
 import pepsi from "@/assets/pepsi.png";
 
-// Room types
+/** Loại phòng: tiêu chuẩn, VIP, hoặc super VIP */
 export type RoomType = 'standard' | 'vip' | 'supervip';
 
+/** Thông tin phòng nghỉ */
 export interface Room {
   id: string;
   name: string;
   type: RoomType;
 }
 
-// Booking status
-export type BookingStatus = 'confirmed' | 'pending' | 'checked-in' | 'checked-out';
+/** Trạng thái đặt phòng */
+export type BookingStatus = 'confirmed' | 'pending' | 'checked-in' | 'checked-out' | 'cancelled';
 
-// Booking interface
+/** Nhãn nội bộ cho việc quản lý phòng */
+export type InternalTag = 'cleaning' | 'maintenance' | 'locked' | 'custom';
+
+/** Phân loại đặt phòng: khách hàng hoặc nội bộ */
+export type BookingCategory = 'guest' | 'internal';
+
+/** Thông tin chi tiết một lượt đặt phòng */
 export interface Booking {
   id: string;
   roomId: string;
-  startTime: string; // Format: "HH:mm"
-  endTime: string;   // Format: "HH:mm"
+  date: string;
+  startTime: string;
+  endTime: string;
   guestName?: string;
   guestPhone?: string;
   status: BookingStatus;
   note?: string;
   adults?: number;
   foodItems?: FoodItem[];
-  totalPrice?: number;
+  totalPrice: number;
+  voucher?: string;
+  category: BookingCategory;
+  internalTag?: InternalTag;
+  internalNote?: string;
+  createdBy?: string;
 }
 
-// Schedule props
+/** Props cho component lịch đặt phòng */
 export interface ScheduleProps {
   date: Date;
   rooms: Room[];
@@ -36,28 +49,28 @@ export interface ScheduleProps {
   onBookingClick?: (booking: Booking) => void;
   onEmptySlotClick?: (roomId: string, time: string) => void;
   onBookingCreate?: (booking: Omit<Booking, 'id'>) => void;
-  startHour?: number;  // Default: 0
-  endHour?: number;    // Default: 24
+  startHour?: number;
+  endHour?: number;
 }
 
-// Filter options
+/** Tùy chọn bộ lọc loại phòng */
 export interface FilterOption {
   value: RoomType | 'all';
   label: string;
   active: boolean;
 }
 
-// Time slot
+/** Khung giờ hiển thị trên lịch */
 export interface TimeSlot {
   hour: number;
   label: string;
   isHighlighted?: boolean;
 }
 
-// Booking type mode
-export type BookingMode = 'hourly' | 'daily' | 'overnight';
+/** Chế độ đặt phòng: theo giờ, theo ngày, hoặc qua đêm */
+export type BookingMode = 'hourly' | 'daily' | 'overnight' | 'combo6h';
 
-// Food/Combo items
+/** Món ăn/đồ uống kèm theo đặt phòng */
 export interface FoodItem {
   id: string;
   name: string;
@@ -67,7 +80,7 @@ export interface FoodItem {
   image?: string;
 }
 
-// Booking form data
+/** Dữ liệu form đặt phòng từ người dùng */
 export interface BookingFormData {
   roomId: string;
   roomType: RoomType;
@@ -86,9 +99,10 @@ export interface BookingFormData {
   note: string;
   voucher: string;
   acceptTerms: boolean;
+  customerLookup?: import('@/types/customer').CustomerLookup | null;
 }
 
-// Price config
+/** Cấu hình giá phòng theo từng chế độ */
 export interface PriceConfig {
   hourlyRate: number;
   dailyRate: number;
@@ -96,7 +110,7 @@ export interface PriceConfig {
   extraHourRate: number;
 }
 
-// Room price config by type
+/** Bảng giá phòng theo từng loại phòng */
 export const ROOM_PRICES: Record<RoomType, PriceConfig> = {
   standard: {
     hourlyRate: 169000,
@@ -105,7 +119,7 @@ export const ROOM_PRICES: Record<RoomType, PriceConfig> = {
     extraHourRate: 40000,
   },
   vip: {
-    hourlyRate: 21000,
+    hourlyRate: 210000,
     dailyRate: 550000,
     overnightRate: 450000,
     extraHourRate: 50000,
@@ -118,47 +132,47 @@ export const ROOM_PRICES: Record<RoomType, PriceConfig> = {
   },
 };
 
-// Demo food items
+/** Danh sách đồ ăn/đồ uống có thể đặt kèm */
 export const FOOD_ITEMS: FoodItem[] = [
   {
-    id: '1',
+    id: 'f1',
     name: 'Pepsi',
-    price: 11000,
+    price: 15000,
     image: pepsi,
   },
   {
-    id: '2',
-    name: 'Mỳ Ly',
-    price: 20000,
+    id: 'f2',
+    name: 'Coca Cola',
+    price: 15000,
     image: pepsi,
   },
   {
-    id: '3',
+    id: 'f3',
     name: 'Sting',
     price: 15000,
     image: pepsi,
   },
   {
-    id: '4',
-    name: 'Pepsi',
-    price: 115000,
-    image: pepsi,
-  },
-  {
-    id: '5',
+    id: 'f4',
     name: 'Mỳ Ly',
     price: 20000,
     image: pepsi,
   },
   {
-    id: '6',
-    name: 'Sting',
+    id: 'f5',
+    name: 'Nước Suối',
+    price: 10000,
+    image: pepsi,
+  },
+  {
+    id: 'f6',
+    name: 'Xúc Xích',
     price: 15000,
     image: pepsi,
   },
 ];
 
-// Combo items (special combos shown separately)
+/** Danh sách combo đồ ăn ưu đãi */
 export const COMBO_ITEMS: FoodItem[] = [
   { id: 'c1', name: '1 MỲ LY + 1 XÚC SÍCH + 1 SUỐI', price: 25000 },
   { id: 'c2', name: '2 ÁO GIÁP', price: 20000 },
