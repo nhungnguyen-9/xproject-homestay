@@ -16,6 +16,7 @@ export function GalleryGrid({ items, onCardClick }: GalleryGridProps) {
 
   const handleClick = (item: RoomCardProps) => {
     if (onCardClick) onCardClick(item)
+    else if (item.id) navigate(`/phong-nghi/${item.id}`)
     else navigate("/phong-nghi")
   }
 

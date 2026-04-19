@@ -1,51 +1,97 @@
+import { useState, useEffect } from "react"
+import { useSearchParams } from "react-router"
 import { GalleryGrid } from "../gallery-grid"
+import { getAll, imageUrl } from "@/services/roomService"
+import * as branchService from "@/services/branchService"
+import { formatPrice } from "@/utils/helpers"
+import type { RoomDetail } from "@/types/room"
+import type { Branch } from "@/types/branch"
+import type { RoomCardProps } from "../rooms/room-card"
 
-const MOCK_ROOMS = [
-    {
-        title: "Phòng Cam 01",
-        price: "3 tiếng/199K • Qua đêm/299K",
-        images: [
-            "/images/generated-1773763911137.png",
-            "/images/generated-1773764116868.png",
-            "/images/generated-1773764146153.png",
-            "/images/generated-1773764166795.png",
-            "/images/generated-1773764183697.png",
-        ],
-    },
-    {
-        title: "Phòng Cam 02",
-        price: "3 tiếng/219K • Qua đêm/319K",
-        images: [
-            "/images/generated-1773764199921.png",
-            "/images/generated-1773764218357.png",
-            "/images/generated-1773764255793.png",
-            "/images/generated-1773764270784.png",
-            "/images/generated-1773764296856.png",
-        ],
-    },
-    {
-        title: "Phòng Cam 03",
-        price: "3 tiếng/249K • Qua đêm/349K",
-        images: [
-            "/images/generated-1773764315880.png",
-            "/images/generated-1773764350601.png",
-            "/images/generated-1773764375449.png",
-            "/images/generated-1773764415086.png",
-        ],
-    },
-]
+/** Format giá rút gọn: 199000 → "199K" */
+function shortPrice(amount: number): string {
+    if (amount >= 1000) {
+        const k = amount / 1000;
+        return `${k % 1 === 0 ? k : k.toFixed(0)}K`;
+    }
+    return formatPrice(amount);
+}
+
+/** Chuyển RoomDetail từ API thành props cho RoomCard */
+function toRoomCardProps(room: RoomDetail): RoomCardProps {
+    const parts: string[] = [];
+    if (room.hourlyRate > 0) parts.push(`3 tiếng/${shortPrice(room.hourlyRate)}`);
+    if (room.overnightRate > 0) parts.push(`Qua đêm/${shortPrice(room.overnightRate)}`);
+    if (parts.length === 0 && room.perMinuteRate > 0) parts.push(`${formatPrice(room.perMinuteRate)} đ/phút`);
+
+    return {
+        id: room.id,
+        title: room.name,
+        price: parts.join(' • ') || 'Liên hệ',
+        images: room.images.map(imageUrl),
+    };
+}
 
 export const RestRoomPage = () => {
+    const [searchParams] = useSearchParams()
+    const branchId = searchParams.get('branchId')
+
+    const [rooms, setRooms] = useState<RoomDetail[]>([])
+    const [branch, setBranch] = useState<Branch | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        setLoading(true)
+
+        const fetchData = async () => {
+            try {
+                // Fetch rooms (filter by branchId if provided)
+                const roomData = await getAll(branchId ? { branchId } : undefined)
+                setRooms(roomData)
+
+                // Fetch branch info if branchId is provided
+                if (branchId) {
+                    const branchData = await branchService.getById(branchId)
+                    setBranch(branchData)
+                } else {
+                    setBranch(null)
+                }
+            } catch {
+                // silently fail
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchData()
+    }, [branchId])
+
+    const roomItems: RoomCardProps[] = rooms.map(toRoomCardProps)
+
     return (
         <div className="flex flex-col gap-6 pb-20 pt-8">
             <div className="px-8">
                 <h1 className="text-[28px] font-extrabold text-[#2B2B2B] tracking-tight">
-                    Danh sách phòng
+                    {branch ? `Phòng tại ${branch.name}` : 'Danh sách phòng'}
                 </h1>
-                <p className="mt-1 text-sm text-[#9B8B7A]">Chọn phòng phù hợp với bạn</p>
+                <p className="mt-1 text-sm text-[#9B8B7A]">
+                    {branch ? branch.address : 'Chọn phòng phù hợp với bạn'}
+                </p>
             </div>
 
-            <GalleryGrid items={MOCK_ROOMS} />
+            {loading ? (
+                <div className="flex justify-center py-12">
+                    <p className="text-sm text-gray-500">Đang tải danh sách phòng...</p>
+                </div>
+            ) : roomItems.length > 0 ? (
+                <GalleryGrid items={roomItems} />
+            ) : (
+                <div className="flex justify-center py-12">
+                    <p className="text-sm text-gray-500">
+                        {branch ? `Chưa có phòng nào tại ${branch.name}` : 'Chưa có phòng nào'}
+                    </p>
+                </div>
+            )}
         </div>
     )
 }

@@ -51,6 +51,8 @@ export interface ScheduleProps {
   onBookingCreate?: (booking: Omit<Booking, 'id'>) => void;
   startHour?: number;
   endHour?: number;
+  /** Map roomId → amenities array for dynamic legend rendering */
+  roomAmenities?: Record<string, string[]>;
 }
 
 /** Tùy chọn bộ lọc loại phòng */

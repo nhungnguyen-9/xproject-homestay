@@ -9,6 +9,7 @@ import type {
 } from '@/types/schedule';
 import { Plus } from 'lucide-react';
 import { BookingModal } from '@/components/booking-calendar-form/booking-modal';
+import { getAmenityIcon } from '@/components/rooms/RoomAmenitiesOverview';
 
 const HOUR_WIDTH = 80;
 const ROOM_LABEL_WIDTH = 80;
@@ -387,6 +388,7 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
     onBookingCreate,
     startHour = 0,
     endHour = 22,
+    roomAmenities,
 }) => {
     const [selectedDate, setSelectedDate] = useState(date);
     const [filters, setFilters] = useState<FilterOption[]>([
@@ -541,7 +543,8 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
 
                 {/* 4. Footer notes */}
                 <div className="border-t border-border px-4 py-3 bg-muted/20 mt-5">
-                    <p className="text-xs font-bold text-foreground mb-0.5">Ghi chú tiện nghị</p>
+                    <p className="text-xs font-bold text-foreground mb-0.5">Ghi chú tiện nghi</p>
+
                     <p className="text-xs text-muted-foreground">
                         🛏️ G01: 1 giường đôi • 🌿 P102: ban công thoáng • 🛁 P103: bồn tắm • 📺 G02: Smart TV • ❄️ P202: máy lạnh 2 chiều
                     </p>

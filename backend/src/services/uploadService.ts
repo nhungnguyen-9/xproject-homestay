@@ -12,8 +12,8 @@ const ALLOWED_MIME_TYPES = new Set([
   'image/webp',
 ]);
 
-/** Giới hạn dung lượng file: 2MB */
-const MAX_FILE_SIZE = 2 * 1024 * 1024;
+/** Giới hạn dung lượng file: 5MB */
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 /**
  * Kiểm tra magic bytes đầu file để xác định loại ảnh thực sự.
@@ -61,7 +61,7 @@ export async function saveRoomImage(file: File, roomId: string, index: number): 
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    throw new Error(`File quá lớn: ${(file.size / 1024 / 1024).toFixed(1)}MB. Tối đa 2MB`);
+    throw new Error(`File quá lớn: ${(file.size / 1024 / 1024).toFixed(1)}MB. Tối đa 5MB`);
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -156,6 +156,65 @@ export async function deleteCustomerIdImage(customerId: string, filename: string
 
   // Chặn path traversal
   if (!filepath.startsWith(path.join(UPLOADS_ROOT, 'customers', customerId))) {
+    throw new Error('Đường dẫn file không hợp lệ');
+  }
+
+  try {
+    await unlink(filepath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+
+/**
+ * Lưu file ảnh vào thư mục uploads/branches/.
+ * Validate cả MIME type lẫn magic bytes header để chống giả mạo.
+ * @param file - File từ multipart form data
+ * @param branchId - ID chi nhánh (dùng làm prefix tên file)
+ * @param index - Số thứ tự file trong batch upload
+ * @returns Tên file đã lưu (dùng để tạo URL)
+ */
+export async function saveBranchImage(file: File, branchId: string, index: number): Promise<string> {
+  if (!ALLOWED_MIME_TYPES.has(file.type)) {
+    throw new Error(`Loại file không được hỗ trợ: ${file.type}. Chỉ chấp nhận JPEG, PNG, WebP`);
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`File quá lớn: ${(file.size / 1024 / 1024).toFixed(1)}MB. Tối đa 5MB`);
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  const magicBytes = validateMagicBytes(buffer);
+  if (!magicBytes) {
+    throw new Error('File không phải ảnh hợp lệ. Nội dung file không khớp với định dạng ảnh.');
+  }
+
+  const ext = magicBytes.ext;
+  const filename = `${branchId}-${Date.now()}-${index}${ext}`;
+  const dir = path.join(UPLOADS_ROOT, 'branches');
+
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true });
+  }
+
+  await writeFile(path.join(dir, filename), buffer);
+
+  return filename;
+}
+
+/**
+ * Xóa file ảnh chi nhánh khỏi disk.
+ * @param imageUrl - URL ảnh (dạng /uploads/branches/filename)
+ * @returns true nếu xóa thành công, false nếu file không tồn tại
+ */
+export async function deleteBranchImage(imageUrl: string): Promise<boolean> {
+  const filename = path.basename(imageUrl);
+  const filepath = path.join(UPLOADS_ROOT, 'branches', filename);
+
+  if (!filepath.startsWith(path.join(UPLOADS_ROOT, 'branches'))) {
     throw new Error('Đường dẫn file không hợp lệ');
   }
 

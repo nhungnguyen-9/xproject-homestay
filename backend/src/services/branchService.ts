@@ -31,3 +31,10 @@ export async function update(id: string, data: Partial<typeof branches.$inferIns
   if (!branch) throw new AppError(404, 'Branch not found');
   return branch;
 }
+
+/** Xoá chi nhánh */
+export async function remove(id: string) {
+  const [branch] = await db.delete(branches).where(eq(branches.id, id)).returning();
+  if (!branch) throw new AppError(404, 'Branch not found');
+  return branch;
+}

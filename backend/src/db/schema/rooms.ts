@@ -27,6 +27,7 @@ export const rooms = pgTable('rooms', {
   images: jsonb('images').$type<string[]>().default([]),
   maxGuests: integer('max_guests').default(2),
   amenities: jsonb('amenities').$type<string[]>().default([]),
+  perMinuteRate: integer('per_minute_rate').notNull().default(0),
   hourlyRate: integer('hourly_rate').notNull(),
   dailyRate: integer('daily_rate').notNull(),
   overnightRate: integer('overnight_rate').notNull(),

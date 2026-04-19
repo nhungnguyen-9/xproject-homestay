@@ -20,6 +20,7 @@ import { PromoManager } from './components/admin/promo-manager.tsx';
 import { TelegramConfig } from './components/admin/telegram-config.tsx';
 import { RevenueDashboard } from './components/admin/revenue-dashboard.tsx';
 import { RoomManagement } from './components/admin/room-management.tsx';
+import { BranchManagement } from './components/admin/branch-management.tsx';
 import { StaffManagement } from './components/admin/staff-management.tsx';
 import * as bookingService from './services/bookingService';
 import * as customerService from './services/customerService';
@@ -46,6 +47,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/" element={<App />}>
           <Route path="/" element={<Home />} />
           <Route path="/phong-nghi" element={<RestRoomPage />} />
+          <Route path="/phong-nghi/:id" element={<RoomDetailRoute />} />
           <Route path="/huong-dan" element={<InstructionPage />} />
           <Route path="/dat-phong" element={<BookingPage />} />
           <Route path="/thu-vien-anh" element={<ImageLibraryPage />} />
@@ -65,6 +67,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="telegram" element={<TelegramConfig />} />
             <Route path="settings" element={<AdminSettingsPage />} />
             <Route path="management" element={<RoomManagement />} />
+            <Route path="branches" element={<BranchManagement />} />
             <Route path="staff" element={<StaffManagement />} />
           </Route>
         </Route>

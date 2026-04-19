@@ -3,6 +3,7 @@ import { motion } from "framer-motion"
 import type { Variants } from "framer-motion"
 
 export interface RoomCardProps {
+  id?: string
   title: string
   price: string
   images: string[]

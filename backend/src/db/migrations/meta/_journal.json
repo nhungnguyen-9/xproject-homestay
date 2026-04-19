@@ -22,6 +22,20 @@
       "when": 1775045036338,
       "tag": "0002_pink_nemesis",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776604511397,
+      "tag": "0003_smiling_terror",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1776608450149,
+      "tag": "0004_even_clea",
+      "breakpoints": true
     }
   ]
 }

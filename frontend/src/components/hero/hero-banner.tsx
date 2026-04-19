@@ -3,7 +3,7 @@ export function HeroBanner() {
     <section className="w-full px-0 sm:px-8">
       <div className="relative overflow-hidden rounded-3xl shadow-sm">
         <img
-          src="/images/HeroImage.png"
+          src="images/HeroImage.png"
           alt="Nhà Cam Homestay"
           className="w-full h-full block"
           loading="eager"

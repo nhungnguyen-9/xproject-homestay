@@ -58,13 +58,13 @@ export function ImageUpload({
     // Validation: Định dạng và dung lượng (Max 2MB theo backend)
     const validFiles = allowedFiles.filter(file => {
       const isValidType = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
-      const isValidSize = file.size <= 2 * 1024 * 1024
+      const isValidSize = file.size <= 5 * 1024 * 1024
       return isValidType && isValidSize
     })
 
     const rejectedCount = allowedFiles.length - validFiles.length
     if (rejectedCount > 0) {
-      toast.error(`${rejectedCount} file bị bỏ qua (sai định dạng hoặc vượt 2MB)`)
+      toast.error(`${rejectedCount} file bị bỏ qua (sai định dạng hoặc vượt 5MB)`)
     }
 
     if (validFiles.length > 0) {
@@ -117,9 +117,9 @@ export function ImageUpload({
     }
 
     const isValidType = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
-    const isValidSize = file.size <= 2 * 1024 * 1024
+    const isValidSize = file.size <= 5 * 1024 * 1024
     if (!isValidType || !isValidSize) {
-      toast.error('File không hợp lệ (chỉ JPG/PNG/WEBP, tối đa 2MB)')
+      toast.error('File không hợp lệ (chỉ JPG/PNG/WEBP, tối đa 5MB)')
       setReplacingUrl(null)
       if (replaceInputRef.current) replaceInputRef.current.value = ''
       return
@@ -272,7 +272,7 @@ export function ImageUpload({
       )}
 
       <p className="font-sans text-xs text-gray-500">
-        Kéo thả ảnh để thay đổi thứ tự. Hỗ trợ JPG, PNG, WEBP (Tối đa 2MB/ảnh).
+        Kéo thả ảnh để thay đổi thứ tự. Hỗ trợ JPG, PNG, WEBP (Tối đa 5MB/ảnh).
       </p>
 
       {/* Input File ẩn — upload nhiều ảnh mới */}
