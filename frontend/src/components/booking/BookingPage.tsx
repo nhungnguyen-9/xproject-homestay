@@ -21,22 +21,30 @@ export const BookingPage = () => {
 
     useEffect(() => {
         roomService.getAll().then((data) => {
-            setRooms(data.map((r: { id: string; name: string; type: string; amenities?: string[] }) => ({
+            setRooms(data.map((r) => ({
                 id: r.id,
                 name: r.name,
                 type: r.type as RoomType,
                 amenities: r.amenities || [],
+                hourlyRate: r.hourlyRate,
+                dailyRate: r.dailyRate,
+                overnightRate: r.overnightRate,
+                extraHourRate: r.extraHourRate,
+                combo3hRate: r.combo3hRate,
+                combo6h1hRate: r.combo6h1hRate,
+                combo6h1hDiscount: r.combo6h1hDiscount,
             })))
         }).catch(() => toast.error('Không tải được danh sách phòng'))
     }, [])
 
     useEffect(() => {
         const dateStr = formatDateISO(date)
-        setLoading(true)
+        let cancelled = false
         bookingService.getByDate(dateStr)
-            .then(setBookings)
-            .catch(() => toast.error('Không tải được lịch đặt phòng'))
-            .finally(() => setLoading(false))
+            .then(data => { if (!cancelled) setBookings(data) })
+            .catch(() => { if (!cancelled) toast.error('Không tải được lịch đặt phòng') })
+            .finally(() => { if (!cancelled) setLoading(false) })
+        return () => { cancelled = true }
     }, [date])
 
     if (loading && rooms.length === 0) {

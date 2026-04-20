@@ -3,19 +3,11 @@
  * Matches RoomCard proportions (flex-5 | flex-3 | flex-2) but taller for detail view.
  * Responsive: horizontal collage on ≥768px, vertical stack on <768px.
  */
+import { fillImageSlots } from './roomImageGallery.helpers';
 
 interface RoomImageGalleryProps {
     images: string[]; // Already resolved via imageUrl()
     roomName: string; // For alt attributes
-}
-
-/**
- * Fills image slots by cycling through available images.
- * If images array is empty, returns placeholder paths for all slots.
- */
-export function fillImageSlots(images: string[], slots: number = 5): string[] {
-    if (images.length === 0) return Array(slots).fill('/images/placeholder-room.png');
-    return Array.from({ length: slots }, (_, i) => images[i % images.length]);
 }
 
 export function RoomImageGallery({ images, roomName }: RoomImageGalleryProps) {

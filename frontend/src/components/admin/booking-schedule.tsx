@@ -106,11 +106,18 @@ export function BookingSchedule() {
 
   useEffect(() => {
     roomService.getAll().then((data) => {
-      setRooms(data.map((r: { id: string; name: string; type: string; amenities?: string[] }) => ({
+      setRooms(data.map((r) => ({
         id: r.id,
         name: r.name,
         type: r.type as import('@/types/schedule').RoomType,
         amenities: r.amenities || [],
+        hourlyRate: r.hourlyRate,
+        dailyRate: r.dailyRate,
+        overnightRate: r.overnightRate,
+        extraHourRate: r.extraHourRate,
+        combo3hRate: r.combo3hRate,
+        combo6h1hRate: r.combo6h1hRate,
+        combo6h1hDiscount: r.combo6h1hDiscount,
       })))
     }).catch(() => toast.error('Không tải được danh sách phòng'))
   }, [])
@@ -221,7 +228,8 @@ export function BookingSchedule() {
         // Nếu status thay đổi, gọi endpoint status transition riêng; còn lại dùng PUT
         if (selectedBooking && rest.status !== selectedBooking.status) {
           saved = await bookingService.updateStatus(id, rest.status)
-          const { status: _s, ...restNoStatus } = rest
+          const restNoStatus: Partial<typeof rest> = { ...rest }
+          delete restNoStatus.status
           if (Object.keys(restNoStatus).length > 0) {
             saved = await bookingService.update(id, restNoStatus)
           }

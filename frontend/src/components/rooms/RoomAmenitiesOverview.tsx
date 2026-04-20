@@ -16,8 +16,6 @@ interface RoomAmenitiesOverviewProps {
     roomName: string;
 }
 
-export { getAmenityIcon };
-
 interface AmenityGroup {
     title: string;
     items: string[];

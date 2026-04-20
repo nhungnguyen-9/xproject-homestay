@@ -86,7 +86,6 @@ export function RevenueDashboard() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     Promise.all([
       revenueService.getRevenueByPeriod(period),
       revenueService.getDailyRevenue(dateRange.start, dateRange.end),

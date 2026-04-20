@@ -277,7 +277,6 @@ function RoomImageCard({
           <p className="text-sm text-muted-foreground">
             {ROOM_TYPE_LABELS[room.type] || room.type} &middot; Tối đa {room.maxGuests} khách
             &middot; {formatPrice(room.hourlyRate)}/giờ
-            &middot; {formatPrice(room.perMinuteRate)} đ/phút
           </p>
         </div>
         <div className="flex items-center gap-2">

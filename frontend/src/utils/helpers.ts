@@ -71,17 +71,30 @@ export const calculateDuration = (
     return Math.max(0, totalMinutes / 60);
 };
 
+/** Subset trường giá mà calculateBookingPrice cần — phủ toàn bộ mode */
+export interface BookingPriceConfig {
+    hourlyRate: number;
+    dailyRate: number;
+    overnightRate: number;
+    extraHourRate: number;
+    combo3hRate: number;
+    combo6h1hRate: number;
+    combo6h1hDiscount: number;
+}
+
 /**
  * Tính giá phòng dựa trên loại phòng, chế độ đặt, và thời lượng
- * @param mode - Chế độ đặt (hourly, daily, overnight)
- * @param duration - Thời lượng tính bằng giờ
- * @param priceConfig - Cấu hình giá từ ROOM_PRICES
+ * @param mode - Chế độ đặt (hourly, daily, overnight, combo3h, combo6h1h)
+ * @param duration - Thời lượng tính bằng giờ (bỏ qua với combo modes)
+ * @param priceConfig - Cấu hình giá từ ROOM_PRICES hoặc RoomDetail
+ * @param combo6h1hOption - Khi mode=combo6h1h: 'bonus_hour' (7h, full price) hoặc 'discount' (6h, trừ discount)
  * @returns Tổng giá phòng (chưa tính đồ ăn)
  */
 export const calculateBookingPrice = (
     mode: string,
     duration: number,
-    priceConfig: { hourlyRate: number; dailyRate: number; overnightRate: number; extraHourRate: number }
+    priceConfig: BookingPriceConfig,
+    combo6h1hOption: 'bonus_hour' | 'discount' = 'bonus_hour'
 ): number => {
     if (mode === "hourly") {
         return Math.max(1, Math.ceil(duration)) * priceConfig.hourlyRate;
@@ -91,7 +104,7 @@ export const calculateBookingPrice = (
         const fullDays = Math.max(1, Math.floor(duration / 24) || 1);
         const remainingHours = duration - fullDays * 24;
         const extraHours = Math.max(0, Math.ceil(remainingHours));
-        
+
         // Giá = (số ngày * dailyRate) + (giờ lẻ * extraRate), nhưng không vượt quá (số ngày + 1) * dailyRate
         const basePrice = fullDays * priceConfig.dailyRate;
         const extraPrice = extraHours * priceConfig.extraHourRate;
@@ -109,6 +122,17 @@ export const calculateBookingPrice = (
             priceConfig.overnightRate + extraHours * priceConfig.extraHourRate,
             priceConfig.dailyRate
         );
+    }
+
+    if (mode === "combo3h") {
+        return priceConfig.combo3hRate;
+    }
+
+    if (mode === "combo6h1h") {
+        if (combo6h1hOption === 'discount') {
+            return Math.max(0, priceConfig.combo6h1hRate - priceConfig.combo6h1hDiscount);
+        }
+        return priceConfig.combo6h1hRate;
     }
 
     return Math.ceil(duration) * priceConfig.hourlyRate;

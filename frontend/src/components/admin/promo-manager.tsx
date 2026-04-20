@@ -66,7 +66,6 @@ export function PromoManager() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     promoService.getAll()
       .then(data => { if (!cancelled) setPromos(data) })
       .catch(err => { if (!cancelled) toast.error(err instanceof Error ? err.message : 'Không tải được danh sách mã khuyến mãi') })

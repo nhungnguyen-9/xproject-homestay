@@ -5,7 +5,7 @@ import { apiFetch } from './apiClient';
  * Chuẩn hoá số điện thoại: bỏ khoảng trắng, dấu gạch ngang và chuyển +84 thành 0
  */
 export function normalizePhone(phone: string): string {
-  let normalized = phone.replace(/[\s\-]/g, '');
+  let normalized = phone.replace(/[\s-]/g, '');
   if (normalized.startsWith('+84')) {
     normalized = '0' + normalized.slice(3);
   }

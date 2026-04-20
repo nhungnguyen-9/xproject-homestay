@@ -8,7 +8,8 @@ interface SnowfallProps {
  * Hiệu ứng tuyết rơi toàn trang — mỗi bông tuyết có vị trí, kích thước, tốc độ ngẫu nhiên
  */
 export const MainSnowfall: React.FC<SnowfallProps> = ({ flakes = 24 }) => {
-    const snowflakes = React.useMemo(() => {
+    // Lazy init via useState để sinh giá trị ngẫu nhiên 1 lần duy nhất (giữ render thuần khiết)
+    const [snowflakes] = React.useState(() => {
         return Array.from({ length: flakes }).map((_, i) => {
             const left = Math.random() * 100
             const size = 6 + Math.random() * 10
@@ -18,7 +19,7 @@ export const MainSnowfall: React.FC<SnowfallProps> = ({ flakes = 24 }) => {
             const swing = (Math.random() * 30) - 15
             return { key: i, left, size, delay, duration, opacity, swing }
         })
-    }, [flakes])
+    })
 
     return (
         <div className="pointer-events-none fixed inset-0 overflow-hidden z-20">
@@ -53,13 +54,12 @@ export const MainSnowfall: React.FC<SnowfallProps> = ({ flakes = 24 }) => {
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                         style={{
-                            // @ts-ignore
-                            ["--swing" as any]: `${f.swing}px`,
+                            "--swing": `${f.swing}px`,
                             animation: `swayMain ${Math.max(3, f.duration / 3)}s ease-in-out ${-f.delay}s infinite alternate`,
                             transformOrigin: "center",
                             opacity: 1,
                             display: "block",
-                        }}
+                        } as React.CSSProperties}
                         aria-hidden
                     >
                         <g stroke="rgba(255,255,255,0.9)" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round" fill="none">

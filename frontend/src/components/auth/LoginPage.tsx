@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import * as authService from '@/services/authService';
@@ -14,16 +14,14 @@ const loginSchema = z.object({
 
 export function LoginPage() {
   const navigate = useNavigate();
-
-  // If already authenticated, redirect to admin
-  if (authService.isAuthenticated()) {
-    navigate('/admin', { replace: true });
-    return null;
-  }
-
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // If already authenticated, redirect to admin
+  if (authService.isAuthenticated()) {
+    return <Navigate to="/admin" replace />;
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();

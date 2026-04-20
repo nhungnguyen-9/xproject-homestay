@@ -81,7 +81,6 @@ export function CustomerList() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     customerService.getAllWithStats()
       .then(data => { if (!cancelled) setCustomers(data) })
       .catch(err => { if (!cancelled) toast.error(err instanceof Error ? err.message : 'Không tải được danh sách khách hàng') })

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link, useParams } from "react-router"
 import { RoomDetailPage } from "./room-detail-page"
 import * as roomService from "@/services/roomService"
@@ -13,7 +13,7 @@ export default function RoomDetailRoute() {
   const { id } = useParams<{ id: string }>()
 
   const [room, setRoom] = useState<RoomDetail | null>(null)
-  const [branchRooms, setBranchRooms] = useState<RoomDetail[]>([])
+  const [fetchedBranchRooms, setFetchedBranchRooms] = useState<RoomDetail[] | null>(null)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [loading, setLoading] = useState<boolean>(true)
@@ -21,20 +21,15 @@ export default function RoomDetailRoute() {
 
   // Fetch room detail when id changes
   useEffect(() => {
-    if (!id) {
-      setError("Phòng không tìm thấy")
-      setLoading(false)
-      return
-    }
+    if (!id) return
 
     let cancelled = false
-    setLoading(true)
-    setError(null)
 
     roomService
       .getById(id)
       .then((data) => {
         if (!cancelled) {
+          setError(null)
           setRoom(data)
           setLoading(false)
         }
@@ -53,10 +48,7 @@ export default function RoomDetailRoute() {
 
   // Fetch sibling rooms when room.branchId is available
   useEffect(() => {
-    if (!room?.branchId) {
-      setBranchRooms(room ? [room] : [])
-      return
-    }
+    if (!room?.branchId) return
 
     let cancelled = false
 
@@ -64,12 +56,12 @@ export default function RoomDetailRoute() {
       .getAll({ branchId: room.branchId })
       .then((data) => {
         if (!cancelled) {
-          setBranchRooms(data)
+          setFetchedBranchRooms(data)
         }
       })
       .catch(() => {
         if (!cancelled) {
-          setBranchRooms([room])
+          setFetchedBranchRooms(null)
         }
       })
 
@@ -77,6 +69,12 @@ export default function RoomDetailRoute() {
       cancelled = true
     }
   }, [room])
+
+  // Derive branchRooms: use fetched when available, otherwise fallback to current room
+  const branchRooms = useMemo<RoomDetail[]>(() => {
+    if (fetchedBranchRooms && fetchedBranchRooms.length > 0) return fetchedBranchRooms
+    return room ? [room] : []
+  }, [fetchedBranchRooms, room])
 
   // Fetch bookings when selectedDate changes
   useEffect(() => {
@@ -105,6 +103,20 @@ export default function RoomDetailRoute() {
     },
     [selectedDate]
   )
+
+  if (!id) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-lg text-gray-600">Phòng không tìm thấy</p>
+        <Link
+          to="/phong-nghi"
+          className="text-blue-600 hover:underline"
+        >
+          ← Quay lại danh sách phòng
+        </Link>
+      </div>
+    )
+  }
 
   if (loading) {
     return (

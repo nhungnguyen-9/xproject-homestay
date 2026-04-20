@@ -10,11 +10,14 @@ export interface RoomDetail {
   images: string[];
   maxGuests: number;
   amenities: string[];
-  perMinuteRate: number;
   hourlyRate: number;
   dailyRate: number;
   overnightRate: number;
   extraHourRate: number;
+  combo3hRate: number;
+  combo6h1hRate: number;
+  /** Số tiền giảm khi khách không lấy 1H bonus trong combo 6H+1H */
+  combo6h1hDiscount: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -29,9 +32,11 @@ export interface CreateRoomPayload {
   images: string[];
   maxGuests: number;
   amenities: string[];
-  perMinuteRate: number;
   hourlyRate: number;
   dailyRate: number;
   overnightRate: number;
   extraHourRate: number;
+  combo3hRate: number;
+  combo6h1hRate: number;
+  combo6h1hDiscount: number;
 }

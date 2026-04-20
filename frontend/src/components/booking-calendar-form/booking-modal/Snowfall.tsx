@@ -8,7 +8,8 @@ interface SnowfallProps {
  * Hiệu ứng tuyết rơi trang trí — tạo các bông tuyết CSS animation rơi ngẫu nhiên trong modal
  */
 export const Snowfall: React.FC<SnowfallProps> = ({ flakes = 20 }) => {
-    const snowflakes = React.useMemo(() => {
+    // Lazy init via useState để sinh giá trị ngẫu nhiên 1 lần duy nhất (giữ render thuần khiết)
+    const [snowflakes] = React.useState(() => {
         return Array.from({ length: flakes }).map((_, i) => {
             const left = Math.random() * 100;
             const size = 3 + Math.random() * 6;
@@ -18,7 +19,7 @@ export const Snowfall: React.FC<SnowfallProps> = ({ flakes = 20 }) => {
             const swing = (Math.random() * 20) - 10;
             return { key: i, left, size, delay, duration, opacity, swing };
         });
-    }, [flakes]);
+    });
 
     return (
         <div className="pointer-events-none fixed inset-0 overflow-hidden z-[9999]">
@@ -56,12 +57,10 @@ export const Snowfall: React.FC<SnowfallProps> = ({ flakes = 20 }) => {
                             height: `${f.size}px`,
                             borderRadius: "50%",
                             background: "rgba(255,255,255,0.95)",
-                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                            // @ts-ignore
-                            ["--swing" as any]: `${f.swing}px`,
+                            "--swing": `${f.swing}px`,
                             animation: `sway ${Math.max(3, f.duration / 3)}s ease-in-out ${-f.delay}s infinite alternate`,
                             filter: "blur(0.2px)",
-                        }}
+                        } as React.CSSProperties}
                     />
                 </div>
             ))}

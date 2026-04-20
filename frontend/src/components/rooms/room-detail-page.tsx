@@ -10,7 +10,19 @@ import type { Booking, Room } from '@/types/schedule'
  * Maps a RoomDetail object to the simpler Room type used by RoomSchedule.
  */
 function toScheduleRoom(detail: RoomDetail): Room {
-  return { id: detail.id, name: detail.name, type: detail.type, amenities: detail.amenities }
+  return {
+    id: detail.id,
+    name: detail.name,
+    type: detail.type,
+    amenities: detail.amenities,
+    hourlyRate: detail.hourlyRate,
+    dailyRate: detail.dailyRate,
+    overnightRate: detail.overnightRate,
+    extraHourRate: detail.extraHourRate,
+    combo3hRate: detail.combo3hRate,
+    combo6h1hRate: detail.combo6h1hRate,
+    combo6h1hDiscount: detail.combo6h1hDiscount,
+  }
 }
 
 export interface RoomDetailPageProps {

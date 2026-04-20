@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { type BookingFormData, type Booking, ROOM_PRICES } from "@/types/schedule";
+import { type BookingFormData, type Booking, type Room, getRoomPriceConfig } from "@/types/schedule";
 import { calculateDuration, calculateBookingPrice } from "@/utils/helpers";
 import { validateStep1, validateStep2, validateStep3 } from "./validation";
 
@@ -7,6 +7,7 @@ interface UseBookingFormProps {
     initialFormData: BookingFormData;
     bookings: Booking[];
     selectedDate: Date;
+    rooms?: Room[];
 }
 
 /**
@@ -15,7 +16,7 @@ interface UseBookingFormProps {
  * @param bookings - Danh sách booking hiện tại để kiểm tra trùng lịch
  * @param selectedDate - Ngày được chọn trên calendar
  */
-export const useBookingForm = ({ initialFormData, bookings, selectedDate }: UseBookingFormProps) => {
+export const useBookingForm = ({ initialFormData, bookings, selectedDate, rooms }: UseBookingFormProps) => {
     const [formData, setFormData] = useState<BookingFormData>(initialFormData);
     const [currentStep, setCurrentStep] = useState(1);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -34,10 +35,16 @@ export const useBookingForm = ({ initialFormData, bookings, selectedDate }: UseB
         formData.checkOutTime,
     ]);
 
-    // Tính giá phòng bằng helper tập trung để đảm bảo tính đúng đắn cho các ca phụ thu
     const price = useMemo(() => {
-        return calculateBookingPrice(formData.mode, duration, ROOM_PRICES[formData.roomType]);
-    }, [formData.roomType, formData.mode, duration]);
+        const room = rooms?.find(r => r.id === formData.roomId);
+        const priceConfig = getRoomPriceConfig(room ?? { type: formData.roomType });
+        return calculateBookingPrice(
+            formData.mode,
+            duration,
+            priceConfig,
+            formData.combo6h1hOption,
+        );
+    }, [rooms, formData.roomId, formData.roomType, formData.mode, duration, formData.combo6h1hOption]);
 
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);
     const foodTotal = selectedFoodItems.reduce(

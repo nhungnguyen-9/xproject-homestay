@@ -20,9 +20,10 @@ function shortPrice(amount: number): string {
 /** Chuyển RoomDetail từ API thành props cho RoomCard */
 function toRoomCardProps(room: RoomDetail): RoomCardProps {
     const parts: string[] = [];
-    if (room.hourlyRate > 0) parts.push(`3 tiếng/${shortPrice(room.hourlyRate)}`);
+    if (room.combo3hRate > 0) parts.push(`3H/${shortPrice(room.combo3hRate)}`);
+    else if (room.hourlyRate > 0) parts.push(`${shortPrice(room.hourlyRate)}/giờ`);
+    if (room.combo6h1hRate > 0) parts.push(`6H+1H/${shortPrice(room.combo6h1hRate)}`);
     if (room.overnightRate > 0) parts.push(`Qua đêm/${shortPrice(room.overnightRate)}`);
-    if (parts.length === 0 && room.perMinuteRate > 0) parts.push(`${formatPrice(room.perMinuteRate)} đ/phút`);
 
     return {
         id: room.id,

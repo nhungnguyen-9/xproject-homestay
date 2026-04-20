@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import {
@@ -33,13 +33,13 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { RoomTypeBadge } from '@/components/rooms/RoomTypeBadge'
-import { demoRooms } from '@/data/demo-schedule'
 import * as bookingService from '@/services/bookingService'
+import * as roomService from '@/services/roomService'
 import * as promoService from '@/services/promoService'
 import * as authService from '@/services/authService'
 import type { PromoCode } from '@/types/promo'
-import type { Booking, BookingStatus, InternalTag, RoomType } from '@/types/schedule'
-import { ROOM_PRICES } from '@/types/schedule'
+import type { Booking, BookingStatus, InternalTag, Room, RoomType } from '@/types/schedule'
+import { getRoomPriceConfig } from '@/types/schedule'
 import { calculateBookingPrice } from '@/utils/helpers'
 
 interface BookingModalProps {
@@ -105,11 +105,29 @@ export function BookingModal({
   const isAdmin = authService.isAdmin()
   const isEdit = mode === 'edit'
 
+  const [rooms, setRooms] = useState<Room[]>([])
+  useEffect(() => {
+    roomService.getAll().then((data) => {
+      setRooms(data.map((r) => ({
+        id: r.id, name: r.name, type: r.type,
+        amenities: r.amenities || [],
+        hourlyRate: r.hourlyRate, dailyRate: r.dailyRate,
+        overnightRate: r.overnightRate, extraHourRate: r.extraHourRate,
+        combo3hRate: r.combo3hRate, combo6h1hRate: r.combo6h1hRate,
+        combo6h1hDiscount: r.combo6h1hDiscount,
+      })))
+    }).catch(() => {})
+  }, [])
+
   const [activeTab, setActiveTab] = useState<'guest' | 'internal'>(
     booking?.category === 'internal' ? 'internal' : 'guest'
   )
 
-  const [roomId, setRoomId] = useState(booking?.roomId || prefillRoomId || demoRooms[0].id)
+  const [roomId, setRoomId] = useState(booking?.roomId || prefillRoomId || '')
+
+  useEffect(() => {
+    if (!roomId && rooms.length > 0) setRoomId(rooms[0].id)
+  }, [rooms, roomId])
   const [date, setDate] = useState(
     booking?.date || prefillDate || new Date().toISOString().split('T')[0]
   )
@@ -143,7 +161,7 @@ export function BookingModal({
       setValidatedPromo(null)
       return
     }
-    const room = demoRooms.find((r) => r.id === roomId)
+    const room = rooms.find((r) => r.id === roomId)
     const roomType: RoomType = room?.type || 'standard'
     setValidatingVoucher(true)
     try {
@@ -165,7 +183,7 @@ export function BookingModal({
     } finally {
       setValidatingVoucher(false)
     }
-  }, [voucher, roomId])
+  }, [voucher, roomId, rooms])
 
   const timeToMinutes = (time: string): number => {
     const [h, m] = time.split(':').map(Number)
@@ -247,9 +265,9 @@ export function BookingModal({
   }
 
   const calculatePrice = (): number => {
-    const room = demoRooms.find((r) => r.id === roomId)
+    const room = rooms.find((r) => r.id === roomId)
     if (!room) return 0
-    const priceConfig = ROOM_PRICES[room.type]
+    const priceConfig = getRoomPriceConfig(room)
     
     // Giả định Admin modal hiện tại chỉ hỗ trợ tính theo giờ (hourly) hoặc cần logic xác định mode
     // Vì Admin modal không có trường 'mode', ta mặc định là 'hourly' hoặc tính dựa trên thời gian
@@ -314,7 +332,7 @@ export function BookingModal({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {demoRooms.map((r) => (
+                    {rooms.map((r) => (
                       <SelectItem key={r.id} value={r.id}>
                         <span className="inline-flex items-center gap-2">
                           <span>{r.name}</span>

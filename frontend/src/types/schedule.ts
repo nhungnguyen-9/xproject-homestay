@@ -9,6 +9,27 @@ export interface Room {
   name: string;
   type: RoomType;
   amenities?: string[];
+  hourlyRate?: number;
+  dailyRate?: number;
+  overnightRate?: number;
+  extraHourRate?: number;
+  combo3hRate?: number;
+  combo6h1hRate?: number;
+  combo6h1hDiscount?: number;
+}
+
+/** Lấy PriceConfig từ Room — dùng giá thực từ API, fallback về ROOM_PRICES mặc định */
+export function getRoomPriceConfig(room: Pick<Room, 'type' | 'hourlyRate' | 'dailyRate' | 'overnightRate' | 'extraHourRate' | 'combo3hRate' | 'combo6h1hRate' | 'combo6h1hDiscount'>): PriceConfig {
+  const fallback = ROOM_PRICES[room.type];
+  return {
+    hourlyRate: room.hourlyRate ?? fallback.hourlyRate,
+    dailyRate: room.dailyRate ?? fallback.dailyRate,
+    overnightRate: room.overnightRate ?? fallback.overnightRate,
+    extraHourRate: room.extraHourRate ?? fallback.extraHourRate,
+    combo3hRate: room.combo3hRate ?? fallback.combo3hRate,
+    combo6h1hRate: room.combo6h1hRate ?? fallback.combo6h1hRate,
+    combo6h1hDiscount: room.combo6h1hDiscount ?? fallback.combo6h1hDiscount,
+  };
 }
 
 /** Trạng thái đặt phòng */
@@ -70,8 +91,11 @@ export interface TimeSlot {
   isHighlighted?: boolean;
 }
 
-/** Chế độ đặt phòng: theo giờ, theo ngày, hoặc qua đêm */
-export type BookingMode = 'hourly' | 'daily' | 'overnight' | 'combo6h';
+/** Chế độ đặt phòng: theo giờ, theo ngày, qua đêm, combo 3H, hoặc combo 6H+1H */
+export type BookingMode = 'hourly' | 'daily' | 'overnight' | 'combo3h' | 'combo6h1h';
+
+/** Tuỳ chọn khi chọn combo 6H+1H: nhận 1 giờ bonus hay nhận giảm giá thay thế */
+export type Combo6h1hOption = 'bonus_hour' | 'discount';
 
 /** Món ăn/đồ uống kèm theo đặt phòng */
 export interface FoodItem {
@@ -103,6 +127,8 @@ export interface BookingFormData {
   voucher: string;
   acceptTerms: boolean;
   customerLookup?: import('@/types/customer').CustomerLookup | null;
+  /** Tuỳ chọn khi mode = combo6h1h — mặc định 'bonus_hour' */
+  combo6h1hOption?: Combo6h1hOption;
 }
 
 /** Cấu hình giá phòng theo từng chế độ */
@@ -111,6 +137,12 @@ export interface PriceConfig {
   dailyRate: number;
   overnightRate: number;
   extraHourRate: number;
+  /** Giá combo 3H trọn gói (thay cho hourlyRate * 3) */
+  combo3hRate: number;
+  /** Giá combo 6H + 1H bonus trọn gói */
+  combo6h1hRate: number;
+  /** Số tiền giảm khi khách không lấy 1H bonus (chỉ còn 6H) */
+  combo6h1hDiscount: number;
 }
 
 /** Bảng giá phòng theo từng loại phòng */
@@ -120,18 +152,27 @@ export const ROOM_PRICES: Record<RoomType, PriceConfig> = {
     dailyRate: 450000,
     overnightRate: 350000,
     extraHourRate: 40000,
+    combo3hRate: 420000,
+    combo6h1hRate: 560000,
+    combo6h1hDiscount: 60000,
   },
   vip: {
     hourlyRate: 210000,
     dailyRate: 550000,
     overnightRate: 450000,
     extraHourRate: 50000,
+    combo3hRate: 520000,
+    combo6h1hRate: 720000,
+    combo6h1hDiscount: 80000,
   },
   supervip: {
     hourlyRate: 269000,
     dailyRate: 650000,
     overnightRate: 550000,
     extraHourRate: 60000,
+    combo3hRate: 650000,
+    combo6h1hRate: 880000,
+    combo6h1hDiscount: 100000,
   },
 };
 

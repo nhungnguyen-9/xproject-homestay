@@ -5,8 +5,6 @@ import { Toaster } from 'sonner';
 import './index.css'
 import App from './App.tsx'
 import { Home } from './components/home/home.tsx';
-import { LocationPage } from './components/locations/location-page.tsx';
-import { DestinationPage } from './components/locations/destination-page.tsx';
 import RoomDetailRoute from './components/rooms/RoomDetailRoute.tsx'
 import { ScrollToTop } from './components/common/ScrollToTop.tsx';
 import { LoginPage } from './components/auth/LoginPage.tsx';

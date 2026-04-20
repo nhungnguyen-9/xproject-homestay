@@ -25,6 +25,8 @@ export const validateStep1 = (
     duration: number,
     _selectedDate: Date
 ): Record<string, string> => {
+    // _selectedDate giữ lại cho tương thích API với caller hiện tại
+    void _selectedDate;
     const newErrors: Record<string, string> = {};
 
     if (duration < 0.5) {

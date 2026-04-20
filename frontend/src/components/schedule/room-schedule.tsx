@@ -239,30 +239,6 @@ const RoomRow: React.FC<RoomRowProps> = ({
         supervip: 'rounded-md m-1 text-black font-medium text-sm shrink-0',
     };
 
-    const isTimeBooked = (minutes: number): boolean => {
-        return bookings.some(booking => {
-            const bookingStart = timeToMinutes(booking.startTime);
-            const bookingEnd = timeToMinutes(booking.endTime);
-            return minutes >= bookingStart && minutes < bookingEnd;
-        });
-    };
-
-    const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-
-        const minutes = (x / HOUR_WIDTH) * 60 + startHour * 60;
-        // Làm tròn xuống bội số 30 phút
-        const roundedMinutes = Math.floor(minutes / 30) * 30;
-
-        if (!isTimeBooked(roundedMinutes)) {
-            const hours = Math.floor(roundedMinutes / 60);
-            const mins = roundedMinutes % 60;
-            const timeString = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-            onEmptySlotClick?.(room.id, timeString);
-        }
-    };
-
     return (
         <div className="flex border-b border-border" style={{ height: ROW_HEIGHT }}>
             <div
@@ -362,10 +338,6 @@ const CurrentTimeIndicator: React.FC<CurrentTimeIndicatorProps> = ({
         currentTime.getHours() * 60 + currentTime.getMinutes() - startHour * 60;
     const left = (currentMinutes / 60) * HOUR_WIDTH + ROOM_LABEL_WIDTH;
 
-    const timeLabel = `${String(currentTime.getHours()).padStart(2, '0')}:${String(
-        currentTime.getMinutes()
-    ).padStart(2, '0')}`;
-
     return (
         <div
             className="absolute z-20 pointer-events-none"
@@ -396,7 +368,6 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
     onBookingCreate,
     startHour = 0,
     endHour = 22,
-    roomAmenities,
 }) => {
     const [selectedDate, setSelectedDate] = useState(date);
     const [filters, setFilters] = useState<FilterOption[]>([

@@ -1,4 +1,3 @@
-import { Play } from "lucide-react"
 import { motion } from "framer-motion"
 import type { Variants } from "framer-motion"
 import { RoomTypeBadge } from "./RoomTypeBadge"

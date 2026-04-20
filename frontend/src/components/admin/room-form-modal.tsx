@@ -44,7 +44,7 @@ interface RoomFormModalProps {
 interface FormErrors {
     name?: string;
     type?: string;
-    perMinuteRate?: string;
+    hourlyRate?: string;
 }
 
 const ROOM_TYPE_OPTIONS = [
@@ -64,11 +64,13 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
     const [name, setName] = useState('');
     const [type, setType] = useState<string>('');
     const [branchId, setBranchId] = useState<string>('');
-    const [perMinuteRate, setPerMinuteRate] = useState<string>('');
-    const [hourlyRate, setHourlyRate] = useState<string>('0');
+    const [hourlyRate, setHourlyRate] = useState<string>('');
     const [dailyRate, setDailyRate] = useState<string>('0');
     const [overnightRate, setOvernightRate] = useState<string>('0');
     const [extraHourRate, setExtraHourRate] = useState<string>('0');
+    const [combo3hRate, setCombo3hRate] = useState<string>('0');
+    const [combo6h1hRate, setCombo6h1hRate] = useState<string>('0');
+    const [combo6h1hDiscount, setCombo6h1hDiscount] = useState<string>('0');
     const [maxGuests, setMaxGuests] = useState<string>('2');
     const [description, setDescription] = useState('');
     const [amenities, setAmenities] = useState<string[]>([]);
@@ -106,11 +108,13 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
                 setName(room.name);
                 setType(room.type);
                 setBranchId(room.branchId || '');
-                setPerMinuteRate(String(room.perMinuteRate));
                 setHourlyRate(String(room.hourlyRate));
                 setDailyRate(String(room.dailyRate));
                 setOvernightRate(String(room.overnightRate));
                 setExtraHourRate(String(room.extraHourRate));
+                setCombo3hRate(String(room.combo3hRate));
+                setCombo6h1hRate(String(room.combo6h1hRate));
+                setCombo6h1hDiscount(String(room.combo6h1hDiscount));
                 setMaxGuests(String(room.maxGuests));
                 setDescription(room.description || '');
                 setAmenities(room.amenities || []);
@@ -118,11 +122,13 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
                 setName('');
                 setType('');
                 setBranchId('');
-                setPerMinuteRate('');
-                setHourlyRate('0');
+                setHourlyRate('');
                 setDailyRate('0');
                 setOvernightRate('0');
                 setExtraHourRate('0');
+                setCombo3hRate('0');
+                setCombo6h1hRate('0');
+                setCombo6h1hDiscount('0');
                 setMaxGuests('2');
                 setDescription('');
                 setAmenities([]);
@@ -132,9 +138,6 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
             setSubmitting(false);
         }
     }, [isOpen, room]);
-
-    /** Tính hourly equivalent từ perMinuteRate */
-    const hourlyEquivalent = perMinuteRate ? Number(perMinuteRate) * 60 : 0;
 
     /** Validate required fields, trả về true nếu hợp lệ */
     function validate(): boolean {
@@ -148,9 +151,9 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
             newErrors.type = 'Loại phòng là bắt buộc';
         }
 
-        const rateNum = Number(perMinuteRate);
-        if (!perMinuteRate || isNaN(rateNum) || rateNum <= 0) {
-            newErrors.perMinuteRate = 'Giá theo phút phải lớn hơn 0';
+        const rateNum = Number(hourlyRate);
+        if (!hourlyRate || isNaN(rateNum) || rateNum <= 0) {
+            newErrors.hourlyRate = 'Giá theo giờ phải lớn hơn 0';
         }
 
         setErrors(newErrors);
@@ -196,11 +199,13 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
             images: room?.images || [],
             maxGuests: Number(maxGuests) || 2,
             amenities,
-            perMinuteRate: Number(perMinuteRate),
             hourlyRate: Number(hourlyRate) || 0,
             dailyRate: Number(dailyRate) || 0,
             overnightRate: Number(overnightRate) || 0,
             extraHourRate: Number(extraHourRate) || 0,
+            combo3hRate: Number(combo3hRate) || 0,
+            combo6h1hRate: Number(combo6h1hRate) || 0,
+            combo6h1hDiscount: Number(combo6h1hDiscount) || 0,
         };
 
         setSubmitting(true);
@@ -298,44 +303,26 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
                         </Select>
                     </div>
 
-                    {/* Giá theo phút */}
-                    <div className="space-y-1.5">
-                        <Label htmlFor="room-per-minute-rate">
-                            Giá theo phút (VNĐ) <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                            id="room-per-minute-rate"
-                            type="number"
-                            min="1"
-                            value={perMinuteRate}
-                            onChange={(e) => {
-                                setPerMinuteRate(e.target.value);
-                                if (errors.perMinuteRate) setErrors((prev) => ({ ...prev, perMinuteRate: undefined }));
-                            }}
-                            placeholder="Nhập giá theo phút"
-                            aria-invalid={!!errors.perMinuteRate}
-                        />
-                        {errors.perMinuteRate && (
-                            <p className="text-sm text-destructive">{errors.perMinuteRate}</p>
-                        )}
-                        {hourlyEquivalent > 0 && (
-                            <p className="text-sm text-muted-foreground">
-                                ≈ {hourlyEquivalent.toLocaleString('vi-VN')} đ/giờ
-                            </p>
-                        )}
-                    </div>
-
                     {/* Giá theo giờ */}
                     <div className="space-y-1.5">
-                        <Label htmlFor="room-hourly-rate">Giá theo giờ (VNĐ)</Label>
+                        <Label htmlFor="room-hourly-rate">
+                            Giá theo giờ (VNĐ) <span className="text-destructive">*</span>
+                        </Label>
                         <Input
                             id="room-hourly-rate"
                             type="number"
-                            min="0"
+                            min="1"
                             value={hourlyRate}
-                            onChange={(e) => setHourlyRate(e.target.value)}
-                            placeholder="0"
+                            onChange={(e) => {
+                                setHourlyRate(e.target.value);
+                                if (errors.hourlyRate) setErrors((prev) => ({ ...prev, hourlyRate: undefined }));
+                            }}
+                            placeholder="Nhập giá theo giờ"
+                            aria-invalid={!!errors.hourlyRate}
                         />
+                        {errors.hourlyRate && (
+                            <p className="text-sm text-destructive">{errors.hourlyRate}</p>
+                        )}
                     </div>
 
                     {/* Giá theo ngày */}
@@ -362,6 +349,48 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
                             onChange={(e) => setOvernightRate(e.target.value)}
                             placeholder="0"
                         />
+                    </div>
+
+                    {/* Giá Combo 3H */}
+                    <div className="space-y-1.5">
+                        <Label htmlFor="room-combo3h-rate">Giá Combo 3H (VNĐ)</Label>
+                        <Input
+                            id="room-combo3h-rate"
+                            type="number"
+                            min="0"
+                            value={combo3hRate}
+                            onChange={(e) => setCombo3hRate(e.target.value)}
+                            placeholder="0"
+                        />
+                    </div>
+
+                    {/* Giá Combo 6H+1H */}
+                    <div className="space-y-1.5">
+                        <Label htmlFor="room-combo6h1h-rate">Giá Combo 6H+1H (VNĐ)</Label>
+                        <Input
+                            id="room-combo6h1h-rate"
+                            type="number"
+                            min="0"
+                            value={combo6h1hRate}
+                            onChange={(e) => setCombo6h1hRate(e.target.value)}
+                            placeholder="0"
+                        />
+                    </div>
+
+                    {/* Giảm giá thay thế 1H */}
+                    <div className="space-y-1.5">
+                        <Label htmlFor="room-combo6h1h-discount">Giảm giá thay thế 1H (VNĐ)</Label>
+                        <Input
+                            id="room-combo6h1h-discount"
+                            type="number"
+                            min="0"
+                            value={combo6h1hDiscount}
+                            onChange={(e) => setCombo6h1hDiscount(e.target.value)}
+                            placeholder="0"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Số tiền giảm khi khách không lấy 1H bonus
+                        </p>
                     </div>
 
                     {/* Số khách tối đa */}

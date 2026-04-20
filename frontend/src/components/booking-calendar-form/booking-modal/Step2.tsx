@@ -20,7 +20,7 @@ interface Step2Props {
 }
 
 export const Step2: React.FC<Step2Props> = ({ formData, setFormData, price, duration, errors }) => {
-    const upd = (u: Partial<BookingFormData>) => setFormData(p => ({ ...p, ...u }));
+    const upd = React.useCallback((u: Partial<BookingFormData>) => setFormData(p => ({ ...p, ...u })), [setFormData]);
     const [lookupResult, setLookupResult] = React.useState<CustomerLookup | null | 'loading'>(null);
     const [showTerms, setShowTerms] = React.useState(false);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -37,7 +37,7 @@ export const Step2: React.FC<Step2Props> = ({ formData, setFormData, price, dura
             else upd({ customerLookup: null });
         }, 600);
         return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-    }, [formData.guestPhone]);
+    }, [formData.guestPhone, upd]);
 
     const selFood = formData.foodItems.filter(f => (f.qty || 0) > 0);
     const foodTotal = selFood.reduce((s, i) => s + i.price * (i.qty || 0), 0)
@@ -45,7 +45,15 @@ export const Step2: React.FC<Step2Props> = ({ formData, setFormData, price, dura
     const totalPrice = price + foodTotal;
     const hasIdImages = lookupResult && lookupResult !== 'loading' && lookupResult.hasIdImages;
 
-    const modeLabel = formData.mode === 'hourly' ? 'Giờ' : formData.mode === 'daily' ? 'Ngày' : 'Qua đêm';
+    const modeLabel = (
+        formData.mode === 'hourly' ? 'Giờ'
+        : formData.mode === 'daily' ? 'Ngày'
+        : formData.mode === 'overnight' ? 'Qua đêm'
+        : formData.mode === 'combo3h' ? 'Combo 3H'
+        : formData.mode === 'combo6h1h'
+            ? `Combo 6H+1H (${formData.combo6h1hOption === 'discount' ? 'giảm giá' : '+1H bonus'})`
+            : 'Giờ'
+    );
 
     return (
         <div className="flex flex-col lg:flex-row lg:items-stretch gap-5">

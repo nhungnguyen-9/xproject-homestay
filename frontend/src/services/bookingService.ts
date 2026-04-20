@@ -61,7 +61,6 @@ export async function getAll(params: ListBookingsParams = {}): Promise<Booking[]
   const limit = params.limit ?? 100;
   let page = params.page ?? 1;
   const all: Booking[] = [];
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const res = await apiFetch<PaginatedBookings>(`/bookings${buildQuery({ ...params, page, limit })}`);
     all.push(...res.data);
