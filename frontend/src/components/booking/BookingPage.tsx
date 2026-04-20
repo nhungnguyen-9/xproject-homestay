@@ -34,7 +34,10 @@ export const BookingPage = () => {
                 combo6h1hRate: r.combo6h1hRate,
                 combo6h1hDiscount: r.combo6h1hDiscount,
             })))
-        }).catch(() => toast.error('Không tải được danh sách phòng'))
+        }).catch((err) => {
+            console.error('Failed to load rooms:', err)
+            toast.error('Không tải được danh sách phòng')
+        })
     }, [])
 
     useEffect(() => {
@@ -42,7 +45,12 @@ export const BookingPage = () => {
         let cancelled = false
         bookingService.getByDate(dateStr)
             .then(data => { if (!cancelled) setBookings(data) })
-            .catch(() => { if (!cancelled) toast.error('Không tải được lịch đặt phòng') })
+            .catch((err) => {
+                if (!cancelled) {
+                    console.error('Failed to load bookings:', err)
+                    toast.error('Không tải được lịch đặt phòng')
+                }
+            })
             .finally(() => { if (!cancelled) setLoading(false) })
         return () => { cancelled = true }
     }, [date])
