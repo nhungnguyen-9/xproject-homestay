@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import type { Booking, Room, RoomType } from '@/types/schedule'
 import { RoomSchedule } from '@/components/schedule/room-schedule'
@@ -55,6 +55,19 @@ export const BookingPage = () => {
         return () => { cancelled = true }
     }, [date])
 
+    const handleBookingCreate = useCallback(async (newBooking: Omit<Booking, 'id'>) => {
+        try {
+            await bookingService.create(newBooking)
+            const dateStr = formatDateISO(date)
+            const data = await bookingService.getByDate(dateStr)
+            setBookings(data)
+            toast.success('Đặt phòng thành công')
+        } catch (err) {
+            console.error('Tạo booking thất bại:', err)
+            toast.error('Đặt phòng thất bại, vui lòng thử lại')
+        }
+    }, [date])
+
     if (loading && rooms.length === 0) {
         return (
             <div className="flex items-center justify-center py-20">
@@ -70,6 +83,7 @@ export const BookingPage = () => {
                 rooms={rooms}
                 bookings={bookings}
                 onDateChange={setDate}
+                onBookingCreate={handleBookingCreate}
                 startHour={0}
                 endHour={24}
             />
