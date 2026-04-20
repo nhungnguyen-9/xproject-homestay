@@ -1,0 +1,561 @@
+============================================================
+CHECK: backend:test
+TIME:  2026-04-20 19:57:02
+CMD:   cd backend && npm run test:run
+------------------------------------------------------------
+
+> chon-cinehome-backend@0.1.0 test:run
+> vitest run
+
+
+ RUN  v4.1.1 /home/tav/Documents/xproject-homestay/backend
+
+
+ Test Files  3 passed (3)
+      Tests  53 passed (53)
+   Start at  19:57:03
+   Duration  200ms (transform 107ms, setup 0ms, import 156ms, tests 21ms, environment 1ms)
+
+
+============================================================
+CHECK: frontend:test
+TIME:  2026-04-20 19:57:03
+CMD:   cd frontend && npm run test:run
+------------------------------------------------------------
+
+> frontend@0.0.0 test:run
+> vitest run
+
+
+ RUN  v4.1.1 /home/tav/Documents/xproject-homestay/frontend
+
+
+ Test Files  1 passed (1)
+      Tests  21 passed (21)
+   Start at  19:57:03
+   Duration  919ms (transform 50ms, setup 73ms, import 34ms, tests 37ms, environment 642ms)
+
+
+============================================================
+CHECK: backend:build
+TIME:  2026-04-20 19:57:04
+CMD:   cd backend && npm run build
+------------------------------------------------------------
+
+> chon-cinehome-backend@0.1.0 build
+> tsc
+
+
+============================================================
+CHECK: frontend:build
+TIME:  2026-04-20 19:57:08
+CMD:   cd frontend && npm run build
+------------------------------------------------------------
+
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.1 building client environment for production...
+transforming...
+✓ 3484 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                         1.57 kB │ gzip:   0.71 kB
+dist/assets/pepsi-CuuYVOwX.png         12.21 kB
+dist/assets/image_home2-BwUj4HNq.png  174.50 kB
+dist/assets/image_home1-soVlbDmx.png  234.59 kB
+dist/assets/image_home3-Q8FgiBc8.png  251.54 kB
+dist/assets/index-BZi-IPOw.css        100.12 kB │ gzip:  16.57 kB
+dist/assets/vendor-DlM37L41.js         44.54 kB │ gzip:  16.05 kB │ map:   452.21 kB
+dist/assets/ui-BCxzHLTa.js            127.49 kB │ gzip:  35.56 kB │ map:   652.12 kB
+dist/assets/charts-d-7bmipa.js        342.08 kB │ gzip: 102.66 kB │ map: 1,788.51 kB
+dist/assets/index-C-nzJywG.js         830.51 kB │ gzip: 243.24 kB │ map: 3,642.06 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 7.20s
+
+============================================================
+CHECK: frontend:lint
+TIME:  2026-04-20 19:57:21
+CMD:   cd frontend && npm run lint
+------------------------------------------------------------
+
+> frontend@0.0.0 lint
+> eslint .
+
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/admin/booking-modal.tsx
+  186:6  warning  React Hook useCallback has a missing dependency: 'rooms'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/admin/booking-schedule.tsx
+  231:27  error  '_s' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/admin/customer-detail.tsx
+  136:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/admin/customer-detail.tsx:136:5
+  134 |     if (!id) return
+  135 |     let cancelled = false
+> 136 |     setLoading(true)
+      |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  137 |     setNotFound(false)
+  138 |     Promise.all([customerService.getStats(id), bookingService.getAll({ customerId: id })])
+  139 |       .then(([data, customerBookings]) => {  react-hooks/set-state-in-effect
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/admin/customer-list.tsx
+  84:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/admin/customer-list.tsx:84:5
+  82 |   useEffect(() => {
+  83 |     let cancelled = false
+> 84 |     setLoading(true)
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  85 |     customerService.getAllWithStats()
+  86 |       .then(data => { if (!cancelled) setCustomers(data) })
+  87 |       .catch(err => { if (!cancelled) toast.error(err instanceof Error ? err.message : 'Không tải được danh sách khách hàng') })  react-hooks/set-state-in-effect
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/admin/promo-manager.tsx
+  69:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/admin/promo-manager.tsx:69:5
+  67 |   useEffect(() => {
+  68 |     let cancelled = false
+> 69 |     setLoading(true)
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  70 |     promoService.getAll()
+  71 |       .then(data => { if (!cancelled) setPromos(data) })
+  72 |       .catch(err => { if (!cancelled) toast.error(err instanceof Error ? err.message : 'Không tải được danh sách mã khuyến mãi') })  react-hooks/set-state-in-effect
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/admin/promo-modal.tsx
+  1:20  error  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/admin/revenue-dashboard.tsx
+  89:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/admin/revenue-dashboard.tsx:89:5
+  87 |   useEffect(() => {
+  88 |     let cancelled = false
+> 89 |     setLoading(true)
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  90 |     Promise.all([
+  91 |       revenueService.getRevenueByPeriod(period),
+  92 |       revenueService.getDailyRevenue(dateRange.start, dateRange.end),  react-hooks/set-state-in-effect
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/auth/LoginPage.tsx
+  24:35  error  React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  25:35  error  React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  26:43  error  React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal.tsx
+  25:5  error  'Snowfall' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Snowfall.tsx
+  13:26  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Snowfall.tsx:13:26
+  11 |     const snowflakes = React.useMemo(() => {
+  12 |         return Array.from({ length: flakes }).map((_, i) => {
+> 13 |             const left = Math.random() * 100;
+     |                          ^^^^^^^^^^^^^ Cannot call impure function
+  14 |             const size = 3 + Math.random() * 6;
+  15 |             const delay = Math.random() * 30;
+  16 |             const duration = 18 + Math.random() * 18;                                            react-hooks/purity
+  14:30  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Snowfall.tsx:14:30
+  12 |         return Array.from({ length: flakes }).map((_, i) => {
+  13 |             const left = Math.random() * 100;
+> 14 |             const size = 3 + Math.random() * 6;
+     |                              ^^^^^^^^^^^^^ Cannot call impure function
+  15 |             const delay = Math.random() * 30;
+  16 |             const duration = 18 + Math.random() * 18;
+  17 |             const opacity = 0.35 + Math.random() * 0.45;                            react-hooks/purity
+  15:27  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Snowfall.tsx:15:27
+  13 |             const left = Math.random() * 100;
+  14 |             const size = 3 + Math.random() * 6;
+> 15 |             const delay = Math.random() * 30;
+     |                           ^^^^^^^^^^^^^ Cannot call impure function
+  16 |             const duration = 18 + Math.random() * 18;
+  17 |             const opacity = 0.35 + Math.random() * 0.45;
+  18 |             const swing = (Math.random() * 20) - 10;                                        react-hooks/purity
+  16:35  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Snowfall.tsx:16:35
+  14 |             const size = 3 + Math.random() * 6;
+  15 |             const delay = Math.random() * 30;
+> 16 |             const duration = 18 + Math.random() * 18;
+     |                                   ^^^^^^^^^^^^^ Cannot call impure function
+  17 |             const opacity = 0.35 + Math.random() * 0.45;
+  18 |             const swing = (Math.random() * 20) - 10;
+  19 |             return { key: i, left, size, delay, duration, opacity, swing };  react-hooks/purity
+  17:36  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Snowfall.tsx:17:36
+  15 |             const delay = Math.random() * 30;
+  16 |             const duration = 18 + Math.random() * 18;
+> 17 |             const opacity = 0.35 + Math.random() * 0.45;
+     |                                    ^^^^^^^^^^^^^ Cannot call impure function
+  18 |             const swing = (Math.random() * 20) - 10;
+  19 |             return { key: i, left, size, delay, duration, opacity, swing };
+  20 |         });                                     react-hooks/purity
+  18:28  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Snowfall.tsx:18:28
+  16 |             const duration = 18 + Math.random() * 18;
+  17 |             const opacity = 0.35 + Math.random() * 0.45;
+> 18 |             const swing = (Math.random() * 20) - 10;
+     |                            ^^^^^^^^^^^^^ Cannot call impure function
+  19 |             return { key: i, left, size, delay, duration, opacity, swing };
+  20 |         });
+  21 |     }, [flakes]);                                                                         react-hooks/purity
+  61:43  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Step1.tsx
+   27:16  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+  101:11  error  'foodTotal' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+  233:68  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Step1.tsx:233:68
+  231 |                                 <div className="w-[300px] shrink-0 flex gap-1.5 items-center">
+  232 |                                     <Input type="date" value={formatDateInput(formData.checkInDate)} onChange={e => handleCheckInDateChange(new Date(e.target.value))} className="bg-white flex-1 min-w-0" />
+> 233 |                                     {formData.mode === 'hourly' ? <TimeSelects field="checkInTime" time={formData.checkInTime} /> : <span className="text-sm text-gray-600 font-medium shrink-0">{formData.checkInTime}</span>}
+      |                                                                    ^^^^^^^^^^^ This component is created during render
+  234 |                                 </div>
+  235 |                                 <div className="w-[300px] shrink-0 flex gap-1.5 items-center">
+  236 |                                     <Input type="date" value={formatDateInput(formData.checkOutDate)} onChange={e => handleDate('checkOutDate', new Date(e.target.value))} className="bg-white flex-1 min-w-0" />
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Step1.tsx:125:25
+  123 |     const combo6h1hDiscount = getRoomPriceConfig(selectedRoom ?? { type: formData.roomType }).combo6h1hDiscount;
+  124 |
+> 125 |     const TimeSelects = ({ field, time }: { field: 'checkInTime' | 'checkOutTime'; time: string }) => (
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 126 |         <>
+      | ^^^^^^^^^^
+> 127 |             <Select value={time.split(":")[0] + "h"} onValueChange={v => handleTime(field, `${v.replace("h", "")}:${time.split(":")[1] || "00"}`)}>
+      …
+      | ^^^^^^^^^^
+> 135 |         </>
+      | ^^^^^^^^^^
+> 136 |     );
+      | ^^^^^^ The component is created during render here
+  137 |
+  138 |     return (
+  139 |         <div className="space-y-4 sm:space-y-5">                   react-hooks/static-components
+  237:68  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Step1.tsx:237:68
+  235 |                                 <div className="w-[300px] shrink-0 flex gap-1.5 items-center">
+  236 |                                     <Input type="date" value={formatDateInput(formData.checkOutDate)} onChange={e => handleDate('checkOutDate', new Date(e.target.value))} className="bg-white flex-1 min-w-0" />
+> 237 |                                     {formData.mode === 'hourly' ? <TimeSelects field="checkOutTime" time={formData.checkOutTime} /> : <span className="text-sm text-gray-600 font-medium shrink-0">{formData.checkOutTime}</span>}
+      |                                                                    ^^^^^^^^^^^ This component is created during render
+  238 |                                 </div>
+  239 |                                 <div className="w-[52px] shrink-0 text-center text-xs text-gray-600 font-medium whitespace-nowrap">{displayDuration()}</div>
+  240 |                                 <div className="w-[90px] shrink-0 text-right text-sm font-semibold text-primary whitespace-nowrap">{formatPrice(price)}</div>
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Step1.tsx:125:25
+  123 |     const combo6h1hDiscount = getRoomPriceConfig(selectedRoom ?? { type: formData.roomType }).combo6h1hDiscount;
+  124 |
+> 125 |     const TimeSelects = ({ field, time }: { field: 'checkInTime' | 'checkOutTime'; time: string }) => (
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 126 |         <>
+      | ^^^^^^^^^^
+> 127 |             <Select value={time.split(":")[0] + "h"} onValueChange={v => handleTime(field, `${v.replace("h", "")}:${time.split(":")[1] || "00"}`)}>
+      …
+      | ^^^^^^^^^^
+> 135 |         </>
+      | ^^^^^^^^^^
+> 136 |     );
+      | ^^^^^^ The component is created during render here
+  137 |
+  138 |     return (
+  139 |         <div className="space-y-4 sm:space-y-5">  react-hooks/static-components
+  272:65  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Step1.tsx:272:65
+  270 |                             <div className="flex gap-2 items-center">
+  271 |                                 <Input type="date" value={formatDateInput(formData.checkInDate)} onChange={e => handleCheckInDateChange(new Date(e.target.value))} className="bg-white flex-1" />
+> 272 |                                 {formData.mode === 'hourly' && <TimeSelects field="checkInTime" time={formData.checkInTime} />}
+      |                                                                 ^^^^^^^^^^^ This component is created during render
+  273 |                             </div>
+  274 |                         </div>
+  275 |                         <div className="space-y-2">
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Step1.tsx:125:25
+  123 |     const combo6h1hDiscount = getRoomPriceConfig(selectedRoom ?? { type: formData.roomType }).combo6h1hDiscount;
+  124 |
+> 125 |     const TimeSelects = ({ field, time }: { field: 'checkInTime' | 'checkOutTime'; time: string }) => (
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 126 |         <>
+      | ^^^^^^^^^^
+> 127 |             <Select value={time.split(":")[0] + "h"} onValueChange={v => handleTime(field, `${v.replace("h", "")}:${time.split(":")[1] || "00"}`)}>
+      …
+      | ^^^^^^^^^^
+> 135 |         </>
+      | ^^^^^^^^^^
+> 136 |     );
+      | ^^^^^^ The component is created during render here
+  137 |
+  138 |     return (
+  139 |         <div className="space-y-4 sm:space-y-5">                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/static-components
+  279:65  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Step1.tsx:279:65
+  277 |                             <div className="flex gap-2 items-center">
+  278 |                                 <Input type="date" value={formatDateInput(formData.checkOutDate)} onChange={e => handleDate('checkOutDate', new Date(e.target.value))} className="bg-white flex-1" />
+> 279 |                                 {formData.mode === 'hourly' && <TimeSelects field="checkOutTime" time={formData.checkOutTime} />}
+      |                                                                 ^^^^^^^^^^^ This component is created during render
+  280 |                             </div>
+  281 |                         </div>
+  282 |                         <div className="flex justify-between items-center pt-2 border-t">
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Step1.tsx:125:25
+  123 |     const combo6h1hDiscount = getRoomPriceConfig(selectedRoom ?? { type: formData.roomType }).combo6h1hDiscount;
+  124 |
+> 125 |     const TimeSelects = ({ field, time }: { field: 'checkInTime' | 'checkOutTime'; time: string }) => (
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 126 |         <>
+      | ^^^^^^^^^^
+> 127 |             <Select value={time.split(":")[0] + "h"} onValueChange={v => handleTime(field, `${v.replace("h", "")}:${time.split(":")[1] || "00"}`)}>
+      …
+      | ^^^^^^^^^^
+> 135 |         </>
+      | ^^^^^^^^^^
+> 136 |     );
+      | ^^^^^^ The component is created during render here
+  137 |
+  138 |     return (
+  139 |         <div className="space-y-4 sm:space-y-5">                                                                                                                                                                                                                                                                                                                                                 react-hooks/static-components
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/Step2.tsx
+  40:8  warning  React Hook React.useEffect has a missing dependency: 'upd'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking-calendar-form/booking-modal/validation.ts
+  26:5  error  '_selectedDate' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking/BookingPage.tsx
+  42:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/booking/BookingPage.tsx:42:9
+  40 |     useEffect(() => {
+  41 |         const dateStr = formatDateISO(date)
+> 42 |         setLoading(true)
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  43 |         bookingService.getByDate(dateStr)
+  44 |             .then(setBookings)
+  45 |             .catch(() => toast.error('Không tải được lịch đặt phòng'))  react-hooks/set-state-in-effect
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/common/MainHearts.tsx
+  17:45  error  'emitterY' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  25:31  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/common/MainHearts.tsx:25:31
+  23 |     const heartCount = useMemo(() => {
+  24 |         if (typeof count === "number") return count
+> 25 |         return 8 + Math.floor(Math.random() * 3)
+     |                               ^^^^^^^^^^^^^ Cannot call impure function
+  26 |     }, [count])
+  27 |
+  28 |     return (  react-hooks/purity
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/common/MainSnowfall.tsx
+  13:26  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/common/MainSnowfall.tsx:13:26
+  11 |     const snowflakes = React.useMemo(() => {
+  12 |         return Array.from({ length: flakes }).map((_, i) => {
+> 13 |             const left = Math.random() * 100
+     |                          ^^^^^^^^^^^^^ Cannot call impure function
+  14 |             const size = 6 + Math.random() * 10
+  15 |             const delay = Math.random() * 10
+  16 |             const duration = 10 + Math.random() * 14                                          react-hooks/purity
+  14:30  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/common/MainSnowfall.tsx:14:30
+  12 |         return Array.from({ length: flakes }).map((_, i) => {
+  13 |             const left = Math.random() * 100
+> 14 |             const size = 6 + Math.random() * 10
+     |                              ^^^^^^^^^^^^^ Cannot call impure function
+  15 |             const delay = Math.random() * 10
+  16 |             const duration = 10 + Math.random() * 14
+  17 |             const opacity = 0.55 + Math.random() * 0.35                           react-hooks/purity
+  15:27  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/common/MainSnowfall.tsx:15:27
+  13 |             const left = Math.random() * 100
+  14 |             const size = 6 + Math.random() * 10
+> 15 |             const delay = Math.random() * 10
+     |                           ^^^^^^^^^^^^^ Cannot call impure function
+  16 |             const duration = 10 + Math.random() * 14
+  17 |             const opacity = 0.55 + Math.random() * 0.35
+  18 |             const swing = (Math.random() * 30) - 15                                        react-hooks/purity
+  16:35  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/common/MainSnowfall.tsx:16:35
+  14 |             const size = 6 + Math.random() * 10
+  15 |             const delay = Math.random() * 10
+> 16 |             const duration = 10 + Math.random() * 14
+     |                                   ^^^^^^^^^^^^^ Cannot call impure function
+  17 |             const opacity = 0.55 + Math.random() * 0.35
+  18 |             const swing = (Math.random() * 30) - 15
+  19 |             return { key: i, left, size, delay, duration, opacity, swing }  react-hooks/purity
+  17:36  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/common/MainSnowfall.tsx:17:36
+  15 |             const delay = Math.random() * 10
+  16 |             const duration = 10 + Math.random() * 14
+> 17 |             const opacity = 0.55 + Math.random() * 0.35
+     |                                    ^^^^^^^^^^^^^ Cannot call impure function
+  18 |             const swing = (Math.random() * 30) - 15
+  19 |             return { key: i, left, size, delay, duration, opacity, swing }
+  20 |         })                                      react-hooks/purity
+  18:28  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/common/MainSnowfall.tsx:18:28
+  16 |             const duration = 10 + Math.random() * 14
+  17 |             const opacity = 0.55 + Math.random() * 0.35
+> 18 |             const swing = (Math.random() * 30) - 15
+     |                            ^^^^^^^^^^^^^ Cannot call impure function
+  19 |             return { key: i, left, size, delay, duration, opacity, swing }
+  20 |         })
+  21 |     }, [flakes])                                                                          react-hooks/purity
+  56:29  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/ban-ts-comment
+  57:43  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/rooms/RoomAmenitiesOverview.tsx
+  19:10  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/rooms/RoomDetailRoute.tsx
+  25:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/rooms/RoomDetailRoute.tsx:25:7
+  23 |   useEffect(() => {
+  24 |     if (!id) {
+> 25 |       setError("Phòng không tìm thấy")
+     |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  26 |       setLoading(false)
+  27 |       return
+  28 |     }  react-hooks/set-state-in-effect
+  57:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/rooms/RoomDetailRoute.tsx:57:7
+  55 |   useEffect(() => {
+  56 |     if (!room?.branchId) {
+> 57 |       setBranchRooms(room ? [room] : [])
+     |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  58 |       return
+  59 |     }
+  60 |      react-hooks/set-state-in-effect
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/rooms/RoomImageGallery.tsx
+  16:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/rooms/room-card.tsx
+  1:10  error  'Play' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/schedule/room-schedule.tsx
+  250:11  error  'handleTimelineClick' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  365:11  error  'timeLabel' is assigned a value but never used            @typescript-eslint/no-unused-vars
+  399:5   error  'roomAmenities' is defined but never used                 @typescript-eslint/no-unused-vars
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/ui/badge.tsx
+  54:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  61:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/tav/Documents/xproject-homestay/frontend/src/components/ui/tabs.tsx
+  89:52  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/tav/Documents/xproject-homestay/frontend/src/main.tsx
+  8:10  error  'LocationPage' is defined but never used     @typescript-eslint/no-unused-vars
+  9:10  error  'DestinationPage' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/tav/Documents/xproject-homestay/frontend/src/services/bookingService.ts
+  64:3  warning  Unused eslint-disable directive (no problems were reported from 'no-constant-condition')
+
+/home/tav/Documents/xproject-homestay/frontend/src/services/customerService.ts
+  8:38  error  Unnecessary escape character: \-  no-useless-escape
+
+✖ 52 problems (49 errors, 3 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+
+
