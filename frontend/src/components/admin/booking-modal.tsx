@@ -32,10 +32,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { RoomTypeBadge } from '@/components/rooms/RoomTypeBadge'
 import { demoRooms } from '@/data/demo-schedule'
 import * as bookingService from '@/services/bookingService'
 import * as promoService from '@/services/promoService'
 import * as authService from '@/services/authService'
+import type { PromoCode } from '@/types/promo'
 import type { Booking, BookingStatus, InternalTag, RoomType } from '@/types/schedule'
 import { ROOM_PRICES } from '@/types/schedule'
 import { calculateBookingPrice } from '@/utils/helpers'
@@ -130,25 +132,38 @@ export function BookingModal({
     valid: boolean
     message: string
   } | null>(null)
+  const [validatedPromo, setValidatedPromo] = useState<PromoCode | null>(null)
+  const [validatingVoucher, setValidatingVoucher] = useState(false)
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const validateVoucher = useCallback(() => {
+  const validateVoucher = useCallback(async () => {
     if (!voucher.trim()) {
       setVoucherStatus(null)
+      setValidatedPromo(null)
       return
     }
     const room = demoRooms.find((r) => r.id === roomId)
     const roomType: RoomType = room?.type || 'standard'
-    const result = promoService.validate(voucher.trim().toUpperCase(), roomType)
-    if (result.valid && result.promo) {
-      const discountText =
-        result.promo.discountType === 'percent'
-          ? `${result.promo.discountValue}%`
-          : `${result.promo.discountValue.toLocaleString('vi-VN')}d`
-      setVoucherStatus({ valid: true, message: `Giam ${discountText}` })
-    } else {
-      setVoucherStatus({ valid: false, message: result.error || 'Ma khong hop le' })
+    setValidatingVoucher(true)
+    try {
+      const result = await promoService.validate(voucher.trim().toUpperCase(), roomType)
+      if (result.valid && result.promo) {
+        const discountText =
+          result.promo.discountType === 'percent'
+            ? `${result.promo.discountValue}%`
+            : `${result.promo.discountValue.toLocaleString('vi-VN')}d`
+        setVoucherStatus({ valid: true, message: `Giam ${discountText}` })
+        setValidatedPromo(result.promo)
+      } else {
+        setVoucherStatus({ valid: false, message: result.error || 'Ma khong hop le' })
+        setValidatedPromo(null)
+      }
+    } catch (err) {
+      setVoucherStatus({ valid: false, message: err instanceof Error ? err.message : 'Không kiểm tra được mã' })
+      setValidatedPromo(null)
+    } finally {
+      setValidatingVoucher(false)
     }
   }, [voucher, roomId])
 
@@ -157,7 +172,7 @@ export function BookingModal({
     return h * 60 + m
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const newErrors: Record<string, string> = {}
 
     if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
@@ -188,8 +203,14 @@ export function BookingModal({
     }
 
     const excludeId = isEdit && booking ? booking.id : undefined
-    if (bookingService.hasConflict(roomId, date, startTime, endTime, excludeId)) {
-      toast.error('Trung lich! Da co booking trong khung gio nay.')
+    try {
+      const conflict = await bookingService.hasConflict(roomId, date, startTime, endTime, excludeId)
+      if (conflict) {
+        toast.error('Trung lich! Da co booking trong khung gio nay.')
+        return
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Khong kiem tra duoc trung lich')
       return
     }
 
@@ -238,15 +259,11 @@ export function BookingModal({
     // Sử dụng helper để tính giá chuẩn
     let price = calculateBookingPrice('hourly', hours, priceConfig)
 
-    if (voucher.trim()) {
-      const roomType: RoomType = room.type
-      const result = promoService.validate(voucher.trim().toUpperCase(), roomType)
-      if (result.valid && result.promo) {
-        if (result.promo.discountType === 'percent') {
-          price = Math.round(price * (1 - result.promo.discountValue / 100))
-        } else {
-          price = Math.max(0, price - result.promo.discountValue)
-        }
+    if (voucher.trim() && validatedPromo && validatedPromo.code === voucher.trim().toUpperCase()) {
+      if (validatedPromo.discountType === 'percent') {
+        price = Math.round(price * (1 - validatedPromo.discountValue / 100))
+      } else {
+        price = Math.max(0, price - validatedPromo.discountValue)
       }
     }
 
@@ -299,7 +316,10 @@ export function BookingModal({
                   <SelectContent>
                     {demoRooms.map((r) => (
                       <SelectItem key={r.id} value={r.id}>
-                        {r.name} ({r.type})
+                        <span className="inline-flex items-center gap-2">
+                          <span>{r.name}</span>
+                          <RoomTypeBadge type={r.type} size="sm" />
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -404,6 +424,7 @@ export function BookingModal({
                     onChange={(e) => {
                       setVoucher(e.target.value)
                       setVoucherStatus(null)
+                      setValidatedPromo(null)
                     }}
                     placeholder="SUMMER20"
                     className="flex-1"
@@ -413,9 +434,10 @@ export function BookingModal({
                     variant="outline"
                     size="sm"
                     onClick={validateVoucher}
+                    disabled={validatingVoucher}
                     className="shrink-0"
                   >
-                    Kiem tra
+                    {validatingVoucher ? 'Dang kiem tra...' : 'Kiem tra'}
                   </Button>
                 </div>
                 {voucherStatus && (

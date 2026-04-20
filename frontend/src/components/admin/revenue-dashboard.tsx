@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Navigate } from 'react-router'
+import { Loader2 } from 'lucide-react'
 import {
   AreaChart,
   Area,
@@ -75,28 +76,39 @@ function formatDisplayDate(dateStr: string): string {
  */
 export function RevenueDashboard() {
   const [period, setPeriod] = useState<Period>('week')
-
-  const summary: RevenueSummary = useMemo(
-    () => revenueService.getRevenueByPeriod(period),
-    [period],
-  )
+  const [summary, setSummary] = useState<RevenueSummary | null>(null)
+  const [dailyData, setDailyData] = useState<DailyRevenue[]>([])
+  const [occupancy, setOccupancy] = useState<RoomOccupancy[]>([])
+  const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([])
+  const [loading, setLoading] = useState(true)
 
   const dateRange = useMemo(() => getPeriodDateRange(period), [period])
 
-  const dailyData: DailyRevenue[] = useMemo(
-    () => revenueService.getDailyRevenue(dateRange.start, dateRange.end),
-    [dateRange.start, dateRange.end],
-  )
-
-  const occupancy: RoomOccupancy[] = useMemo(
-    () => revenueService.getOccupancyByRoom(period),
-    [period],
-  )
-
-  const topCustomers: TopCustomer[] = useMemo(
-    () => revenueService.getTopCustomers(period, 5),
-    [period],
-  )
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    Promise.all([
+      revenueService.getRevenueByPeriod(period),
+      revenueService.getDailyRevenue(dateRange.start, dateRange.end),
+      revenueService.getOccupancyByRoom(period),
+      revenueService.getTopCustomers(period, 5),
+    ])
+      .then(([s, d, o, t]) => {
+        if (cancelled) return
+        setSummary(s)
+        setDailyData(d)
+        setOccupancy(o)
+        setTopCustomers(t)
+        setLoading(false)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [period, dateRange.start, dateRange.end])
 
   const role = authService.getRole()
 
@@ -104,10 +116,18 @@ export function RevenueDashboard() {
     return <Navigate to="/admin/bookings" />
   }
 
+  if (loading || !summary) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   const hasDailyData = dailyData.some((d) => d.revenue > 0)
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
         {PERIOD_LABELS.map((p) => (
           <button

@@ -119,6 +119,21 @@ export async function validate(code: string, roomType: RoomType) {
 }
 
 /**
+ * Tính số tiền giảm giá cho một promo đã validate (side-effect-free).
+ * Tách khỏi incrementUsage để bookingService có thể tính giá + tăng lượt dùng
+ * trong cùng một transaction.
+ */
+export function computeDiscount(
+  promo: { discountType: string; discountValue: number },
+  originalPrice: number,
+): number {
+  let discountAmount = promo.discountType === 'percent'
+    ? Math.round(originalPrice * promo.discountValue / 100)
+    : promo.discountValue;
+  return Math.min(Math.max(0, discountAmount), originalPrice);
+}
+
+/**
  * Áp dụng mã khuyến mãi — tính giảm giá và tăng usedCount atomically
  * Hỗ trợ giảm theo phần trăm hoặc số tiền cố định
  * @param code - Mã khuyến mãi
@@ -134,15 +149,7 @@ export async function applyDiscount(code: string, roomType: RoomType, originalPr
   }
 
   const promo = result.promo;
-  let discountAmount: number;
-
-  if (promo.discountType === 'percent') {
-    discountAmount = Math.round(originalPrice * promo.discountValue / 100);
-  } else {
-    discountAmount = promo.discountValue;
-  }
-
-  discountAmount = Math.min(discountAmount, originalPrice);
+  const discountAmount = computeDiscount(promo, originalPrice);
   const finalTotal = originalPrice - discountAmount;
 
   await db
@@ -151,4 +158,27 @@ export async function applyDiscount(code: string, roomType: RoomType, originalPr
     .where(eq(promoCodes.id, promo.id));
 
   return { discountAmount, finalTotal };
+}
+
+/**
+ * Hoàn trả 1 lượt sử dụng mã khuyến mãi — dùng khi booking bị cancelled.
+ * Clamp tại 0 để tránh usedCount âm nếu dữ liệu không nhất quán.
+ * Trả false nếu mã không tồn tại (đã xóa).
+ */
+export async function refundUsage(code: string, tx?: typeof db): Promise<boolean> {
+  const executor = tx || db;
+  const promo = await executor.select({ id: promoCodes.id })
+    .from(promoCodes)
+    .where(eq(promoCodes.code, code.toUpperCase()))
+    .limit(1);
+  if (promo.length === 0) return false;
+
+  await executor
+    .update(promoCodes)
+    .set({
+      usedCount: sql`GREATEST(${promoCodes.usedCount} - 1, 0)`,
+      updatedAt: new Date(),
+    })
+    .where(eq(promoCodes.id, promo[0].id));
+  return true;
 }

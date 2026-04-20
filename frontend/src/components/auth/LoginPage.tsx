@@ -62,7 +62,7 @@ export function LoginPage() {
           <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary shadow-md">
             <span className="text-xl font-bold text-primary-foreground">NC</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Nhà Cắm Admin</h1>
+          <h1 className="text-2xl font-bold text-foreground">Nhà Cam Admin</h1>
           <p className="mt-1 text-sm text-muted-foreground">Đăng nhập để quản lý hệ thống</p>
         </div>
 

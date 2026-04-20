@@ -1,47 +1,68 @@
 /**
- * RoomAmenitiesOverview — Displays room amenities with emoji icons.
- * Maps amenity strings to icon + label pairs using keyword matching.
- * Shows fallback message when no amenities are available.
+ * RoomAmenitiesOverview — hiển thị tiện nghi phòng với icon chính xác từ AMENITY_OPTIONS.
+ * Chia 2 nhóm (chung / riêng) nếu có cả hai; custom amenities hiển thị nhóm "Khác" với icon fallback.
  */
+import {
+    findAmenityOption,
+    getAmenityIcon,
+    hasSharedWC,
+    isSharedWC,
+    SHARED_WC_WARNING,
+} from '@/data/amenities';
+import { cn } from '@/lib/utils';
 
 interface RoomAmenitiesOverviewProps {
-    amenities: string[]; // Array of amenity strings from RoomDetail
-    roomName: string; // For section context
+    amenities: string[];
+    roomName: string;
 }
 
-interface AmenityMapping {
-    keywords: string[];
-    icon: string;
+export { getAmenityIcon };
+
+interface AmenityGroup {
+    title: string;
+    items: string[];
 }
 
-const AMENITY_MAPPINGS: AmenityMapping[] = [
-    { keywords: ['giường'], icon: '🛏️' },
-    { keywords: ['vòi sen', 'nước nóng'], icon: '🚿' },
-    { keywords: ['wifi', 'wi-fi'], icon: '📶' },
-    { keywords: ['điều hòa', 'máy lạnh'], icon: '❄️' },
-    { keywords: ['bữa sáng'], icon: '☕' },
-    { keywords: ['ban công'], icon: '🌿' },
-    { keywords: ['bồn tắm'], icon: '🛁' },
-    { keywords: ['tv', 'smart tv'], icon: '📺' },
-];
+function groupAmenities(amenities: string[]): AmenityGroup[] {
+    const common: string[] = [];
+    const extra: string[] = [];
+    const custom: string[] = [];
 
-const DEFAULT_ICON = '✨';
-
-/**
- * Maps an amenity string to its corresponding emoji icon.
- * Matches by checking if the amenity (lowercased) contains any keyword.
- */
-export function getAmenityIcon(amenity: string): string {
-    const lower = amenity.toLowerCase();
-    for (const mapping of AMENITY_MAPPINGS) {
-        if (mapping.keywords.some((keyword) => lower.includes(keyword))) {
-            return mapping.icon;
-        }
+    for (const amenity of amenities) {
+        const opt = findAmenityOption(amenity);
+        if (!opt) custom.push(amenity);
+        else if (opt.category === 'common') common.push(amenity);
+        else extra.push(amenity);
     }
-    return DEFAULT_ICON;
+
+    const groups: AmenityGroup[] = [];
+    if (common.length) groups.push({ title: 'Tiện nghi chung', items: common });
+    if (extra.length) groups.push({ title: 'Tiện nghi riêng', items: extra });
+    if (custom.length) groups.push({ title: 'Khác', items: custom });
+    return groups;
+}
+
+function AmenityChip({ amenity }: { amenity: string }) {
+    const warn = isSharedWC(amenity);
+    return (
+        <span
+            className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm',
+                warn
+                    ? 'bg-red-100 text-red-700 border border-red-200 font-semibold'
+                    : 'bg-muted text-foreground',
+            )}
+        >
+            <span aria-hidden="true">{getAmenityIcon(amenity)}</span>
+            <span>{amenity}</span>
+        </span>
+    );
 }
 
 export function RoomAmenitiesOverview({ amenities, roomName }: RoomAmenitiesOverviewProps) {
+    const groups = groupAmenities(amenities);
+    const showGroups = groups.length > 1;
+
     return (
         <section
             aria-label={`Tiện nghi ${roomName}`}
@@ -55,18 +76,33 @@ export function RoomAmenitiesOverview({ amenities, roomName }: RoomAmenitiesOver
                 <p className="text-sm text-muted-foreground">
                     Chưa có thông tin tiện nghi
                 </p>
-            ) : (
-                <div className="flex flex-wrap gap-2">
-                    {amenities.map((amenity, index) => (
-                        <span
-                            key={index}
-                            className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm text-foreground"
-                        >
-                            <span aria-hidden="true">{getAmenityIcon(amenity)}</span>
-                            <span>{amenity}</span>
-                        </span>
+            ) : showGroups ? (
+                <div className="flex flex-col gap-3">
+                    {groups.map((group) => (
+                        <div key={group.title}>
+                            <p className="text-xs font-semibold text-muted-foreground mb-1.5">
+                                {group.title}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                {group.items.map((item) => (
+                                    <AmenityChip key={item} amenity={item} />
+                                ))}
+                            </div>
+                        </div>
                     ))}
                 </div>
+            ) : (
+                <div className="flex flex-wrap gap-2">
+                    {amenities.map((amenity) => (
+                        <AmenityChip key={amenity} amenity={amenity} />
+                    ))}
+                </div>
+            )}
+
+            {hasSharedWC(amenities) && (
+                <p className="mt-2 text-xs font-medium text-red-600">
+                    ⚠️ {SHARED_WC_WARNING}
+                </p>
             )}
         </section>
     );

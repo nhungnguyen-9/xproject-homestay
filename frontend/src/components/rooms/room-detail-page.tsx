@@ -1,6 +1,7 @@
 ﻿import { useMemo } from 'react'
 import RoomSchedule from '../schedule/room-schedule'
 import { RoomImageGallery } from './RoomImageGallery'
+import { RoomTypeBadge } from './RoomTypeBadge'
 import { imageUrl } from '@/services/roomService'
 import type { RoomDetail } from '@/types/room'
 import type { Booking, Room } from '@/types/schedule'
@@ -9,7 +10,7 @@ import type { Booking, Room } from '@/types/schedule'
  * Maps a RoomDetail object to the simpler Room type used by RoomSchedule.
  */
 function toScheduleRoom(detail: RoomDetail): Room {
-  return { id: detail.id, name: detail.name, type: detail.type }
+  return { id: detail.id, name: detail.name, type: detail.type, amenities: detail.amenities }
 }
 
 export interface RoomDetailPageProps {
@@ -59,9 +60,12 @@ export function RoomDetailPage({
     <div className="bg-[#fdeeee] px-4 md:px-6 pb-20 pt-10">
       <div className="mx-auto w-full max-w-6xl rounded-[18px] border border-[#f3c6cc] bg-white/70 px-4 md:px-6 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
         <section aria-labelledby="room-detail-heading">
-          <h2 id="room-detail-heading" className="text-2xl font-bold text-foreground mb-4">
-            {room.name}
-          </h2>
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <h2 id="room-detail-heading" className="text-2xl font-bold text-foreground">
+              {room.name}
+            </h2>
+            <RoomTypeBadge type={room.type} />
+          </div>
 
           <RoomImageGallery images={resolvedImages} roomName={room.name} />
 

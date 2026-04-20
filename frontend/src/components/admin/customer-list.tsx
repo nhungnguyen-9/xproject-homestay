@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router'
-import { Search, ChevronLeft, ChevronRight, Users } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, Users, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/utils/helpers'
 import * as customerService from '@/services/customerService'
@@ -71,13 +72,22 @@ function sortCustomers(
  */
 export function CustomerList() {
   const navigate = useNavigate()
-  const [customers] = useState<CustomerWithStats[]>(() => 
-    customerService.getAllWithStats()
-  )
+  const [customers, setCustomers] = useState<CustomerWithStats[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [sortBy, setSortBy] = useState<SortOption>('recent')
   const [currentPage, setCurrentPage] = useState(1)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    customerService.getAllWithStats()
+      .then(data => { if (!cancelled) setCustomers(data) })
+      .catch(err => { if (!cancelled) toast.error(err instanceof Error ? err.message : 'Không tải được danh sách khách hàng') })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -138,6 +148,14 @@ export function CustomerList() {
     return pages
   }, [currentPage, totalPages])
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   if (customers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -154,9 +172,9 @@ export function CustomerList() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-800">
+        <h2 className="text-xl font-bold text-foreground">
           Khách hàng
-          <span className="ml-2 text-sm font-normal text-slate-400">
+          <span className="ml-2 text-sm font-normal text-muted-foreground">
             ({filteredCustomers.length})
           </span>
         </h2>

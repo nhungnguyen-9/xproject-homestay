@@ -9,12 +9,12 @@ import {
   StickyNote,
   Save,
   X,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/utils/helpers'
 import * as customerService from '@/services/customerService'
 import * as bookingService from '@/services/bookingService'
-import { apiFetch } from '@/services/apiClient'
 import { demoRooms } from '@/data/demo-schedule'
 import type { CustomerWithStats } from '@/types/customer'
 import type { Booking } from '@/types/schedule'
@@ -116,39 +116,51 @@ export function CustomerDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const [customer, setCustomer] = useState<CustomerWithStats | null>(() => {
-    if (!id) return null
-    const raw = customerService.getById(id)
-    return raw ? customerService.getWithStats(raw) : null
-  })
-
-  const [bookings] = useState<Booking[]>(() => {
-    if (!id) return []
-    const raw = customerService.getById(id)
-    if (!raw) return []
-    const allBookings = bookingService.getAll()
-    const normalizedPhone = customerService.normalizePhone(raw.phone)
-    const matched = allBookings.filter(
-      (b) =>
-        b.category === 'guest' &&
-        b.guestPhone &&
-        customerService.normalizePhone(b.guestPhone) === normalizedPhone,
-    )
-    matched.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-    return matched
-  })
-
+  const [customer, setCustomer] = useState<CustomerWithStats | null>(null)
+  const [bookings, setBookings] = useState<Booking[]>([])
   const [idImageUrls, setIdImageUrls] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
+
+  const [isEditingNote, setIsEditingNote] = useState(false)
+  const [noteValue, setNoteValue] = useState('')
 
   useEffect(() => {
     if (!id) return
-    apiFetch<{ idImageUrls: string[] }>(`/customers/${id}`)
-      .then(data => setIdImageUrls(data.idImageUrls ?? []))
-      .catch(() => {})
+    let cancelled = false
+    setLoading(true)
+    setNotFound(false)
+    Promise.all([customerService.getStats(id), bookingService.getAll({ customerId: id })])
+      .then(([data, customerBookings]) => {
+        if (cancelled) return
+        setCustomer(data)
+        setNoteValue(data.note ?? '')
+        setIdImageUrls(data.idImageUrls ?? [])
+        // Ưu tiên customerId, fallback lọc theo SĐT cho booking guest legacy chưa có customerId
+        const normalizedPhone = customerService.normalizePhone(data.phone)
+        const byPhone = customerBookings.length > 0
+          ? customerBookings
+          : [] // nếu backend đã map customerId thì đủ dùng
+        const matched = (byPhone.length > 0 ? byPhone : []).filter(
+          (b) =>
+            b.category !== 'internal' &&
+            (!b.guestPhone || customerService.normalizePhone(b.guestPhone) === normalizedPhone),
+        )
+        matched.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+        setBookings(matched)
+      })
+      .catch(err => {
+        if (cancelled) return
+        const msg = err instanceof Error ? err.message : ''
+        if (msg.toLowerCase().includes('not found') || msg.includes('404')) {
+          setNotFound(true)
+        } else {
+          toast.error(msg || 'Không tải được thông tin khách hàng')
+        }
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [id])
-
-  const [isEditingNote, setIsEditingNote] = useState(false)
-  const [noteValue, setNoteValue] = useState(customer?.note ?? '')
 
   const topRooms = useMemo<RoomFrequency[]>(() => {
     const counts = new Map<string, number>()
@@ -165,11 +177,16 @@ export function CustomerDetail() {
       .slice(0, 3)
   }, [bookings])
 
-  const handleSaveNote = () => {
+  const handleSaveNote = async () => {
     if (!customer || !id) return
-    customerService.update(id, { note: noteValue })
-    setCustomer({ ...customer, note: noteValue })
-    setIsEditingNote(false)
+    try {
+      const updated = await customerService.update(id, { note: noteValue })
+      setCustomer({ ...customer, note: updated.note })
+      setIsEditingNote(false)
+      toast.success('Đã lưu ghi chú')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Không lưu được ghi chú')
+    }
   }
 
   const handleCancelNote = () => {
@@ -177,30 +194,27 @@ export function CustomerDetail() {
     setIsEditingNote(false)
   }
 
-  if (!customer && id) {
-    const raw = customerService.getById(id)
-    if (!raw) {
-      return (
-        <div className="space-y-4">
-          <button
-            onClick={() => navigate('/admin/customers')}
-            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Quay lại
-          </button>
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-slate-500 text-sm">Không tìm thấy khách hàng.</p>
-          </div>
-        </div>
-      )
-    }
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
-  if (!customer) {
+  if (notFound || !customer) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <p className="text-slate-400 text-sm">Đang tải...</p>
+      <div className="space-y-4">
+        <button
+          onClick={() => navigate('/admin/customers')}
+          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Quay lại
+        </button>
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <p className="text-slate-500 text-sm">Không tìm thấy khách hàng.</p>
+        </div>
       </div>
     )
   }
@@ -226,7 +240,7 @@ export function CustomerDetail() {
             {getInitials(customer.name)}
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-slate-800">
+            <h2 className="text-lg font-semibold text-foreground">
               {customer.name}
             </h2>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">

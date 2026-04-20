@@ -29,6 +29,7 @@ function toRoomCardProps(room: RoomDetail): RoomCardProps {
         title: room.name,
         price: parts.join(' • ') || 'Liên hệ',
         images: room.images.map(imageUrl),
+        type: room.type,
     };
 }
 

@@ -6,7 +6,9 @@ import type { BookingFormData, BookingMode, Room, RoomType } from "@/types/sched
 import { COMBO_ITEMS } from "@/types/schedule";
 import { Check, ShoppingCart } from "lucide-react";
 import { calculateDuration, formatDateInput, formatPrice } from "@/utils/helpers";
-import { BOOKING_MODES, ROOM_TYPE_LABELS, HOURS, MINUTES } from "./constants";
+import { BOOKING_MODES, HOURS, MINUTES } from "./constants";
+import { RoomTypeBadge } from "@/components/rooms/RoomTypeBadge";
+import { getAmenityIcon, hasSharedWC, isSharedWC, SHARED_WC_WARNING } from "@/data/amenities";
 
 interface Step1Props {
     formData: BookingFormData;
@@ -129,12 +131,19 @@ export const Step1: React.FC<Step1Props> = ({ formData, setFormData, rooms, pric
                             </div>
                             {/* Data */}
                             <div className="flex items-center justify-between">
-                                <div className="w-[90px] shrink-0 text-sm font-medium">{ROOM_TYPE_LABELS[formData.roomType]}</div>
+                                <div className="w-[90px] shrink-0"><RoomTypeBadge type={formData.roomType} size="sm" /></div>
                                 <div className="w-[90px] shrink-0">
                                     <Select value={formData.roomId} onValueChange={handleRoomChange}>
                                         <SelectTrigger className="w-full bg-white"><SelectValue /></SelectTrigger>
                                         <SelectContent position="popper" align="start">
-                                            {getRooms(formData.roomType).map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
+                                            {getRooms(formData.roomType).map(r => (
+                                                <SelectItem key={r.id} value={r.id}>
+                                                    <span className="inline-flex items-center gap-2">
+                                                        <span>{r.name}</span>
+                                                        <RoomTypeBadge type={r.type} size="sm" />
+                                                    </span>
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -157,12 +166,19 @@ export const Step1: React.FC<Step1Props> = ({ formData, setFormData, rooms, pric
                         <div className="space-y-2">
                             <label className="text-xs font-medium text-gray-700">Hạng phòng & Phòng</label>
                             <div className="flex gap-2">
-                                <div className="flex-1 px-3 py-2 bg-gray-50 rounded-md text-sm">{ROOM_TYPE_LABELS[formData.roomType]}</div>
+                                <div className="flex-1 px-3 py-2 bg-gray-50 rounded-md flex items-center"><RoomTypeBadge type={formData.roomType} size="sm" /></div>
                                 <div className="flex-1">
                                     <Select value={formData.roomId} onValueChange={handleRoomChange}>
                                         <SelectTrigger className="w-full bg-white"><SelectValue /></SelectTrigger>
                                         <SelectContent position="popper" align="start">
-                                            {getRooms(formData.roomType).map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
+                                            {getRooms(formData.roomType).map(r => (
+                                                <SelectItem key={r.id} value={r.id}>
+                                                    <span className="inline-flex items-center gap-2">
+                                                        <span>{r.name}</span>
+                                                        <RoomTypeBadge type={r.type} size="sm" />
+                                                    </span>
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -189,6 +205,42 @@ export const Step1: React.FC<Step1Props> = ({ formData, setFormData, rooms, pric
                     </div>
                 </div>
             </div>
+
+            {/* Room Amenities */}
+            {(() => {
+                const selectedRoom = rooms.find(r => r.id === formData.roomId);
+                const amenities = selectedRoom?.amenities;
+                if (!amenities || amenities.length === 0) return null;
+                return (
+                    <div className="bg-white border rounded-lg shadow-sm px-3 sm:px-4 py-4 sm:py-5">
+                        <h4 className="font-semibold text-gray-800 text-sm sm:text-base mb-3">Tiện nghi phòng {selectedRoom.name}</h4>
+                        <div className="flex flex-wrap gap-2">
+                            {amenities.map((amenity, i) => {
+                                const warn = isSharedWC(amenity);
+                                return (
+                                    <span
+                                        key={i}
+                                        className={cn(
+                                            "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs sm:text-sm",
+                                            warn
+                                                ? "bg-red-100 text-red-700 border border-red-200 font-semibold"
+                                                : "bg-muted text-foreground",
+                                        )}
+                                    >
+                                        <span aria-hidden="true">{getAmenityIcon(amenity)}</span>
+                                        <span>{amenity}</span>
+                                    </span>
+                                );
+                            })}
+                        </div>
+                        {hasSharedWC(amenities) && (
+                            <p className="mt-2 text-xs font-medium text-red-600">
+                                ⚠️ {SHARED_WC_WARNING}
+                            </p>
+                        )}
+                    </div>
+                );
+            })()}
 
             {/* Food */}
             <div className="bg-white border rounded-lg shadow-sm px-3 sm:px-4 py-4 sm:py-5">

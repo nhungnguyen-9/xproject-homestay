@@ -21,7 +21,17 @@ import {
 import type { RoomDetail, CreateRoomPayload } from '@/types/room';
 import type { Branch } from '@/types/branch';
 import * as branchService from '@/services/branchService';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, X, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+    AMENITY_OPTIONS,
+    COMMON_AMENITIES,
+    EXTRA_AMENITIES,
+    findAmenityOption,
+    getAmenityIcon,
+    hasSharedWC,
+    SHARED_WC_WARNING,
+} from '@/data/amenities';
 
 interface RoomFormModalProps {
     isOpen: boolean;
@@ -147,7 +157,14 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
         return Object.keys(newErrors).length === 0;
     }
 
-    /** Xử lý thêm amenity tag */
+    /** Bật/tắt amenity từ menu predefined */
+    function toggleAmenity(label: string) {
+        setAmenities((prev) =>
+            prev.includes(label) ? prev.filter((a) => a !== label) : [...prev, label],
+        );
+    }
+
+    /** Thêm amenity custom (không có trong danh sách predefined) */
     function handleAmenityKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -163,6 +180,8 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
     function removeAmenity(tag: string) {
         setAmenities((prev) => prev.filter((a) => a !== tag));
     }
+
+    const customAmenities = amenities.filter((a) => !findAmenityOption(a));
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -370,34 +389,63 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
                         />
                     </div>
 
-                    {/* Tiện nghi (tag input) */}
-                    <div className="space-y-1.5">
-                        <Label htmlFor="room-amenities">Tiện nghi</Label>
-                        <div className="flex flex-wrap gap-2">
-                            {amenities.map((tag) => (
-                                <span
-                                    key={tag}
-                                    className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-sm"
-                                >
-                                    {tag}
-                                    <button
-                                        type="button"
-                                        onClick={() => removeAmenity(tag)}
-                                        className="ml-0.5 rounded-full p-0.5 hover:bg-destructive/10 hover:text-destructive"
-                                        aria-label={`Xoá ${tag}`}
-                                    >
-                                        <X className="size-3" />
-                                    </button>
-                                </span>
-                            ))}
-                        </div>
-                        <Input
-                            id="room-amenities"
-                            value={amenityInput}
-                            onChange={(e) => setAmenityInput(e.target.value)}
-                            onKeyDown={handleAmenityKeyDown}
-                            placeholder="Nhập tiện nghi rồi nhấn Enter"
+                    {/* Tiện nghi — menu tags predefined + input custom */}
+                    <div className="space-y-3">
+                        <Label>Tiện nghi</Label>
+
+                        <AmenityGroup
+                            title="Tiện nghi chung"
+                            options={COMMON_AMENITIES}
+                            selected={amenities}
+                            onToggle={toggleAmenity}
                         />
+
+                        <AmenityGroup
+                            title="Tiện nghi riêng"
+                            options={EXTRA_AMENITIES}
+                            selected={amenities}
+                            onToggle={toggleAmenity}
+                        />
+
+                        {hasSharedWC(amenities) && (
+                            <p className="text-xs font-medium text-red-600">
+                                ⚠️ {SHARED_WC_WARNING}
+                            </p>
+                        )}
+
+                        <div className="space-y-1.5">
+                            <Label htmlFor="room-amenities" className="text-xs font-semibold text-muted-foreground">
+                                Tiện nghi khác (tuỳ chỉnh)
+                            </Label>
+                            {customAmenities.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    {customAmenities.map((tag) => (
+                                        <span
+                                            key={tag}
+                                            className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-sm"
+                                        >
+                                            <span aria-hidden="true">{getAmenityIcon(tag)}</span>
+                                            <span>{tag}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeAmenity(tag)}
+                                                className="ml-0.5 rounded-full p-0.5 hover:bg-destructive/10 hover:text-destructive"
+                                                aria-label={`Xoá ${tag}`}
+                                            >
+                                                <X className="size-3" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                            <Input
+                                id="room-amenities"
+                                value={amenityInput}
+                                onChange={(e) => setAmenityInput(e.target.value)}
+                                onKeyDown={handleAmenityKeyDown}
+                                placeholder="Nhập tiện nghi custom rồi nhấn Enter"
+                            />
+                        </div>
                     </div>
 
                     <DialogFooter className="pt-2">
@@ -417,5 +465,49 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
                 </form>
             </DialogContent>
         </Dialog>
+    );
+}
+
+interface AmenityGroupProps {
+    title: string;
+    options: typeof AMENITY_OPTIONS;
+    selected: string[];
+    onToggle: (label: string) => void;
+}
+
+/** Grid checkbox pill cho một nhóm tiện nghi */
+function AmenityGroup({ title, options, selected, onToggle }: AmenityGroupProps) {
+    return (
+        <div className="space-y-1.5">
+            <p className="text-xs font-semibold text-muted-foreground">{title}</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {options.map((opt) => {
+                    const active = selected.includes(opt.label);
+                    const warn = opt.warn === true;
+                    return (
+                        <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => onToggle(opt.label)}
+                            className={cn(
+                                'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs sm:text-sm transition-colors text-left',
+                                active
+                                    ? warn
+                                        ? 'border-red-300 bg-red-100 text-red-700 font-semibold'
+                                        : 'border-primary bg-primary/10 text-primary font-semibold'
+                                    : warn
+                                        ? 'border-red-200 bg-card text-red-600 hover:border-red-300 hover:bg-red-50'
+                                        : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:bg-accent',
+                            )}
+                            aria-pressed={active}
+                        >
+                            <span aria-hidden="true">{opt.icon}</span>
+                            <span className="flex-1 truncate">{opt.label}</span>
+                            {active && <Check className="size-3.5 shrink-0" />}
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
     );
 }

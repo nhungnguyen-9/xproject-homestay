@@ -73,7 +73,7 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
           </div>
           {isOpen && (
             <span className="font-semibold text-sidebar-foreground text-sm truncate">
-              Nhà Cắm Admin
+              Nhà Cam Admin
             </span>
           )}
         </div>
@@ -89,7 +89,7 @@ export function Sidebar({ isOpen, mobileOpen = false, onToggle, onCloseMobile }:
                 "flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium",
                 "transition-colors duration-150",
                 isActive
-                  ? "bg-sidebar-accent text-sidebar-primary"
+                  ? "bg-primary/10 text-primary font-semibold"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                 !isOpen && "justify-center"
               )}

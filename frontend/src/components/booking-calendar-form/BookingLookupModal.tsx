@@ -40,18 +40,26 @@ export const BookingLookupModal: React.FC<BookingLookupModalProps> = ({
     const [phone, setPhone] = useState("");
     const [results, setResults] = useState<Booking[] | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const handleSearch = (e: React.FormEvent) => {
+    const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!phone.trim()) return;
 
-        const allBookings = bookingService.getAll();
-        const found = allBookings.filter(
-            (b) => b.guestPhone === phone.trim() || b.guestPhone === `0${phone.trim()}` || b.guestPhone?.replace(/\s/g, "") === phone.trim().replace(/\s/g, "")
-        ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-        setResults(found);
-        setHasSearched(true);
+        setLoading(true);
+        try {
+            const allBookings = await bookingService.getAll();
+            const found = allBookings.filter(
+                (b) => b.guestPhone === phone.trim() || b.guestPhone === `0${phone.trim()}` || b.guestPhone?.replace(/\s/g, "") === phone.trim().replace(/\s/g, "")
+            ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            setResults(found);
+            setHasSearched(true);
+        } catch {
+            setResults([]);
+            setHasSearched(true);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -76,9 +84,9 @@ export const BookingLookupModal: React.FC<BookingLookupModalProps> = ({
                                 type="tel"
                             />
                         </div>
-                        <Button type="submit" className="bg-primary hover:bg-primary/90">
+                        <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={loading}>
                             <Search className="size-4 mr-2" />
-                            Tìm
+                            {loading ? 'Đang tìm...' : 'Tìm'}
                         </Button>
                     </form>
 

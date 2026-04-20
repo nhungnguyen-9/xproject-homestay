@@ -1,12 +1,15 @@
 import { Play } from "lucide-react"
 import { motion } from "framer-motion"
 import type { Variants } from "framer-motion"
+import { RoomTypeBadge } from "./RoomTypeBadge"
+import type { RoomType } from "@/types/schedule"
 
 export interface RoomCardProps {
   id?: string
   title: string
   price: string
   images: string[]
+  type?: RoomType
 }
 
 const cardVariants: Variants = {
@@ -21,7 +24,7 @@ const cardVariants: Variants = {
 /**
  * Thẻ phòng — collage: ảnh trái lớn | ảnh giữa + play | 3 ảnh nhỏ phải
  */
-export function RoomCard({ title, price, images }: RoomCardProps) {
+export function RoomCard({ title, price, images, type }: RoomCardProps) {
   const img = (i: number) => images[i] || images[0] || "/images/placeholder-room.png"
 
   return (
@@ -30,7 +33,12 @@ export function RoomCard({ title, price, images }: RoomCardProps) {
       className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-md cursor-pointer"
     >
       {/* Image collage */}
-      <div className="flex h-[200px] gap-2">
+      <div className="relative flex h-[200px] gap-2">
+        {type && (
+          <div className="absolute left-2 top-2 z-10">
+            <RoomTypeBadge type={type} />
+          </div>
+        )}
 
         {/* Left — main large image */}
         <div className="relative flex-[5] overflow-hidden rounded-xl">

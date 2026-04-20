@@ -81,8 +81,11 @@ export default function RoomDetailRoute() {
   // Fetch bookings when selectedDate changes
   useEffect(() => {
     const dateStr = selectedDate.toISOString().split("T")[0]
-    const data = bookingService.getByDate(dateStr)
-    setBookings(data)
+    let cancelled = false
+    bookingService.getByDate(dateStr)
+      .then(data => { if (!cancelled) setBookings(data) })
+      .catch(() => { if (!cancelled) setBookings([]) })
+    return () => { cancelled = true }
   }, [selectedDate])
 
   const handleDateChange = useCallback((date: Date) => {
@@ -90,12 +93,15 @@ export default function RoomDetailRoute() {
   }, [])
 
   const handleBookingCreate = useCallback(
-    (newBooking: Omit<Booking, "id">) => {
-      bookingService.create(newBooking)
-      // Refresh bookings for current date
-      const dateStr = selectedDate.toISOString().split("T")[0]
-      const data = bookingService.getByDate(dateStr)
-      setBookings(data)
+    async (newBooking: Omit<Booking, "id">) => {
+      try {
+        await bookingService.create(newBooking)
+        const dateStr = selectedDate.toISOString().split("T")[0]
+        const data = await bookingService.getByDate(dateStr)
+        setBookings(data)
+      } catch (err) {
+        console.error('Tạo booking thất bại:', err)
+      }
     },
     [selectedDate]
   )

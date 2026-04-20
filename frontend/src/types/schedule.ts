@@ -8,6 +8,7 @@ export interface Room {
   id: string;
   name: string;
   type: RoomType;
+  amenities?: string[];
 }
 
 /** Trạng thái đặt phòng */

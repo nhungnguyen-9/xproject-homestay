@@ -29,11 +29,12 @@ export const createBookingSchema = z.object({
   adults: z.number().int().min(1).default(2),
   foodItems: z.array(z.object({
     id: z.string(),
-    name: z.string(),
-    price: z.number(),
+    name: z.string().optional(),
+    price: z.number().optional(),
     qty: z.number().int().min(1).optional(),
   })).default([]),
-  totalPrice: z.number().int().min(0).default(0),
+  // totalPrice from client là gợi ý hiển thị, bị ignore — server tự tính từ room rates + foodItems (DB) + promo.
+  totalPrice: z.number().int().min(0).optional(),
   voucher: z.string().optional(),
 });
 

@@ -180,9 +180,9 @@ export function RoomManagement() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Quản lý phòng</h2>
+        <h2 className="text-xl font-bold text-foreground">Quản lý phòng</h2>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={fetchRooms}>
             <RefreshCw className="mr-2 size-4" /> Làm mới
@@ -267,7 +267,7 @@ function RoomImageCard({
   onDeactivate: () => void;
 }) {
   return (
-    <div className="rounded-lg border bg-white p-5 shadow-sm">
+    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
       <div className="mb-4 flex items-center gap-3">
         <div className="flex size-10 items-center justify-center rounded-lg bg-nhacam-primary/10">
           <ImageIcon className="size-5 text-nhacam-primary" />
