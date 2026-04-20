@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { timeToMinutes, hasTimeOverlap, durationHours } from './time.js'
+import {
+  timeToMinutes,
+  hasTimeOverlap,
+  durationHours,
+  addDaysISO,
+  dateToEpochDays,
+  computeAbsoluteMinutes,
+} from './time.js'
 
 describe('timeToMinutes()', () => {
   it('converts 00:00 to 0', () => {
@@ -81,5 +88,63 @@ describe('durationHours()', () => {
 
   it('calculates correctly across many hours', () => {
     expect(durationHours('08:00', '20:00')).toBe(12)
+  })
+})
+
+describe('addDaysISO()', () => {
+  it('adds one day across month boundary', () => {
+    expect(addDaysISO('2026-04-30', 1)).toBe('2026-05-01')
+  })
+  it('subtracts one day across month boundary', () => {
+    expect(addDaysISO('2026-05-01', -1)).toBe('2026-04-30')
+  })
+  it('handles leap year (Feb 28 → Feb 29)', () => {
+    expect(addDaysISO('2024-02-28', 1)).toBe('2024-02-29')
+  })
+  it('handles non-leap year (Feb 28 → Mar 1)', () => {
+    expect(addDaysISO('2026-02-28', 1)).toBe('2026-03-01')
+  })
+  it('returns same date when days = 0', () => {
+    expect(addDaysISO('2026-04-21', 0)).toBe('2026-04-21')
+  })
+})
+
+describe('dateToEpochDays()', () => {
+  it('returns different values for consecutive days', () => {
+    const a = dateToEpochDays('2026-04-20')
+    const b = dateToEpochDays('2026-04-21')
+    expect(b - a).toBe(1)
+  })
+})
+
+describe('computeAbsoluteMinutes()', () => {
+  it('same-day hourly: start < end, no wrap', () => {
+    const r = computeAbsoluteMinutes('2026-04-21', '14:00', '16:00', 'hourly', '2026-04-21')
+    expect(r).toEqual({ start: 14 * 60, end: 16 * 60 })
+  })
+
+  it('overnight mode: wraps endTime +24h even when textually earlier', () => {
+    const r = computeAbsoluteMinutes('2026-04-21', '22:00', '06:00', 'overnight', '2026-04-21')
+    expect(r).toEqual({ start: 22 * 60, end: 6 * 60 + 1440 })
+  })
+
+  it('endTime < startTime without overnight mode still detected as wrap', () => {
+    const r = computeAbsoluteMinutes('2026-04-21', '22:00', '06:00', 'hourly', '2026-04-21')
+    expect(r).toEqual({ start: 22 * 60, end: 6 * 60 + 1440 })
+  })
+
+  it('next-day booking relative to refDate (ref is earlier)', () => {
+    const r = computeAbsoluteMinutes('2026-04-22', '06:00', '10:00', 'hourly', '2026-04-21')
+    expect(r).toEqual({ start: 1440 + 6 * 60, end: 1440 + 10 * 60 })
+  })
+
+  it('previous-day booking relative to refDate produces negative start', () => {
+    const r = computeAbsoluteMinutes('2026-04-20', '22:00', '06:00', 'overnight', '2026-04-21')
+    expect(r).toEqual({ start: -1440 + 22 * 60, end: -1440 + 6 * 60 + 1440 })
+  })
+
+  it('zero-duration range (endTime == startTime) does not wrap', () => {
+    const r = computeAbsoluteMinutes('2026-04-21', '10:00', '10:00', 'hourly', '2026-04-21')
+    expect(r).toEqual({ start: 600, end: 600 })
   })
 })

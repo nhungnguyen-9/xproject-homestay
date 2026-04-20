@@ -60,8 +60,9 @@ bookingsRouter.get('/check-overlap', authMiddleware, requirePermission('bookings
   const date = c.req.query('date')!;
   const startTime = c.req.query('startTime')!;
   const endTime = c.req.query('endTime')!;
+  const mode = c.req.query('mode') || 'hourly';
   const excludeId = c.req.query('excludeId');
-  const hasConflict = await bookingService.checkOverlap(roomId, date, startTime, endTime, excludeId);
+  const hasConflict = await bookingService.checkOverlap(roomId, date, startTime, endTime, mode, excludeId);
   return c.json({ hasConflict });
 });
 

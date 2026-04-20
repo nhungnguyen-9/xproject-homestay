@@ -4,6 +4,8 @@ import { bookings, customers, rooms, foodItems, promoCodes } from '../db/schema/
 import { AppError } from '../middleware/errorHandler.js';
 import { normalizePhone } from '../utils/phone.js';
 import { calculatePrice } from '../utils/price.js';
+import { addDaysISO } from '../utils/time.js';
+import { findOverlappingBooking } from '../utils/bookingOverlap.js';
 import { STATUS_TRANSITIONS, type BookingStatus, type RoomType } from '../types/index.js';
 import * as promoService from './promoService.js';
 
@@ -64,33 +66,43 @@ export async function getById(id: string) {
 }
 
 /**
- * Kiểm tra trùng lịch phòng
- * Tìm booking chưa hủy có thời gian chồng chéo trên cùng phòng + ngày
+ * Kiểm tra trùng lịch phòng — overnight-aware.
+ *
+ * Query candidate bookings trong cửa sổ date ± 1 ngày (để bắt booking qua đêm
+ * từ hôm trước vẫn còn active sang hôm sau), sau đó so sánh bằng timestamp
+ * numeric trong JS thay vì text compare SQL.
+ *
+ * @param mode - Chế độ booking ('overnight' ép +24h vào endTime). Mặc định 'hourly'.
  */
 export async function checkOverlap(
   roomId: string,
   date: string,
   startTime: string,
   endTime: string,
+  mode: string = 'hourly',
   excludeId?: string,
 ): Promise<boolean> {
   const conditions = [
     eq(bookings.roomId, roomId),
-    eq(bookings.date, date),
+    inArray(bookings.date, [addDaysISO(date, -1), date, addDaysISO(date, 1)]),
     ne(bookings.status, 'cancelled'),
-    sql`${bookings.startTime} < ${endTime}`,
-    sql`${bookings.endTime} > ${startTime}`,
   ];
   if (excludeId) {
     conditions.push(ne(bookings.id, excludeId));
   }
 
-  const [result] = await db
-    .select({ count: sql<number>`count(*)` })
+  const candidates = await db
+    .select({
+      id: bookings.id,
+      date: bookings.date,
+      startTime: bookings.startTime,
+      endTime: bookings.endTime,
+      mode: bookings.mode,
+    })
     .from(bookings)
     .where(and(...conditions));
 
-  return Number(result.count) > 0;
+  return findOverlappingBooking({ date, startTime, endTime, mode }, candidates) !== null;
 }
 
 /**
@@ -163,7 +175,13 @@ export async function create(
   userId?: string,
 ) {
   if (data.startTime && data.endTime && data.date && data.roomId) {
-    const hasConflict = await checkOverlap(data.roomId, data.date, data.startTime, data.endTime);
+    const hasConflict = await checkOverlap(
+      data.roomId,
+      data.date,
+      data.startTime,
+      data.endTime,
+      data.mode || 'hourly',
+    );
     if (hasConflict) {
       throw new AppError(409, 'Time slot conflicts with an existing booking');
     }
@@ -260,7 +278,14 @@ export async function create(
  */
 export async function update(id: string, data: BookingUpdateInput) {
   if (data.startTime && data.endTime && data.date && data.roomId) {
-    const hasConflict = await checkOverlap(data.roomId, data.date, data.startTime, data.endTime, id);
+    const hasConflict = await checkOverlap(
+      data.roomId,
+      data.date,
+      data.startTime,
+      data.endTime,
+      data.mode || 'hourly',
+      id,
+    );
     if (hasConflict) {
       throw new AppError(409, 'Time slot conflicts with an existing booking');
     }

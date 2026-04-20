@@ -54,5 +54,6 @@ export const checkOverlapSchema = z.object({
   date: z.string().regex(dateRegex),
   startTime: z.string().regex(timeRegex),
   endTime: z.string().regex(timeRegex),
+  mode: z.enum(['hourly', 'daily', 'overnight', 'combo3h', 'combo6h1h']).optional(),
   excludeId: z.string().optional(),
 });
