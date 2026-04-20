@@ -14,7 +14,8 @@ import { users } from './users';
  * - customerId: FK tới customers (null nếu booking nội bộ)
  * - date: ngày đặt phòng ("YYYY-MM-DD")
  * - startTime, endTime: giờ bắt đầu/kết thúc ("HH:mm")
- * - mode: chế độ tính giá ('hourly' | 'daily' | 'overnight'), có CHECK constraint
+ * - mode: chế độ tính giá ('hourly' | 'daily' | 'overnight' | 'combo3h' | 'combo6h1h'), có CHECK constraint
+ * - combo6h1hOption: chỉ dùng khi mode='combo6h1h' — 'bonus_hour' (khách lấy 1 giờ tặng) | 'discount' (khách nhận giảm giá thay thế)
  * - status: trạng thái ('pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled'), có CHECK constraint
  * - category: phân loại ('guest' | 'internal'), có CHECK constraint
  * - internalTag: nhãn nội bộ ('cleaning' | 'maintenance' | 'locked' | 'custom') — chỉ dùng khi category = 'internal'
@@ -32,6 +33,7 @@ export const bookings = pgTable('bookings', {
   startTime: text('start_time').notNull(),
   endTime: text('end_time').notNull(),
   mode: text('mode').default('hourly'),
+  combo6h1hOption: text('combo_6h1h_option'),
   guestName: text('guest_name'),
   guestPhone: text('guest_phone'),
   status: text('status').notNull().default('pending'),
@@ -54,5 +56,6 @@ export const bookings = pgTable('bookings', {
   index('idx_bookings_created_by').on(table.createdBy),
   check('status_check', sql`${table.status} IN ('pending','confirmed','checked-in','checked-out','cancelled')`),
   check('category_check', sql`${table.category} IN ('guest','internal')`),
-  check('mode_check', sql`${table.mode} IN ('hourly', 'daily', 'overnight')`),
+  check('mode_check', sql`${table.mode} IN ('hourly', 'daily', 'overnight', 'combo3h', 'combo6h1h')`),
+  check('combo_6h1h_option_check', sql`${table.combo6h1hOption} IS NULL OR ${table.combo6h1hOption} IN ('bonus_hour', 'discount')`),
 ]);

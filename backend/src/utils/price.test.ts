@@ -6,6 +6,9 @@ const baseConfig = {
   dailyRate: 450000,
   overnightRate: 350000,
   extraHourRate: 40000,
+  combo3hRate: 400000,
+  combo6h1hRate: 700000,
+  combo6h1hDiscount: 100000,
 }
 
 describe('calculatePrice() — hourly mode', () => {
@@ -84,6 +87,53 @@ describe('calculatePrice() — with food items', () => {
     ]
     // 169000 + 22000 + 20000 = 211000
     expect(calculatePrice('hourly', '10:00', '11:00', baseConfig, food)).toBe(211000)
+  })
+})
+
+describe('calculatePrice() — combo3h mode', () => {
+  it('charges flat combo3hRate for ≤3 hours', () => {
+    expect(calculatePrice('combo3h', '10:00', '13:00', baseConfig)).toBe(400000)
+  })
+
+  it('charges flat rate for 1 hour (under combo window)', () => {
+    expect(calculatePrice('combo3h', '10:00', '11:00', baseConfig)).toBe(400000)
+  })
+
+  it('adds extraHourRate for overage past 3h', () => {
+    // 4 hrs → 400000 + 1 * 40000 = 440000
+    expect(calculatePrice('combo3h', '10:00', '14:00', baseConfig)).toBe(440000)
+  })
+
+  it('ceils partial overage hours', () => {
+    // 3h30m → ceil(3.5)=4 → 400000 + 1*40000 = 440000
+    expect(calculatePrice('combo3h', '10:00', '13:30', baseConfig)).toBe(440000)
+  })
+})
+
+describe('calculatePrice() — combo6h1h mode', () => {
+  it('default option=bonus_hour: flat rate for 7h', () => {
+    expect(calculatePrice('combo6h1h', '10:00', '17:00', baseConfig)).toBe(700000)
+  })
+
+  it('bonus_hour: overage past 7h adds extraHourRate', () => {
+    // 8h → 700000 + 1*40000 = 740000
+    expect(calculatePrice('combo6h1h', '10:00', '18:00', baseConfig, [], 0, 'bonus_hour')).toBe(740000)
+  })
+
+  it('discount option: 6h window, rate − discount', () => {
+    // 6h → 700000 − 100000 = 600000
+    expect(calculatePrice('combo6h1h', '10:00', '16:00', baseConfig, [], 0, 'discount')).toBe(600000)
+  })
+
+  it('discount option: overage past 6h adds extraHourRate', () => {
+    // 7h with discount option → 600000 + 1*40000 = 640000
+    expect(calculatePrice('combo6h1h', '10:00', '17:00', baseConfig, [], 0, 'discount')).toBe(640000)
+  })
+
+  it('discount clamps at 0 when discount > rate', () => {
+    const cfg = { ...baseConfig, combo6h1hRate: 50000, combo6h1hDiscount: 200000 }
+    // base = max(0, 50000−200000) = 0
+    expect(calculatePrice('combo6h1h', '10:00', '16:00', cfg, [], 0, 'discount')).toBe(0)
   })
 })
 

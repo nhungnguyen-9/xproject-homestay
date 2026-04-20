@@ -36,6 +36,13 @@
       "when": 1776608450149,
       "tag": "0004_even_clea",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1776688420720,
+      "tag": "0005_optimal_ego",
+      "breakpoints": true
     }
   ]
 }

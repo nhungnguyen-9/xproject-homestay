@@ -196,9 +196,13 @@ export async function create(
         dailyRate: room.dailyRate,
         overnightRate: room.overnightRate,
         extraHourRate: room.extraHourRate,
+        combo3hRate: room.combo3hRate,
+        combo6h1hRate: room.combo6h1hRate,
+        combo6h1hDiscount: room.combo6h1hDiscount,
       },
       resolvedFoodItems,
       0,
+      (data.combo6h1hOption as 'bonus_hour' | 'discount' | undefined) ?? 'bonus_hour',
     );
     discountAmount = promoService.computeDiscount(promoToApply, roomPrice);
   }
@@ -212,9 +216,13 @@ export async function create(
       dailyRate: room.dailyRate,
       overnightRate: room.overnightRate,
       extraHourRate: room.extraHourRate,
+      combo3hRate: room.combo3hRate,
+      combo6h1hRate: room.combo6h1hRate,
+      combo6h1hDiscount: room.combo6h1hDiscount,
     },
     resolvedFoodItems,
     discountAmount,
+    (data.combo6h1hOption as 'bonus_hour' | 'discount' | undefined) ?? 'bonus_hour',
   );
 
   let customerId: string | null = null;

@@ -12,6 +12,9 @@ import { branches } from './branches';
  * - type: loại phòng ('standard' | 'vip' | 'supervip'), có CHECK constraint
  * - branchId: FK tới branches — phòng thuộc chi nhánh nào
  * - hourlyRate, dailyRate, overnightRate, extraHourRate: bảng giá (VND, integer)
+ * - combo3hRate: giá combo 3 giờ (VND, integer, default 0)
+ * - combo6h1hRate: giá combo 6 giờ + 1 giờ bonus (VND, integer, default 0)
+ * - combo6h1hDiscount: số tiền giảm thay thế khi khách không lấy bonus 1H (VND, integer, default 0)
  * - amenities: danh sách tiện ích (JSONB array)
  * - images: ảnh phòng (JSONB array)
  * - isActive: trạng thái hoạt động
@@ -27,11 +30,13 @@ export const rooms = pgTable('rooms', {
   images: jsonb('images').$type<string[]>().default([]),
   maxGuests: integer('max_guests').default(2),
   amenities: jsonb('amenities').$type<string[]>().default([]),
-  perMinuteRate: integer('per_minute_rate').notNull().default(0),
   hourlyRate: integer('hourly_rate').notNull(),
   dailyRate: integer('daily_rate').notNull(),
   overnightRate: integer('overnight_rate').notNull(),
   extraHourRate: integer('extra_hour_rate').notNull(),
+  combo3hRate: integer('combo_3h_rate').notNull().default(0),
+  combo6h1hRate: integer('combo_6h1h_rate').notNull().default(0),
+  combo6h1hDiscount: integer('combo_6h1h_discount').notNull().default(0),
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

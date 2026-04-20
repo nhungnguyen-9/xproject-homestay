@@ -15,11 +15,13 @@ export const createRoomSchema = z.object({
   images: z.array(z.string()).max(5).default([]),
   maxGuests: z.number().int().min(1).default(2),
   amenities: z.array(z.string()).default([]),
-  perMinuteRate: z.number().int().min(1, 'Giá theo phút phải lớn hơn 0'),
   hourlyRate: z.number().int().min(0),
   dailyRate: z.number().int().min(0),
   overnightRate: z.number().int().min(0),
   extraHourRate: z.number().int().min(0),
+  combo3hRate: z.number().int().min(0).default(0),
+  combo6h1hRate: z.number().int().min(0).default(0),
+  combo6h1hDiscount: z.number().int().min(0).default(0),
 });
 
 /** Schema cập nhật phòng — tất cả trường optional */

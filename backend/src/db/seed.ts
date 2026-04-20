@@ -38,20 +38,20 @@ async function seed() {
   // ---- 2. Chi nhánh ----
   console.log('  Inserting branches...');
   await db.insert(branches).values([
-    { id: 'branch-ct', name: 'Cần Thơ', phone: '08xxxxxxxx', address: '08/245 Cần Thơ', district: 'Quận Ninh Kiều' },
-    { id: 'branch-hcm', name: 'TP. Hồ Chí Minh', phone: '08xxxxxxxx', address: '08/245 Hồ Chí Minh', district: 'Quận 1' },
+    { id: 'branch-ct', name: 'Cần Thơ', phone: '08xxxxxxxx', address: '08/245 Cần Thơ', district: 'Quận Ninh Kiều', images: ['/uploads/branches/mock-branch-ct.png'] },
+    { id: 'branch-hcm', name: 'TP. Hồ Chí Minh', phone: '08xxxxxxxx', address: '08/245 Hồ Chí Minh', district: 'Quận 1', images: ['/uploads/branches/mock-branch-hcm.png'] },
   ]);
   console.log('  ✓ 2 branches');
 
   // ---- 3. Phòng ----
   console.log('  Inserting rooms...');
   await db.insert(rooms).values([
-    { id: 'g01', name: 'G01', type: 'standard', branchId: 'branch-ct', hourlyRate: 169000, dailyRate: 450000, overnightRate: 350000, extraHourRate: 40000 },
-    { id: 'p102', name: 'P102', type: 'standard', branchId: 'branch-ct', hourlyRate: 169000, dailyRate: 450000, overnightRate: 350000, extraHourRate: 40000 },
-    { id: 'p103', name: 'P103', type: 'standard', branchId: 'branch-ct', hourlyRate: 169000, dailyRate: 450000, overnightRate: 350000, extraHourRate: 40000 },
-    { id: 'p104', name: 'P104', type: 'vip', branchId: 'branch-ct', hourlyRate: 210000, dailyRate: 550000, overnightRate: 450000, extraHourRate: 50000 },
-    { id: 'p105', name: 'P105', type: 'vip', branchId: 'branch-ct', hourlyRate: 210000, dailyRate: 550000, overnightRate: 450000, extraHourRate: 50000 },
-    { id: 'p106', name: 'P106', type: 'supervip', branchId: 'branch-ct', hourlyRate: 269000, dailyRate: 650000, overnightRate: 550000, extraHourRate: 60000 },
+    { id: 'g01', name: 'G01', type: 'standard', branchId: 'branch-ct', hourlyRate: 169000, dailyRate: 450000, overnightRate: 350000, extraHourRate: 40000, images: ['/uploads/rooms/mock-g01.png'] },
+    { id: 'p102', name: 'P102', type: 'standard', branchId: 'branch-ct', hourlyRate: 169000, dailyRate: 450000, overnightRate: 350000, extraHourRate: 40000, images: ['/uploads/rooms/mock-p102.png'] },
+    { id: 'p103', name: 'P103', type: 'standard', branchId: 'branch-ct', hourlyRate: 169000, dailyRate: 450000, overnightRate: 350000, extraHourRate: 40000, images: ['/uploads/rooms/mock-p103.png'] },
+    { id: 'p104', name: 'P104', type: 'vip', branchId: 'branch-ct', hourlyRate: 210000, dailyRate: 550000, overnightRate: 450000, extraHourRate: 50000, images: ['/uploads/rooms/mock-p104.png'] },
+    { id: 'p105', name: 'P105', type: 'vip', branchId: 'branch-ct', hourlyRate: 210000, dailyRate: 550000, overnightRate: 450000, extraHourRate: 50000, images: ['/uploads/rooms/mock-p105.png'] },
+    { id: 'p106', name: 'P106', type: 'supervip', branchId: 'branch-ct', hourlyRate: 269000, dailyRate: 650000, overnightRate: 550000, extraHourRate: 60000, images: ['/uploads/rooms/mock-p106.png'] },
   ]);
   console.log('  ✓ 6 rooms');
 
