@@ -71,7 +71,7 @@ export const BookingPage = () => {
                 bookings={bookings}
                 onDateChange={setDate}
                 startHour={0}
-                endHour={22}
+                endHour={24}
             />
         </div>
     )
