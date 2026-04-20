@@ -5,6 +5,7 @@ import * as roomService from "@/services/roomService"
 import * as bookingService from "@/services/bookingService"
 import type { RoomDetail } from "@/types/room"
 import type { Booking } from "@/types/schedule"
+import { formatDateInput } from "@/utils/helpers"
 
 /**
  * Route chi tiết phòng — fetch dữ liệu phòng từ API và render trang chi tiết
@@ -78,7 +79,7 @@ export default function RoomDetailRoute() {
 
   // Fetch bookings when selectedDate changes
   useEffect(() => {
-    const dateStr = selectedDate.toISOString().split("T")[0]
+    const dateStr = formatDateInput(selectedDate)
     let cancelled = false
     bookingService.getByDate(dateStr)
       .then(data => { if (!cancelled) setBookings(data) })
@@ -94,7 +95,7 @@ export default function RoomDetailRoute() {
     async (newBooking: Omit<Booking, "id">) => {
       try {
         await bookingService.create(newBooking)
-        const dateStr = selectedDate.toISOString().split("T")[0]
+        const dateStr = formatDateInput(selectedDate)
         const data = await bookingService.getByDate(dateStr)
         setBookings(data)
       } catch (err) {

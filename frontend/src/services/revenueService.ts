@@ -1,4 +1,5 @@
 import type { RoomType } from '@/types/schedule';
+import { formatDateInput } from '@/utils/helpers';
 import { apiFetch } from './apiClient';
 
 export interface RevenueSummary {
@@ -28,10 +29,6 @@ export interface DailyRevenue {
   revenue: number;
 }
 
-function formatDate(d: Date): string {
-  return d.toISOString().split('T')[0];
-}
-
 function getPeriodRange(period: 'today' | 'week' | 'month'): {
   start: string;
   end: string;
@@ -39,7 +36,7 @@ function getPeriodRange(period: 'today' | 'week' | 'month'): {
   const now = new Date();
 
   if (period === 'today') {
-    return { start: formatDate(now), end: formatDate(now) };
+    return { start: formatDateInput(now), end: formatDateInput(now) };
   }
 
   if (period === 'week') {
@@ -48,12 +45,12 @@ function getPeriodRange(period: 'today' | 'week' | 'month'): {
     weekStart.setDate(now.getDate() - dayOfWeek);
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
-    return { start: formatDate(weekStart), end: formatDate(weekEnd) };
+    return { start: formatDateInput(weekStart), end: formatDateInput(weekEnd) };
   }
 
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return { start: formatDate(monthStart), end: formatDate(monthEnd) };
+  return { start: formatDateInput(monthStart), end: formatDateInput(monthEnd) };
 }
 
 /**

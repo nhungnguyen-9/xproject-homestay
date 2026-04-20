@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { formatDateInput } from '@/utils/helpers';
 import type {
     Room,
     Booking,
@@ -122,7 +123,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ date, onChange }) => {
             <div className="flex items-center gap-2">
                 <input
                     type="date"
-                    value={date.toISOString().split('T')[0]}
+                    value={formatDateInput(date)}
                     onChange={(e) => onChange(new Date(e.target.value))}
                     className="border-none outline-none text-xs lg:text-sm bg-transparent"
                 />

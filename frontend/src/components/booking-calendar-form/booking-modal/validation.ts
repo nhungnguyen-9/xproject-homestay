@@ -1,4 +1,5 @@
 import type { BookingFormData, Booking } from "@/types/schedule";
+import { formatDateInput } from "@/utils/helpers";
 
 /** Chuyển chuỗi ngày (YYYY-MM-DD) và giờ (HH:mm) thành timestamp tuyệt đối (local time) */
 function toTimestamp(dateStr: string, time: string): number {
@@ -34,10 +35,10 @@ export const validateStep1 = (
     }
 
     const inDate = formData.checkInDate instanceof Date
-        ? formData.checkInDate.toISOString().split('T')[0]
+        ? formatDateInput(formData.checkInDate)
         : String(formData.checkInDate);
     const outDate = formData.checkOutDate instanceof Date
-        ? formData.checkOutDate.toISOString().split('T')[0]
+        ? formatDateInput(formData.checkOutDate)
         : String(formData.checkOutDate);
 
     const newStart = toTimestamp(inDate, formData.checkInTime);

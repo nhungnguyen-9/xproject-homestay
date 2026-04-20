@@ -18,7 +18,7 @@ import type {
   TopCustomer,
   DailyRevenue,
 } from '@/services/revenueService'
-import { formatPrice } from '@/utils/helpers'
+import { formatPrice, formatDateInput } from '@/utils/helpers'
 import { cn } from '@/lib/utils'
 
 type Period = 'today' | 'week' | 'month'
@@ -37,10 +37,9 @@ const ROOM_TYPE_COLORS: Record<string, string> = {
 
 function getPeriodDateRange(period: Period): { start: string; end: string } {
   const now = new Date()
-  const formatDate = (d: Date) => d.toISOString().split('T')[0]
 
   if (period === 'today') {
-    return { start: formatDate(now), end: formatDate(now) }
+    return { start: formatDateInput(now), end: formatDateInput(now) }
   }
 
   if (period === 'week') {
@@ -49,12 +48,12 @@ function getPeriodDateRange(period: Period): { start: string; end: string } {
     weekStart.setDate(now.getDate() - dayOfWeek)
     const weekEnd = new Date(weekStart)
     weekEnd.setDate(weekStart.getDate() + 6)
-    return { start: formatDate(weekStart), end: formatDate(weekEnd) }
+    return { start: formatDateInput(weekStart), end: formatDateInput(weekEnd) }
   }
 
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  return { start: formatDate(monthStart), end: formatDate(monthEnd) }
+  return { start: formatDateInput(monthStart), end: formatDateInput(monthEnd) }
 }
 
 function formatDateLabel(dateStr: unknown): string {

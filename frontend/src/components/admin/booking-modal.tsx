@@ -40,7 +40,7 @@ import * as authService from '@/services/authService'
 import type { PromoCode } from '@/types/promo'
 import type { Booking, BookingStatus, InternalTag, Room, RoomType } from '@/types/schedule'
 import { getRoomPriceConfig } from '@/types/schedule'
-import { calculateBookingPrice } from '@/utils/helpers'
+import { calculateBookingPrice, formatDateInput } from '@/utils/helpers'
 
 interface BookingModalProps {
   open: boolean
@@ -129,7 +129,7 @@ export function BookingModal({
     if (!roomId && rooms.length > 0) setRoomId(rooms[0].id)
   }, [rooms, roomId])
   const [date, setDate] = useState(
-    booking?.date || prefillDate || new Date().toISOString().split('T')[0]
+    booking?.date || prefillDate || formatDateInput(new Date())
   )
   const [startTime, setStartTime] = useState(booking?.startTime || prefillStartTime || '08:00')
   const [endTime, setEndTime] = useState(booking?.endTime || prefillEndTime || '10:00')
