@@ -46,6 +46,13 @@ export const validateStep1 = (
     // Nếu checkout <= checkin, cộng thêm 24h (trường hợp cùng ngày nhưng ghi giờ ngược)
     if (newEnd <= newStart) newEnd += 24 * 60 * 60 * 1000;
 
+    // Safety net: không cho đặt phòng trong quá khứ
+    const now = Date.now();
+    if (newStart < now) {
+        newErrors.time = "Không thể đặt phòng trong quá khứ";
+        return newErrors;
+    }
+
     // Phát hiện trùng lịch: so sánh với TẤT CẢ booking của phòng này
     const roomBookings = bookings.filter((b) => b.roomId === formData.roomId && b.status !== 'cancelled');
     for (const booking of roomBookings) {
