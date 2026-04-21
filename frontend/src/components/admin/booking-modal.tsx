@@ -365,6 +365,7 @@ export function BookingModal({
                   <Input
                     id="startTime"
                     type="time"
+                    lang="vi-VN"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     className="mt-1"
@@ -378,6 +379,7 @@ export function BookingModal({
                   <Input
                     id="endTime"
                     type="time"
+                    lang="vi-VN"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     className="mt-1"
