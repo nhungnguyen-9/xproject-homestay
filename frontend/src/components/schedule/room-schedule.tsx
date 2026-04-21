@@ -12,7 +12,6 @@ import type {
 import { Plus } from 'lucide-react';
 import { BookingModal } from '@/components/booking-calendar-form/booking-modal';
 import {
-    getAmenityIcon,
     COMMON_AMENITIES,
     isSharedWC,
     hasSharedWC,
@@ -681,13 +680,12 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                 {/* 4. Footer notes — dynamic per-room amenities */}
                 <div className="border-t border-border px-4 py-3 bg-muted/20 mt-5">
                     <p className="text-xs font-bold text-foreground mb-0.5">Ghi chú tiện nghi</p>
-                    <p className="text-xs text-muted-foreground">
+                    <div className="text-xs text-muted-foreground space-y-0.5">
                         {rooms
                             .filter((r) => r.amenities && r.amenities.length > 0)
-                            .map((r, i) => (
-                                <span key={r.id}>
-                                    {i > 0 && ' • '}
-                                    {getAmenityIcon(r.amenities![0])} {r.name}:{' '}
+                            .map((r) => (
+                                <div key={r.id}>
+                                    <span className="font-semibold text-foreground">{r.name}</span>:{' '}
                                     {r.amenities!.map((a, idx) => (
                                         <span
                                             key={a}
@@ -699,12 +697,12 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                                             {a}
                                         </span>
                                     ))}
-                                </span>
+                                </div>
                             ))}
                         {rooms.every((r) => !r.amenities || r.amenities.length === 0) && (
                             <span className="italic">Chưa có thông tin tiện nghi riêng</span>
                         )}
-                    </p>
+                    </div>
                     {rooms.some((r) => hasSharedWC(r.amenities)) && (
                         <p className="mt-1 text-xs font-medium text-red-600">
                             ⚠️ {SHARED_WC_WARNING} (áp dụng cho phòng có tag "WC chung")
