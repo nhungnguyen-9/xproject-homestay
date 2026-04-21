@@ -3,6 +3,7 @@ import { motion } from "framer-motion"
 import type { Variants } from "framer-motion"
 import { RoomTypeBadge } from "./RoomTypeBadge"
 import type { RoomType } from "@/types/schedule"
+import type { DiscountSlot } from "@/types/room"
 
 export interface RoomCardProps {
   id?: string
@@ -10,6 +11,7 @@ export interface RoomCardProps {
   price: string
   images: string[]
   type?: RoomType
+  discountSlots?: DiscountSlot[]
 }
 
 const cardVariants: Variants = {
@@ -24,9 +26,10 @@ const cardVariants: Variants = {
 /**
  * Thẻ phòng — collage: ảnh trái lớn | ảnh giữa + play | 3 ảnh nhỏ phải
  */
-export function RoomCard({ id, title, price, images, type }: RoomCardProps) {
+export function RoomCard({ id, title, price, images, type, discountSlots }: RoomCardProps) {
   const navigate = useNavigate()
   const img = (i: number) => images[i] || images[0] || "/images/placeholder-room.png"
+  const hasDiscount = (discountSlots?.length ?? 0) > 0
 
   return (
     <motion.div
@@ -65,7 +68,14 @@ export function RoomCard({ id, title, price, images, type }: RoomCardProps) {
       {/* Info */}
       <div className="flex flex-col gap-0.5 px-1 pb-1">
         <h3 className="text-[17px] font-extrabold text-[#2B2B2B]">{title}</h3>
-        <p className="text-[13px] font-semibold text-[#6A635B]">{price}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-[13px] font-semibold text-[#6A635B]">{price}</p>
+          {hasDiscount && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+              🎁 Giờ vàng
+            </span>
+          )}
+        </div>
       </div>
 
       {/* "Dat Phong" button — navigates to /dat-phong?roomId=id */}
