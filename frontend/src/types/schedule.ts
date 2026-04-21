@@ -22,7 +22,7 @@ export interface Room {
 }
 
 /** Lấy PriceConfig từ Room — dùng giá thực từ API, fallback về ROOM_PRICES mặc định */
-export function getRoomPriceConfig(room: Pick<Room, 'type' | 'hourlyRate' | 'dailyRate' | 'overnightRate' | 'extraHourRate' | 'combo3hRate' | 'combo6h1hRate' | 'combo6h1hDiscount'>): PriceConfig {
+export function getRoomPriceConfig(room: Pick<Room, 'type' | 'hourlyRate' | 'dailyRate' | 'overnightRate' | 'extraHourRate' | 'combo3hRate' | 'combo6h1hRate' | 'combo6h1hDiscount' | 'discountSlots'>): PriceConfig {
   const fallback = ROOM_PRICES[room.type];
   return {
     hourlyRate: room.hourlyRate ?? fallback.hourlyRate,
@@ -32,6 +32,7 @@ export function getRoomPriceConfig(room: Pick<Room, 'type' | 'hourlyRate' | 'dai
     combo3hRate: room.combo3hRate ?? fallback.combo3hRate,
     combo6h1hRate: room.combo6h1hRate ?? fallback.combo6h1hRate,
     combo6h1hDiscount: room.combo6h1hDiscount ?? fallback.combo6h1hDiscount,
+    discountSlots: room.discountSlots,
   };
 }
 
@@ -148,6 +149,7 @@ export interface PriceConfig {
   combo6h1hRate: number;
   /** Số tiền giảm khi khách không lấy 1H bonus (chỉ còn 6H) */
   combo6h1hDiscount: number;
+  discountSlots?: DiscountSlot[];
 }
 
 /** Bảng giá phòng theo từng loại phòng */

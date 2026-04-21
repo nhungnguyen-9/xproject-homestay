@@ -43,8 +43,9 @@ export const useBookingForm = ({ initialFormData, bookings, selectedDate, rooms 
             duration,
             priceConfig,
             formData.combo6h1hOption,
+            { startTime: formData.checkInTime, endTime: formData.checkOutTime },
         );
-    }, [rooms, formData.roomId, formData.roomType, formData.mode, duration, formData.combo6h1hOption]);
+    }, [rooms, formData.roomId, formData.roomType, formData.mode, duration, formData.combo6h1hOption, formData.checkInTime, formData.checkOutTime]);
 
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);
     const foodTotal = selectedFoodItems.reduce(

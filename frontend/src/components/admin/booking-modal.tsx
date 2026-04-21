@@ -278,8 +278,7 @@ export function BookingModal({
     if (endMin <= startMin) endMin += 24 * 60
     const hours = (endMin - startMin) / 60
     
-    // Sử dụng helper để tính giá chuẩn
-    let price = calculateBookingPrice('hourly', hours, priceConfig)
+    let price = calculateBookingPrice('hourly', hours, priceConfig, 'bonus_hour', { startTime, endTime })
 
     if (voucher.trim() && validatedPromo && validatedPromo.code === voucher.trim().toUpperCase()) {
       if (validatedPromo.discountType === 'percent') {

@@ -127,8 +127,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             duration,
             priceConfig,
             formData.combo6h1hOption,
+            { startTime: formData.checkInTime, endTime: formData.checkOutTime },
         );
-    }, [selectedRoom, formData.roomType, formData.mode, duration, formData.combo6h1hOption]);
+    }, [selectedRoom, formData.roomType, formData.mode, duration, formData.combo6h1hOption, formData.checkInTime, formData.checkOutTime]);
 
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);
     const foodTotal = selectedFoodItems.reduce(
