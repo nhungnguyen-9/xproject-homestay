@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
+import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import type { Booking, Room, RoomType } from '@/types/schedule'
 import type { Branch } from '@/types/branch'
@@ -124,7 +125,10 @@ export const BookingPage = () => {
             {/* Branch tabs above the schedule */}
             {branches.length > 1 && (
                 <div className="mb-4">
-                    <div className="flex gap-1 border-b-2 border-border overflow-x-auto">
+                    <div
+                        className="flex gap-1 border-b-2 border-border overflow-x-auto [&::-webkit-scrollbar]:hidden"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    >
                         {branches.map((branch) => (
                             <button
                                 key={branch.id}
@@ -144,17 +148,28 @@ export const BookingPage = () => {
                 </div>
             )}
 
-            <RoomSchedule
-                date={date}
-                rooms={filteredRooms}
-                bookings={bookings}
-                onDateChange={setDate}
-                onBookingCreate={handleBookingCreate}
-                startHour={0}
-                endHour={24}
-                focusedRoomId={focusedRoomId}
-                onFocusChange={setFocusedRoomId}
-            />
+            {/* RoomSchedule — sliding transition on branch tab change */}
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={activeBranchId ?? 'none'}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                >
+                    <RoomSchedule
+                        date={date}
+                        rooms={filteredRooms}
+                        bookings={bookings}
+                        onDateChange={setDate}
+                        onBookingCreate={handleBookingCreate}
+                        startHour={0}
+                        endHour={24}
+                        focusedRoomId={focusedRoomId}
+                        onFocusChange={setFocusedRoomId}
+                    />
+                </motion.div>
+            </AnimatePresence>
         </div>
     )
 }
