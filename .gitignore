@@ -1,0 +1,6 @@
+# Agent harness artifacts
+.superpowers/
+.claude/worktrees/
+
+# TypeScript incremental build cache
+backend/tsconfig.tsbuildinfo
