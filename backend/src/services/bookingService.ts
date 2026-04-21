@@ -302,6 +302,7 @@ export async function create(
         combo3hRate: room.combo3hRate,
         combo6h1hRate: room.combo6h1hRate,
         combo6h1hDiscount: room.combo6h1hDiscount,
+        discountSlots: room.discountSlots,
       },
       resolvedFoodItems,
       0,
@@ -322,6 +323,7 @@ export async function create(
       combo3hRate: room.combo3hRate,
       combo6h1hRate: room.combo6h1hRate,
       combo6h1hDiscount: room.combo6h1hDiscount,
+      discountSlots: room.discountSlots,
     },
     resolvedFoodItems,
     discountAmount,
@@ -446,6 +448,7 @@ export async function update(id: string, data: BookingUpdateInput) {
     combo3hRate: room.combo3hRate,
     combo6h1hRate: room.combo6h1hRate,
     combo6h1hDiscount: room.combo6h1hDiscount,
+    discountSlots: room.discountSlots,
   };
 
   let discountAmount = 0;
