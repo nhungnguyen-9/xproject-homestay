@@ -9,6 +9,7 @@ import * as customerService from '@/services/customerService'
 import * as telegramService from '@/services/telegramService'
 import { BookingModal } from '@/components/admin/booking-modal'
 import { RoomTypeBadge } from '@/components/rooms/RoomTypeBadge'
+import { formatDate } from '@/utils/helpers'
 import type { Booking, InternalTag } from '@/types/schedule'
 import { Plus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
@@ -252,6 +253,19 @@ export function BookingSchedule() {
         }
 
         toast.success('Đã tạo booking mới')
+
+        // BE auto-tạo cleaning 30p sau guest booking. Nếu là overnight,
+        // cleaning rơi vào ngày D+1 → timeline ngày D không hiển thị.
+        // Cho admin 1 toast hint để biết cleaning đã được scheduled.
+        if (saved.category === 'guest') {
+          const startMin = timeToMinutes(saved.startTime)
+          const endMin = timeToMinutes(saved.endTime)
+          if (endMin <= startMin) {
+            const nextDay = new Date(saved.date + 'T00:00:00')
+            nextDay.setDate(nextDay.getDate() + 1)
+            toast.info(`🧹 Dọn phòng 30p lúc ${saved.endTime} ngày ${formatDate(nextDay)} (hôm sau)`)
+          }
+        }
       }
 
       await refreshBookings()
