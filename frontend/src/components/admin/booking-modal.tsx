@@ -56,26 +56,26 @@ interface BookingModalProps {
 }
 
 const INTERNAL_TAGS: { value: InternalTag; label: string; icon: string }[] = [
-  { value: 'cleaning', label: 'Don phong', icon: '🧹' },
-  { value: 'maintenance', label: 'Bao tri', icon: '🔧' },
-  { value: 'locked', label: 'Khoa phong', icon: '🚫' },
-  { value: 'custom', label: 'Tuy chinh', icon: '📝' },
+  { value: 'cleaning', label: 'Dọn phòng', icon: '🧹' },
+  { value: 'maintenance', label: 'Bảo trì', icon: '🔧' },
+  { value: 'locked', label: 'Khóa phòng', icon: '🚫' },
+  { value: 'custom', label: 'Tùy chỉnh', icon: '📝' },
 ]
 
 const STATUS_OPTIONS: { value: BookingStatus; label: string }[] = [
-  { value: 'pending', label: 'Cho xac nhan' },
-  { value: 'confirmed', label: 'Da xac nhan' },
-  { value: 'checked-in', label: 'Da nhan phong' },
-  { value: 'checked-out', label: 'Da tra phong' },
-  { value: 'cancelled', label: 'Da huy' },
+  { value: 'pending', label: 'Chờ xác nhận' },
+  { value: 'confirmed', label: 'Đã xác nhận' },
+  { value: 'checked-in', label: 'Đã nhận phòng' },
+  { value: 'checked-out', label: 'Đã trả phòng' },
+  { value: 'cancelled', label: 'Đã hủy' },
 ]
 
 const guestSchema = z.object({
-  guestName: z.string().min(1, 'Ten khach hang la bat buoc'),
+  guestName: z.string().min(1, 'Tên khách hàng là bắt buộc'),
   guestPhone: z
     .string()
-    .min(1, 'So dien thoai la bat buoc')
-    .regex(/^0\d{9,10}$/, 'So dien thoai khong hop le (VD: 0901234567)'),
+    .min(1, 'Số điện thoại là bắt buộc')
+    .regex(/^0\d{9,10}$/, 'Số điện thoại không hợp lệ (VD: 0901234567)'),
   startTime: z.string().min(1),
   endTime: z.string().min(1),
 })
@@ -171,10 +171,10 @@ export function BookingModal({
           result.promo.discountType === 'percent'
             ? `${result.promo.discountValue}%`
             : `${result.promo.discountValue.toLocaleString('vi-VN')}d`
-        setVoucherStatus({ valid: true, message: `Giam ${discountText}` })
+        setVoucherStatus({ valid: true, message: `Giảm ${discountText}` })
         setValidatedPromo(result.promo)
       } else {
-        setVoucherStatus({ valid: false, message: result.error || 'Ma khong hop le' })
+        setVoucherStatus({ valid: false, message: result.error || 'Mã không hợp lệ' })
         setValidatedPromo(null)
       }
     } catch (err) {
@@ -230,7 +230,7 @@ export function BookingModal({
         return
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Khong kiem tra duoc trung lich')
+      toast.error(err instanceof Error ? err.message : 'Không kiểm tra được trùng lịch')
       return
     }
 
@@ -306,12 +306,12 @@ export function BookingModal({
         <DialogContent className="sm:max-w-[520px]">
           <DialogHeader>
             <DialogTitle>
-              {isEdit ? 'Chinh sua booking' : 'Tao booking moi'}
+              {isEdit ? 'Chỉnh sửa booking' : 'Tạo booking mới'}
             </DialogTitle>
             <DialogDescription>
               {isEdit
-                ? 'Cap nhat thong tin booking hien tai'
-                : 'Dien thong tin de tao booking moi'}
+                ? 'Cập nhật thông tin booking hiện tại'
+                : 'Điền thông tin để tạo booking mới'}
             </DialogDescription>
           </DialogHeader>
 
@@ -321,16 +321,16 @@ export function BookingModal({
           >
             <TabsList className="w-full">
               <TabsTrigger value="guest" className="flex-1">
-                Khach hang
+                Khách hàng
               </TabsTrigger>
               <TabsTrigger value="internal" className="flex-1">
-                Noi bo
+                Nội bộ
               </TabsTrigger>
             </TabsList>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div className="col-span-2">
-                <Label htmlFor="room">Phong</Label>
+                <Label htmlFor="room">Phòng</Label>
                 <Select value={roomId} onValueChange={setRoomId}>
                   <SelectTrigger className="mt-1 w-full">
                     <SelectValue />
@@ -349,7 +349,7 @@ export function BookingModal({
               </div>
 
               <div>
-                <Label htmlFor="date">Ngay</Label>
+                <Label htmlFor="date">Ngày</Label>
                 <Input
                   id="date"
                   type="date"
@@ -361,7 +361,7 @@ export function BookingModal({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label htmlFor="startTime">Bat dau</Label>
+                  <Label htmlFor="startTime">Bắt đầu</Label>
                   <Input
                     id="startTime"
                     type="time"
@@ -375,7 +375,7 @@ export function BookingModal({
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="endTime">Ket thuc</Label>
+                  <Label htmlFor="endTime">Kết thúc</Label>
                   <Input
                     id="endTime"
                     type="time"
@@ -406,12 +406,12 @@ export function BookingModal({
 
             <TabsContent value="guest" className="mt-3 flex flex-col gap-3">
               <div>
-                <Label htmlFor="guestName">Ten khach hang</Label>
+                <Label htmlFor="guestName">Tên khách hàng</Label>
                 <Input
                   id="guestName"
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
-                  placeholder="Nguyen Van A"
+                  placeholder="Nguyễn Văn A"
                   className="mt-1"
                 />
                 {errors.guestName && (
@@ -420,7 +420,7 @@ export function BookingModal({
               </div>
 
               <div>
-                <Label htmlFor="guestPhone">So dien thoai</Label>
+                <Label htmlFor="guestPhone">Số điện thoại</Label>
                 <Input
                   id="guestPhone"
                   value={guestPhone}
@@ -434,7 +434,7 @@ export function BookingModal({
               </div>
 
               <div>
-                <Label htmlFor="status">Trang thai</Label>
+                <Label htmlFor="status">Trạng thái</Label>
                 <Select
                   value={status}
                   onValueChange={(v) => setStatus(v as BookingStatus)}
@@ -453,7 +453,7 @@ export function BookingModal({
               </div>
 
               <div>
-                <Label htmlFor="voucher">Ma khuyen mai</Label>
+                <Label htmlFor="voucher">Mã khuyến mãi</Label>
                 <div className="flex gap-2 mt-1">
                   <Input
                     id="voucher"
@@ -474,7 +474,7 @@ export function BookingModal({
                     disabled={validatingVoucher}
                     className="shrink-0"
                   >
-                    {validatingVoucher ? 'Dang kiem tra...' : 'Kiem tra'}
+                    {validatingVoucher ? 'Đang kiểm tra...' : 'Kiểm tra'}
                   </Button>
                 </div>
                 {voucherStatus && (
@@ -490,12 +490,12 @@ export function BookingModal({
               </div>
 
               <div>
-                <Label htmlFor="note">Ghi chu</Label>
+                <Label htmlFor="note">Ghi chú</Label>
                 <Textarea
                   id="note"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Ghi chu them..."
+                  placeholder="Ghi chú thêm..."
                   rows={2}
                   className="mt-1"
                 />
@@ -504,7 +504,7 @@ export function BookingModal({
 
             <TabsContent value="internal" className="mt-3 flex flex-col gap-3">
               <div>
-                <Label>Loai noi bo</Label>
+                <Label>Loại nội bộ</Label>
                 <div className="grid grid-cols-2 gap-2 mt-1">
                   {INTERNAL_TAGS.map((tag) => (
                     <button
@@ -526,12 +526,12 @@ export function BookingModal({
               </div>
 
               <div>
-                <Label htmlFor="internalNote">Ghi chu noi bo</Label>
+                <Label htmlFor="internalNote">Ghi chú nội bộ</Label>
                 <Textarea
                   id="internalNote"
                   value={internalNote}
                   onChange={(e) => setInternalNote(e.target.value)}
-                  placeholder="Ly do, chi tiet..."
+                  placeholder="Lý do, chi tiết..."
                   rows={2}
                   className="mt-1"
                 />
@@ -546,17 +546,17 @@ export function BookingModal({
                 className="mr-auto text-destructive border-destructive/20 hover:bg-destructive/5"
                 onClick={() => setShowDeleteConfirm(true)}
               >
-                Xoa
+                Xóa
               </Button>
             )}
             <Button variant="outline" onClick={onClose}>
-              Huy
+              Hủy
             </Button>
             <Button
               onClick={handleSave}
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              {isEdit ? 'Cap nhat' : 'Tao moi'}
+              {isEdit ? 'Cập nhật' : 'Tạo mới'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -565,18 +565,18 @@ export function BookingModal({
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xoa booking?</AlertDialogTitle>
+            <AlertDialogTitle>Xóa booking?</AlertDialogTitle>
             <AlertDialogDescription>
-              Ban co chac muon xoa booking nay? Hanh dong nay khong thể hoan tac.
+              Bạn có chắc muốn xóa booking này? Hành động này không thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Huy</AlertDialogCancel>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive hover:bg-destructive/90 text-white"
             >
-              Xoa
+              Xóa
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
