@@ -6,6 +6,7 @@ import { normalizePhone } from '../utils/phone.js';
 import { calculatePrice } from '../utils/price.js';
 import { addDaysISO } from '../utils/time.js';
 import { findOverlappingBooking } from '../utils/bookingOverlap.js';
+import { computeCleaningSlot } from '../utils/cleaningSlot.js';
 import { STATUS_TRANSITIONS, type BookingStatus, type RoomType } from '../types/index.js';
 import * as promoService from './promoService.js';
 
@@ -156,6 +157,72 @@ async function resolveFoodItems(
 }
 
 /**
+ * Auto-tạo booking dọn phòng 30 phút sau một booking khách.
+ *
+ * Best-effort: overlap → bỏ qua (không fail guest); DB error → log + swallow.
+ * Không dùng transaction chung với guest insert — cleaning hỏng KHÔNG được rollback guest.
+ *
+ * Link với guest theo soft-match: (roomId, date, startTime == guest.endTime, category='internal', internalTag='cleaning').
+ */
+async function tryCreateCleaningBooking(
+  guest: typeof bookings.$inferSelect,
+): Promise<void> {
+  try {
+    const slot = computeCleaningSlot({
+      date: guest.date,
+      startTime: guest.startTime,
+      endTime: guest.endTime,
+    });
+
+    const candidates = await db
+      .select({
+        id: bookings.id,
+        date: bookings.date,
+        startTime: bookings.startTime,
+        endTime: bookings.endTime,
+        mode: bookings.mode,
+      })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.roomId, guest.roomId),
+          inArray(bookings.date, [addDaysISO(slot.date, -1), slot.date, addDaysISO(slot.date, 1)]),
+          ne(bookings.status, 'cancelled'),
+        ),
+      );
+
+    const conflict = findOverlappingBooking(
+      { date: slot.date, startTime: slot.startTime, endTime: slot.endTime, mode: 'hourly' },
+      candidates,
+    );
+    if (conflict) {
+      console.info('[cleaning] skipped due to overlap', {
+        guestId: guest.id,
+        roomId: guest.roomId,
+        overlapId: conflict.id,
+      });
+      return;
+    }
+
+    await db.insert(bookings).values({
+      roomId: guest.roomId,
+      date: slot.date,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      mode: 'hourly',
+      category: 'internal',
+      internalTag: 'cleaning',
+      status: 'confirmed',
+      totalPrice: 0,
+      internalNote: 'Auto-tạo sau booking khách',
+      createdBy: guest.createdBy ?? null,
+    });
+  } catch (err) {
+    console.error('[cleaning] insert failed', { guestId: guest.id, err });
+  }
+}
+
+/**
  * Tạo booking mới — tính giá server-side, wrap promo usage + booking insert trong transaction.
  *
  * Quy trình:
@@ -248,7 +315,7 @@ export async function create(
     customerId = await ensureCustomer(data.guestName ?? undefined, data.guestPhone ?? undefined);
   }
 
-  return db.transaction(async (tx) => {
+  const saved = await db.transaction(async (tx) => {
     const [booking] = await tx
       .insert(bookings)
       .values({
@@ -269,6 +336,14 @@ export async function create(
 
     return booking;
   });
+
+  // Post-commit, best-effort: auto-tạo cleaning slot 30p sau guest booking.
+  // Không trigger cho category='internal' để tránh recursion.
+  if (saved.category === 'guest') {
+    await tryCreateCleaningBooking(saved);
+  }
+
+  return saved;
 }
 
 /**
@@ -308,9 +383,56 @@ export async function update(id: string, data: BookingUpdateInput) {
 }
 
 /**
+ * Cascade cancel: khi guest booking bị hủy, hủy luôn cleaning booking tự-tạo
+ * (soft-match theo roomId + date + startTime == guest.endTime + internalTag='cleaning').
+ *
+ * Silent & best-effort: không throw, không notification. Log info nếu có match.
+ * Idempotent: `ne(status, 'cancelled')` filter giúp tránh double-cancel.
+ */
+async function tryCascadeCancelCleaning(
+  guest: typeof bookings.$inferSelect,
+): Promise<void> {
+  try {
+    const slot = computeCleaningSlot({
+      date: guest.date,
+      startTime: guest.startTime,
+      endTime: guest.endTime,
+    });
+
+    const cancelled = await db
+      .update(bookings)
+      .set({ status: 'cancelled', updatedAt: new Date() })
+      .where(
+        and(
+          eq(bookings.roomId, guest.roomId),
+          eq(bookings.date, slot.date),
+          eq(bookings.startTime, slot.startTime),
+          eq(bookings.category, 'internal'),
+          eq(bookings.internalTag, 'cleaning'),
+          ne(bookings.status, 'cancelled'),
+        ),
+      )
+      .returning({ id: bookings.id });
+
+    if (cancelled.length > 0) {
+      console.info('[cleaning] cascade cancelled', {
+        guestId: guest.id,
+        cleaningIds: cancelled.map((r) => r.id),
+      });
+    }
+  } catch (err) {
+    console.error('[cleaning] cascade cancel failed', { guestId: guest.id, err });
+  }
+}
+
+/**
  * Chuyển trạng thái booking theo ma trận STATUS_TRANSITIONS.
  * Khi chuyển sang 'cancelled' và booking có voucher, hoàn lại 1 lượt sử dụng promo
  * (cùng transaction với update status).
+ *
+ * Cascade: khi hủy một guest booking, cleaning booking tự-tạo (nếu có) cũng bị hủy
+ * sau khi transaction commit (silent, không rollback nếu cascade lỗi).
+ *
  * @throws AppError 400 nếu chuyển trạng thái không hợp lệ
  */
 export async function transitionStatus(id: string, newStatus: BookingStatus) {
@@ -322,8 +444,8 @@ export async function transitionStatus(id: string, newStatus: BookingStatus) {
     throw new AppError(400, `Cannot transition from '${currentStatus}' to '${newStatus}'`);
   }
 
-  return db.transaction(async (tx) => {
-    const [updated] = await tx
+  const updated = await db.transaction(async (tx) => {
+    const [row] = await tx
       .update(bookings)
       .set({ status: newStatus, updatedAt: new Date() })
       .where(eq(bookings.id, id))
@@ -333,8 +455,14 @@ export async function transitionStatus(id: string, newStatus: BookingStatus) {
       await promoService.refundUsage(booking.voucher, tx as unknown as typeof db);
     }
 
-    return updated;
+    return row;
   });
+
+  if (newStatus === 'cancelled' && booking.category === 'guest') {
+    await tryCascadeCancelCleaning(booking);
+  }
+
+  return updated;
 }
 
 /** Xóa booking = chuyển trạng thái sang cancelled (soft delete) */
