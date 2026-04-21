@@ -57,8 +57,9 @@ export const BookingPage = () => {
                     } else if (branchData.length > 0) {
                         setActiveBranchId(branchData[0].id)
                     }
-                    // Clean up URL param after consuming
-                    setSearchParams({}, { replace: true })
+                    const next = new URLSearchParams(searchParams)
+                    next.delete('roomId')
+                    setSearchParams(next, { replace: true })
                 } else if (branchData.length > 0) {
                     setActiveBranchId(branchData[0].id)
                 }

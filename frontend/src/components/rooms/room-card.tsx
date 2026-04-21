@@ -77,7 +77,7 @@ export function RoomCard({ id, title, price, images, type }: RoomCardProps) {
               e.stopPropagation()
               navigate(`/dat-phong?roomId=${id}`)
             }}
-            className="w-full bg-primary text-white rounded-lg py-2 text-sm font-medium hover:bg-primary-hover transition-colors"
+            className="w-full bg-primary text-white rounded-lg py-2 text-sm font-medium hover:bg-nhacam-primary-hover transition-colors"
           >
             Đặt Phòng
           </button>

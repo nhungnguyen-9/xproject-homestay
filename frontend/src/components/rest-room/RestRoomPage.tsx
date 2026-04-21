@@ -99,6 +99,7 @@ export const RestRoomPage = () => {
             </div>
 
             {/* Branch tabs */}
+            {branches.length > 1 && (
             <div className="px-8">
                 <div className="flex gap-1 border-b-2 border-border overflow-x-auto">
                     {branches.map((branch) => (
@@ -118,6 +119,7 @@ export const RestRoomPage = () => {
                     ))}
                 </div>
             </div>
+            )}
 
             {/* Room cards grid */}
             {roomItems.length > 0 ? (
