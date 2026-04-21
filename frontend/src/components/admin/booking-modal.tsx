@@ -40,7 +40,7 @@ import * as authService from '@/services/authService'
 import type { PromoCode } from '@/types/promo'
 import type { Booking, BookingStatus, InternalTag, Room, RoomType } from '@/types/schedule'
 import { getRoomPriceConfig } from '@/types/schedule'
-import { calculateBookingPrice, formatDateInput } from '@/utils/helpers'
+import { calculateBookingPrice, formatDate, formatDateInput } from '@/utils/helpers'
 
 interface BookingModalProps {
   open: boolean
@@ -385,6 +385,19 @@ export function BookingModal({
                   {errors.endTime && (
                     <p className="text-xs text-status-error-foreground mt-0.5">{errors.endTime}</p>
                   )}
+                  {(() => {
+                    const startMin = timeToMinutes(startTime)
+                    const endMin = timeToMinutes(endTime)
+                    if (endMin >= startMin) return null
+                    const d = new Date(date + 'T00:00:00')
+                    if (isNaN(d.getTime())) return null
+                    d.setDate(d.getDate() + 1)
+                    return (
+                      <p className="text-xs text-amber-600 mt-0.5">
+                        Qua đêm — kết thúc {formatDate(d)}
+                      </p>
+                    )
+                  })()}
                 </div>
               </div>
             </div>
