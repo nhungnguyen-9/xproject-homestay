@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router"
 import { motion } from "framer-motion"
 import type { Variants } from "framer-motion"
 import { RoomTypeBadge } from "./RoomTypeBadge"
@@ -23,7 +24,8 @@ const cardVariants: Variants = {
 /**
  * Thẻ phòng — collage: ảnh trái lớn | ảnh giữa + play | 3 ảnh nhỏ phải
  */
-export function RoomCard({ title, price, images, type }: RoomCardProps) {
+export function RoomCard({ id, title, price, images, type }: RoomCardProps) {
+  const navigate = useNavigate()
   const img = (i: number) => images[i] || images[0] || "/images/placeholder-room.png"
 
   return (
@@ -65,6 +67,22 @@ export function RoomCard({ title, price, images, type }: RoomCardProps) {
         <h3 className="text-[17px] font-extrabold text-[#2B2B2B]">{title}</h3>
         <p className="text-[13px] font-semibold text-[#6A635B]">{price}</p>
       </div>
+
+      {/* "Dat Phong" button — navigates to /dat-phong?roomId=id */}
+      {id && (
+        <div className="px-1 pb-1">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate(`/dat-phong?roomId=${id}`)
+            }}
+            className="w-full bg-primary text-white rounded-lg py-2 text-sm font-medium hover:bg-primary-hover transition-colors"
+          >
+            Đặt Phòng
+          </button>
+        </div>
+      )}
     </motion.div>
   )
 }
