@@ -177,14 +177,19 @@ export function BookingSchedule() {
     setShowModal(true)
   }
 
-  const handleBookingClick = (booking: Booking) => {
+  const handleBookingClick = async (booking: Booking) => {
     if (!isAdmin) return
-    setSelectedBooking(booking)
-    setModalMode('edit')
-    setPrefillRoomId(undefined)
-    setPrefillStartTime(undefined)
-    setPrefillEndTime(undefined)
-    setShowModal(true)
+    try {
+      const full = await bookingService.getById(booking.id)
+      setSelectedBooking(full)
+      setModalMode('edit')
+      setPrefillRoomId(undefined)
+      setPrefillStartTime(undefined)
+      setPrefillEndTime(undefined)
+      setShowModal(true)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Không tải được chi tiết booking')
+    }
   }
 
   const handleBookingContextMenu = (e: React.MouseEvent, booking: Booking) => {
