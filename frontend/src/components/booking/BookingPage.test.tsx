@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 import type { Booking } from '@/types/schedule'
 
 vi.mock('@/services/roomService', () => ({
@@ -9,6 +10,10 @@ vi.mock('@/services/roomService', () => ({
 vi.mock('@/services/bookingService', () => ({
   create: vi.fn(),
   getByDate: vi.fn().mockResolvedValue([]),
+}))
+
+vi.mock('@/services/branchService', () => ({
+  getAll: vi.fn().mockResolvedValue([]),
 }))
 
 vi.mock('sonner', () => ({
@@ -53,7 +58,7 @@ describe('BookingPage — onBookingCreate wiring (task #6/#7)', () => {
   it('passes onBookingCreate to RoomSchedule and calls bookingService.create on submit', async () => {
     vi.mocked(bookingService.create).mockResolvedValue({ id: 'b-1' } as Booking)
 
-    render(<BookingPage />)
+    render(<MemoryRouter><BookingPage /></MemoryRouter>)
     const fireBtn = await screen.findByTestId('fire-create')
     fireEvent.click(fireBtn)
 
@@ -72,7 +77,7 @@ describe('BookingPage — onBookingCreate wiring (task #6/#7)', () => {
     vi.mocked(bookingService.create).mockRejectedValueOnce(new Error('overlap'))
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    render(<BookingPage />)
+    render(<MemoryRouter><BookingPage /></MemoryRouter>)
     const fireBtn = await screen.findByTestId('fire-create')
     fireEvent.click(fireBtn)
 
@@ -86,7 +91,7 @@ describe('BookingPage — onBookingCreate wiring (task #6/#7)', () => {
   it('refetches bookings by date after successful create', async () => {
     vi.mocked(bookingService.create).mockResolvedValue({ id: 'b-1' } as Booking)
 
-    render(<BookingPage />)
+    render(<MemoryRouter><BookingPage /></MemoryRouter>)
     const fireBtn = await screen.findByTestId('fire-create')
 
     await waitFor(() => {
