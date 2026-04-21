@@ -17,6 +17,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
     calculateDuration,
     calculateBookingPrice,
+    formatDateInput,
 } from "@/utils/helpers";
 import * as customerService from "@/services/customerService";
 import {
@@ -202,7 +203,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 adults: formData.adults,
                 foodItems: selectedFoodItems,
                 totalPrice,
-                date: formData.checkInDate.toISOString().split('T')[0],
+                date: formatDateInput(formData.checkInDate),
                 category: 'guest' as const,
             };
             onBookingCreate?.(newBooking);

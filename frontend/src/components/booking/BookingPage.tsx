@@ -4,14 +4,8 @@ import type { Booking, Room, RoomType } from '@/types/schedule'
 import { RoomSchedule } from '@/components/schedule/room-schedule'
 import * as roomService from '@/services/roomService'
 import * as bookingService from '@/services/bookingService'
+import { formatDateInput } from '@/utils/helpers'
 import { Loader2 } from 'lucide-react'
-
-function formatDateISO(d: Date): string {
-    const year = d.getFullYear()
-    const month = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-}
 
 export const BookingPage = () => {
     const [date, setDate] = useState(new Date())
@@ -41,7 +35,7 @@ export const BookingPage = () => {
     }, [])
 
     useEffect(() => {
-        const dateStr = formatDateISO(date)
+        const dateStr = formatDateInput(date)
         let cancelled = false
         bookingService.getByDate(dateStr)
             .then(data => { if (!cancelled) setBookings(data) })
@@ -58,7 +52,7 @@ export const BookingPage = () => {
     const handleBookingCreate = useCallback(async (newBooking: Omit<Booking, 'id'>) => {
         try {
             await bookingService.create(newBooking)
-            const dateStr = formatDateISO(date)
+            const dateStr = formatDateInput(date)
             const data = await bookingService.getByDate(dateStr)
             setBookings(data)
             toast.success('Đặt phòng thành công')

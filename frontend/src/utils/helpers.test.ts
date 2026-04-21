@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatPrice, formatDate, timeToMinutes, calculateDuration } from './helpers'
+import { formatPrice, formatDate, formatDateInput, timeToMinutes, calculateDuration } from './helpers'
 
 describe('formatPrice', () => {
   it('formats zero', () => {
@@ -42,6 +42,39 @@ describe('formatDate', () => {
   it('formats the last day of a month correctly', () => {
     const d = new Date(2026, 2, 31) // March 31
     expect(formatDate(d)).toBe('31/03/2026')
+  })
+})
+
+describe('formatDateInput (timezone-safe YYYY-MM-DD for API payload)', () => {
+  it('formats a regular mid-day date to local YYYY-MM-DD', () => {
+    // Noon local → not affected by TZ either way, sanity check
+    const d = new Date(2026, 3, 20, 12, 0, 0) // 2026-04-20 12:00 local
+    expect(formatDateInput(d)).toBe('2026-04-20')
+  })
+
+  it('returns LOCAL date even when UTC date would differ (midnight local in VN UTC+7)', () => {
+    // Simulate: user in VN (UTC+7) picks "2026-04-20" from a date picker.
+    // Internally Date is 2026-04-20T00:00:00 local = 2026-04-19T17:00:00 UTC.
+    // toISOString().split('T')[0] would return '2026-04-19' (WRONG).
+    // formatDateInput must return '2026-04-20' (CORRECT — local date).
+    const d = new Date(2026, 3, 20, 0, 0, 0) // midnight local → UTC-7h in VN
+    expect(formatDateInput(d)).toBe('2026-04-20')
+  })
+
+  it('returns LOCAL date for very early morning (00:30 local)', () => {
+    // Reproduces the bug in ticket #11: user books between 00:00-07:00 local VN.
+    const d = new Date(2026, 3, 20, 0, 30, 0)
+    expect(formatDateInput(d)).toBe('2026-04-20')
+  })
+
+  it('handles single-digit day and month with padding', () => {
+    const d = new Date(2026, 0, 5, 9, 0, 0) // Jan 5, 2026
+    expect(formatDateInput(d)).toBe('2026-01-05')
+  })
+
+  it('handles end-of-year date correctly', () => {
+    const d = new Date(2026, 11, 31, 23, 0, 0)
+    expect(formatDateInput(d)).toBe('2026-12-31')
   })
 })
 
