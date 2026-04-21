@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { useSearchParams } from "react-router"
 import { toast } from "sonner"
+import { AnimatePresence, motion } from "framer-motion"
 import { GalleryGrid } from "../gallery-grid"
 import { getAll, imageUrl } from "@/services/roomService"
 import * as branchService from "@/services/branchService"
@@ -114,7 +115,10 @@ export const RestRoomPage = () => {
             {/* Branch tabs */}
             {branches.length > 1 && (
             <div className="px-8">
-                <div className="flex gap-1 border-b-2 border-border overflow-x-auto">
+                <div
+                    className="flex gap-1 border-b-2 border-border overflow-x-auto [&::-webkit-scrollbar]:hidden"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
                     {branches.map((branch) => (
                         <button
                             key={branch.id}
@@ -134,14 +138,24 @@ export const RestRoomPage = () => {
             </div>
             )}
 
-            {/* Room cards grid */}
-            {roomItems.length > 0 ? (
-                <GalleryGrid items={roomItems} />
-            ) : (
-                <div className="flex justify-center py-12">
-                    <p className="text-sm text-muted-foreground">Chi nhánh này chưa có phòng</p>
-                </div>
-            )}
+            {/* Room cards grid — sliding transition on branch tab change */}
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={activeBranchId ?? 'none'}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                >
+                    {roomItems.length > 0 ? (
+                        <GalleryGrid items={roomItems} />
+                    ) : (
+                        <div className="flex justify-center py-12">
+                            <p className="text-sm text-muted-foreground">Chi nhánh này chưa có phòng</p>
+                        </div>
+                    )}
+                </motion.div>
+            </AnimatePresence>
         </div>
     )
 }
