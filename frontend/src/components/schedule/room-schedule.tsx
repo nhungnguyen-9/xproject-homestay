@@ -303,7 +303,7 @@ const RoomRow: React.FC<RoomRowProps> = ({
             className={cn(
                 'flex border-b border-border transition-all duration-300',
                 isFocused && 'border-2 border-primary rounded-lg bg-primary/5',
-                isDimmed && 'opacity-35',
+                isDimmed && 'opacity-25 grayscale',
             )}
             style={{ height: rowHeight }}
         >
@@ -317,7 +317,7 @@ const RoomRow: React.FC<RoomRowProps> = ({
                 <button
                     type="button"
                     onClick={() => onRoomNameClick?.(room.id)}
-                    className="hover:text-primary transition-colors"
+                    className="cursor-pointer hover:text-primary hover:underline transition-colors"
                 >
                     {room.name}
                 </button>
@@ -564,11 +564,8 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
     }, [onBookingCreate]);
 
     const handleRoomNameClick = useCallback((roomId: string) => {
-        if (focusedRoomId === roomId) {
-            onFocusChange?.(null)
-        } else {
-            onFocusChange?.(roomId)
-        }
+        const next = focusedRoomId === roomId ? null : roomId
+        onFocusChange?.(next)
     }, [focusedRoomId, onFocusChange])
 
     const totalWidth = (endHour - startHour) * HOUR_WIDTH + ROOM_LABEL_WIDTH;
