@@ -72,16 +72,18 @@ bookingsRouter.get('/:id', authMiddleware, requirePermission('bookings'), async 
   return c.json(booking);
 });
 
-/** POST /bookings — tạo booking mới (staff không được tạo booking nội bộ) */
-bookingsRouter.post('/', authMiddleware, requirePermission('bookings'), zValidator('json', createBookingSchema), async (c) => {
+/** POST /bookings — tạo booking mới (công khai cho khách vãng lai; internal booking yêu cầu admin) */
+bookingsRouter.post('/', optionalAuth, zValidator('json', createBookingSchema), async (c) => {
   const data = c.req.valid('json');
-  const user = (c as any).get('user') as JwtPayload;
+  const user = (c as any).get('user') as JwtPayload | undefined;
 
-  if (data.category === 'internal' && user.role !== 'admin') {
-    return c.json({ error: 'Only admins can create internal bookings' }, 403);
+  if (data.category === 'internal') {
+    if (!user || user.role !== 'admin') {
+      return c.json({ error: 'Only admins can create internal bookings' }, 403);
+    }
   }
 
-  const booking = await bookingService.create(data, user.userId);
+  const booking = await bookingService.create(data, user?.userId);
   return c.json(booking, 201);
 });
 
