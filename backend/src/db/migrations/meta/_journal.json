@@ -50,6 +50,13 @@
       "when": 1776755529000,
       "tag": "0006_booking_overlap_exclude",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1776786975729,
+      "tag": "0007_room_discount_slots",
+      "breakpoints": true
     }
   ]
 }

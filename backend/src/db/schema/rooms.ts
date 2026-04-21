@@ -4,6 +4,17 @@ import { nanoid } from 'nanoid';
 import { branches } from './branches';
 
 /**
+ * Khung giờ giảm giá của phòng — admin định nghĩa nhiều khung/phòng.
+ * Cùng ngày, không wrap qua đêm; endTime > startTime.
+ * Khi overlap, khung có discountPercent cao nhất thắng.
+ */
+export interface DiscountSlot {
+  startTime: string;      // "HH:mm", 00:00–23:59
+  endTime: string;        // "HH:mm", > startTime, same-day
+  discountPercent: number; // integer 1–100
+}
+
+/**
  * Bảng rooms — Phòng homestay với bảng giá và tiện ích
  *
  * Columns chính:
@@ -15,6 +26,7 @@ import { branches } from './branches';
  * - combo3hRate: giá combo 3 giờ (VND, integer, default 0)
  * - combo6h1hRate: giá combo 6 giờ + 1 giờ bonus (VND, integer, default 0)
  * - combo6h1hDiscount: số tiền giảm thay thế khi khách không lấy bonus 1H (VND, integer, default 0)
+ * - discountSlots: danh sách khung giờ giảm giá (JSONB array, NOT NULL default [])
  * - amenities: danh sách tiện ích (JSONB array)
  * - images: ảnh phòng (JSONB array)
  * - isActive: trạng thái hoạt động
@@ -37,6 +49,7 @@ export const rooms = pgTable('rooms', {
   combo3hRate: integer('combo_3h_rate').notNull().default(0),
   combo6h1hRate: integer('combo_6h1h_rate').notNull().default(0),
   combo6h1hDiscount: integer('combo_6h1h_discount').notNull().default(0),
+  discountSlots: jsonb('discount_slots').$type<DiscountSlot[]>().notNull().default([]),
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
