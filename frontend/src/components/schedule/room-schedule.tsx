@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { formatDateInput } from '@/utils/helpers';
+import { isSlotOccupied } from '@/utils/bookingOccupancy';
 import type {
     Room,
     Booking,
@@ -309,11 +310,7 @@ const RoomRow: React.FC<RoomRowProps> = ({
                         const slotHour = startHour + i
                         const slotStart = slotHour * 60
                         const slotEnd = (slotHour + 1) * 60
-                        const occupied = bookings.some(b => {
-                            const bs = timeToMinutes(b.startTime)
-                            const be = timeToMinutes(b.endTime) + 10 // +10 phút buffer
-                            return bs < slotEnd && be > slotStart
-                        })
+                        const occupied = isSlotOccupied(bookings, formatDateInput(selectedDate), slotStart, slotEnd)
                         const isPast = isPastDate || (isToday && (
                             slotHour < currentTime.getHours() ||
                             (slotHour === currentTime.getHours() && currentTime.getMinutes() > 0)
@@ -325,8 +322,11 @@ const RoomRow: React.FC<RoomRowProps> = ({
                                 style={{ width: HOUR_WIDTH, minHeight: 44 }}
                             >
                                 {occupied ? (
-                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity z-[5] cursor-not-allowed">
-                                    </div>
+                                    <div
+                                        className="absolute inset-0 bg-rose-200/40 cursor-not-allowed z-[4]"
+                                        aria-label={`Slot ${String(slotHour).padStart(2, '0')}:00 đã có booking`}
+                                        aria-disabled="true"
+                                    />
                                 ) : isPast ? (
                                     <div
                                         className="absolute inset-0 bg-gray-200/50 cursor-not-allowed z-[4]"
