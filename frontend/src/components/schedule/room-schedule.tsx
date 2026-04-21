@@ -308,7 +308,7 @@ const RoomRow: React.FC<RoomRowProps> = ({
             <div
                 className={cn(
                     'flex flex-col items-center justify-center gap-1 text-[#374151] text-sm shrink-0 font-semibold sticky left-0 z-10 rounded-md m-1',
-                    isFocused ? 'bg-primary/5' : 'bg-card',
+                    isFocused ? 'bg-rose-50' : 'bg-white',
                 )}
                 style={{ width: ROOM_LABEL_WIDTH }}
             >
