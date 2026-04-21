@@ -23,7 +23,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const TAG_COLORS: Record<InternalTag, string> = {
-  cleaning: 'bg-tag-cleaning-bg border-l-4 border-l-tag-cleaning text-tag-cleaning-text',
+  cleaning: 'bg-sky-200 border-l-4 border-l-sky-500 text-sky-900',
   maintenance: 'bg-tag-maintenance-bg border-l-4 border-l-tag-maintenance text-tag-maintenance-text',
   locked: 'bg-tag-locked-bg border-l-4 border-l-tag-locked text-tag-locked-text',
   custom: 'bg-tag-custom-bg border-l-4 border-l-tag-custom text-tag-custom-text',
@@ -349,8 +349,8 @@ export function BookingSchedule() {
           }}
           onClick={() => handleBookingClick(booking)}
         >
-          <span className="shrink-0">{TAG_ICONS[tag]}</span>
           <span className="truncate font-medium">{TAG_LABELS[tag]}</span>
+          <span className="shrink-0">{TAG_ICONS[tag]}</span>
         </div>
       )
     }

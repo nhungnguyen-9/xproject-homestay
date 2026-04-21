@@ -212,6 +212,25 @@ const BookingBlock: React.FC<BookingBlockProps> = ({
 
     if (width <= 0) return null;
 
+    const isCleaning = booking.category === 'internal' && booking.internalTag === 'cleaning';
+
+    if (isCleaning) {
+        return (
+            <div
+                className="absolute top-1 bottom-1 rounded-md cursor-not-allowed flex items-center overflow-hidden bg-sky-200 border-l-4 border-l-sky-500"
+                style={{
+                    left: `${left}px`,
+                    width: `${Math.max(width, 30)}px`,
+                }}
+                title="Đang dọn phòng"
+            >
+                <div className="flex items-center w-full px-2 text-sky-900 text-xs">
+                    <span className="font-medium truncate">Đang dọn phòng</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div
             className={cn(
