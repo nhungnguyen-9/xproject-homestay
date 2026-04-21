@@ -317,17 +317,31 @@ export function BookingSchedule() {
   }
 
   /**
-   * Tính vị trí và chiều rộng booking theo phần trăm trên timeline 24h.
-   * Overnight (end ≤ start): cộng 24h → block kéo dài qua biên phải; container overflow sẽ clip.
+   * Tính vị trí booking (%) cho timeline 24h của ngày đang xem.
+   * - Same-day: render từ startTime; overnight kéo qua biên phải, container clip.
+   * - Cross-day wrap-in (booking ngày hôm trước, overnight sang ngày đang xem): render slice [00:00, endTime).
+   * - Không liên quan tới ngày đang xem: trả width 0 để caller bỏ qua.
    */
-  const getBookingPosition = (booking: Booking) => {
+  const getBookingPosition = (booking: Booking, viewingDate: string) => {
     const startMins = timeToMinutes(booking.startTime)
     let endMins = timeToMinutes(booking.endTime)
-    if (endMins <= startMins) endMins += 24 * 60
+    const isOvernight = endMins <= startMins
+    if (isOvernight) endMins += 24 * 60
     const totalMins = 24 * 60
-    const leftPct = (startMins / totalMins) * 100
-    const widthPct = Math.max(((endMins - startMins) / totalMins) * 100, 0.8)
-    return { left: `${leftPct}%`, width: `${widthPct}%` }
+
+    if (booking.date === viewingDate) {
+      const leftPct = (startMins / totalMins) * 100
+      const widthPct = Math.max(((endMins - startMins) / totalMins) * 100, 0.8)
+      return { left: `${leftPct}%`, width: `${widthPct}%` }
+    }
+
+    if (isOvernight) {
+      const wrapEndMins = endMins - 24 * 60
+      const widthPct = Math.max((wrapEndMins / totalMins) * 100, 0.8)
+      return { left: '0%', width: `${widthPct}%` }
+    }
+
+    return { left: '0%', width: '0%' }
   }
 
   const isSlotOccupied = (roomId: string, slotHour: number) => {
@@ -344,7 +358,9 @@ export function BookingSchedule() {
   const renderBookingBlock = (booking: Booking) => {
     const isInternal = booking.category === 'internal'
     const isStaff = role === 'staff'
-    const pos = getBookingPosition(booking)
+    const pos = getBookingPosition(booking, dateStr)
+
+    if (pos.width === '0%') return null
 
     if (isInternal) {
       const tag = booking.internalTag || 'custom'

@@ -43,23 +43,37 @@ const isSameDay = (a: Date, b: Date): boolean => {
 };
 
 /**
- * Tính toán vị trí pixel (left, width) của khối booking trên timeline.
- * Overnight (end ≤ start): cộng thêm 24h để width tính đúng cả khung qua đêm.
+ * Tính vị trí (left, width) của booking trên timeline ngày đang xem.
+ * - Same-day (`booking.date === viewingDate`): render từ startTime; nếu overnight (end ≤ start) cộng 24h cho width, block overflow bên phải (container clip).
+ * - Cross-day wrap-in: booking thuộc ngày `D-1` nhưng overnight sang `D` (đang viewing) → render slice [00:00, endTime).
+ * - Ngày không liên quan: trả `{0, 0}` để caller bỏ qua.
+ *
+ * Giả định: caller đã filter bookings chỉ gồm (date === viewingDate) hoặc (date === viewingDate - 1 AND overnight) — như `bookingService.getByDate` đang làm.
  */
 export const getBookingPosition = (
-    startTime: string,
-    endTime: string,
+    booking: Pick<Booking, 'date' | 'startTime' | 'endTime'>,
+    viewingDate: string,
     startHour: number
 ): { left: number; width: number } => {
-    const startMin = timeToMinutes(startTime);
-    let endMin = timeToMinutes(endTime);
-    if (endMin <= startMin) endMin += 24 * 60;
-    const duration = endMin - startMin;
+    const startMin = timeToMinutes(booking.startTime);
+    let endMin = timeToMinutes(booking.endTime);
+    const isOvernight = endMin <= startMin;
+    if (isOvernight) endMin += 24 * 60;
 
-    const left = ((startMin - startHour * 60) / 60) * HOUR_WIDTH;
-    const width = (duration / 60) * HOUR_WIDTH;
+    if (booking.date === viewingDate) {
+        const left = ((startMin - startHour * 60) / 60) * HOUR_WIDTH;
+        const width = ((endMin - startMin) / 60) * HOUR_WIDTH;
+        return { left, width };
+    }
 
-    return { left, width };
+    if (isOvernight) {
+        const wrapEndMin = endMin - 24 * 60;
+        const left = ((0 - startHour * 60) / 60) * HOUR_WIDTH;
+        const width = (wrapEndMin / 60) * HOUR_WIDTH;
+        return { left, width };
+    }
+
+    return { left: 0, width: 0 };
 };
 
 interface FilterButtonProps {
@@ -181,20 +195,18 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
 
 interface BookingBlockProps {
     booking: Booking;
+    viewingDate: string;
     startHour: number;
     onClick?: (booking: Booking) => void;
 }
 
 const BookingBlock: React.FC<BookingBlockProps> = ({
     booking,
+    viewingDate,
     startHour,
     onClick,
 }) => {
-    const { left, width } = getBookingPosition(
-        booking.startTime,
-        booking.endTime,
-        startHour
-    );
+    const { left, width } = getBookingPosition(booking, viewingDate, startHour);
 
     if (width <= 0) return null;
 
@@ -345,6 +357,7 @@ const RoomRow: React.FC<RoomRowProps> = ({
                         <BookingBlock
                             key={booking.id}
                             booking={booking}
+                            viewingDate={formatDateInput(selectedDate)}
                             startHour={startHour}
                             onClick={onBookingClick}
                         />
