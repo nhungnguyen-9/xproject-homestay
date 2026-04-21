@@ -204,18 +204,27 @@ async function tryCreateCleaningBooking(
       return;
     }
 
-    await db.insert(bookings).values({
-      roomId: guest.roomId,
+    const [inserted] = await db
+      .insert(bookings)
+      .values({
+        roomId: guest.roomId,
+        date: slot.date,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        mode: 'hourly',
+        category: 'internal',
+        internalTag: 'cleaning',
+        status: 'confirmed',
+        totalPrice: 0,
+        internalNote: 'Auto-tạo sau booking khách',
+        createdBy: guest.createdBy ?? null,
+      })
+      .returning({ id: bookings.id });
+    console.info('[cleaning] created', {
+      guestId: guest.id,
+      cleaningId: inserted?.id,
       date: slot.date,
       startTime: slot.startTime,
-      endTime: slot.endTime,
-      mode: 'hourly',
-      category: 'internal',
-      internalTag: 'cleaning',
-      status: 'confirmed',
-      totalPrice: 0,
-      internalNote: 'Auto-tạo sau booking khách',
-      createdBy: guest.createdBy ?? null,
     });
   } catch (err) {
     console.error('[cleaning] insert failed', { guestId: guest.id, err });
