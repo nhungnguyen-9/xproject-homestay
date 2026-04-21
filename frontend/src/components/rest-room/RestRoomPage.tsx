@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
+import { useSearchParams } from "react-router"
 import { toast } from "sonner"
 import { GalleryGrid } from "../gallery-grid"
 import { getAll, imageUrl } from "@/services/roomService"
@@ -35,6 +36,7 @@ function toRoomCardProps(room: RoomDetail): RoomCardProps {
 }
 
 export const RestRoomPage = () => {
+    const [searchParams, setSearchParams] = useSearchParams()
     const [branches, setBranches] = useState<Branch[]>([])
     const [rooms, setRooms] = useState<RoomDetail[]>([])
     const [activeBranchId, setActiveBranchId] = useState<string | null>(null)
@@ -49,8 +51,17 @@ export const RestRoomPage = () => {
                 ])
                 setBranches(branchData)
                 setRooms(roomData)
-                if (branchData.length > 0) {
+
+                const paramBranchId = searchParams.get('branchId')
+                if (paramBranchId && branchData.some((b) => b.id === paramBranchId)) {
+                    setActiveBranchId(paramBranchId)
+                } else if (branchData.length > 0) {
                     setActiveBranchId(branchData[0].id)
+                }
+                if (paramBranchId) {
+                    const next = new URLSearchParams(searchParams)
+                    next.delete('branchId')
+                    setSearchParams(next, { replace: true })
                 }
             } catch (err) {
                 console.error('Failed to load data:', err)
@@ -60,7 +71,7 @@ export const RestRoomPage = () => {
             }
         }
         fetchData()
-    }, [])
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     const filteredRooms = useMemo(() => {
         if (!activeBranchId) return []
