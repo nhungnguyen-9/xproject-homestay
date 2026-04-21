@@ -27,7 +27,6 @@ export const AMENITY_OPTIONS: AmenityOption[] = [
   { id: 'hot-shower', label: 'Vòi sen nước nóng', icon: '🚿', category: 'common' },
   { id: 'wifi', label: 'Wi-Fi tốc độ cao', icon: '📶', category: 'common' },
   { id: 'ac', label: 'Máy điều hòa', icon: '❄️', category: 'common' },
-  { id: 'breakfast', label: 'Bữa sáng theo yêu cầu', icon: '☕', category: 'common' },
 
   // Tiện nghi riêng
   { id: 'balcony', label: 'Ban công thoáng', icon: '🌿', category: 'extra' },
