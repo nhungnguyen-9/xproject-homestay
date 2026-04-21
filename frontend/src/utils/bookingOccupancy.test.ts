@@ -27,16 +27,16 @@ describe('isSlotOccupied — same-day bookings', () => {
         expect(isSlotOccupied(bookings, D, s, e)).toBe(false)
     })
 
-    it('marks slot free when exactly after booking end + buffer', () => {
-        const bookings = [mk(D, '14:00', '16:00')] // end 16:00 + 10 = 16:10 buffer
-        const [s, e] = slot(17) // 17:00-18:00 — past buffer
+    it('marks slot free exactly at booking end time (bufferMin=0 default)', () => {
+        const bookings = [mk(D, '14:00', '16:00')]
+        const [s, e] = [16 * 60, 16 * 60 + 60] // 16:00-17:00 — starts exactly at booking end
         expect(isSlotOccupied(bookings, D, s, e)).toBe(false)
     })
 
-    it('still marks occupied within the 10-minute buffer', () => {
+    it('can still apply an explicit buffer when passed', () => {
         const bookings = [mk(D, '14:00', '16:00')]
-        const [s, e] = [16 * 60, 16 * 60 + 5] // 16:00-16:05 — inside buffer
-        expect(isSlotOccupied(bookings, D, s, e)).toBe(true)
+        const [s, e] = [16 * 60, 16 * 60 + 5] // 16:00-16:05 — inside 10-min buffer
+        expect(isSlotOccupied(bookings, D, s, e, 10)).toBe(true)
     })
 })
 

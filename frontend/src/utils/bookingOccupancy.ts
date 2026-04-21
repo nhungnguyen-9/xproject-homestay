@@ -11,14 +11,14 @@ type OccupancyBooking = Pick<Booking, 'date' | 'startTime' | 'endTime' | 'status
  * đang wrap vào ngày hiện tại (chỉ xét phần [00:00, endTime)).
  *
  * @param slotStartMin/slotEndMin — phạm vi slot tính bằng phút tính từ 00:00 của `viewingDate` (0..1440)
- * @param bufferMin — đệm giữa các booking (phút) để tránh đặt sát nhau; default 10
+ * @param bufferMin — đệm giữa các booking (phút) để tránh đặt sát nhau; default 0 (BE đã tự insert cleaning slot 30p)
  */
 export function isSlotOccupied(
     bookings: OccupancyBooking[],
     viewingDate: string,
     slotStartMin: number,
     slotEndMin: number,
-    bufferMin = 10,
+    bufferMin = 0,
 ): boolean {
     return bookings.some((b) => {
         if (b.status === 'cancelled') return false
