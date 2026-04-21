@@ -43,18 +43,20 @@ const isSameDay = (a: Date, b: Date): boolean => {
 };
 
 /**
- * Tính toán vị trí pixel (left, width) của khối booking trên timeline
+ * Tính toán vị trí pixel (left, width) của khối booking trên timeline.
+ * Overnight (end ≤ start): cộng thêm 24h để width tính đúng cả khung qua đêm.
  */
-const getBookingPosition = (
+export const getBookingPosition = (
     startTime: string,
     endTime: string,
     startHour: number
 ): { left: number; width: number } => {
-    const startMinutes = timeToMinutes(startTime) - startHour * 60;
-    const endMinutes = timeToMinutes(endTime) - startHour * 60;
-    const duration = endMinutes - startMinutes;
+    const startMin = timeToMinutes(startTime);
+    let endMin = timeToMinutes(endTime);
+    if (endMin <= startMin) endMin += 24 * 60;
+    const duration = endMin - startMin;
 
-    const left = (startMinutes / 60) * HOUR_WIDTH;
+    const left = ((startMin - startHour * 60) / 60) * HOUR_WIDTH;
     const width = (duration / 60) * HOUR_WIDTH;
 
     return { left, width };

@@ -193,8 +193,10 @@ export function BookingModal({
   const handleSave = async () => {
     const newErrors: Record<string, string> = {}
 
-    if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
-      newErrors.endTime = 'Gio ket thuc phai sau gio bat dau'
+    // `endTime === startTime` = zero-duration → invalid.
+    // `endTime < startTime` = overnight (cross-midnight) → valid, BE sẽ validate overlap.
+    if (timeToMinutes(endTime) === timeToMinutes(startTime)) {
+      newErrors.endTime = 'Giờ kết thúc không được trùng giờ bắt đầu'
     }
 
     if (activeTab === 'guest') {
@@ -269,10 +271,12 @@ export function BookingModal({
     if (!room) return 0
     const priceConfig = getRoomPriceConfig(room)
     
-    // Giả định Admin modal hiện tại chỉ hỗ trợ tính theo giờ (hourly) hoặc cần logic xác định mode
-    // Vì Admin modal không có trường 'mode', ta mặc định là 'hourly' hoặc tính dựa trên thời gian
-    const minutes = timeToMinutes(endTime) - timeToMinutes(startTime)
-    const hours = Math.max(0, minutes / 60)
+    // Admin modal không có trường 'mode' → mặc định 'hourly'.
+    // Overnight (end ≤ start): cộng 24h để tính đúng duration.
+    const startMin = timeToMinutes(startTime)
+    let endMin = timeToMinutes(endTime)
+    if (endMin <= startMin) endMin += 24 * 60
+    const hours = (endMin - startMin) / 60
     
     // Sử dụng helper để tính giá chuẩn
     let price = calculateBookingPrice('hourly', hours, priceConfig)

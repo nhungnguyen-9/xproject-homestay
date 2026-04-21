@@ -316,10 +316,14 @@ export function BookingSchedule() {
     }
   }
 
-  /** Tính vị trí và chiều rộng booking theo phần trăm trên timeline 24h */
+  /**
+   * Tính vị trí và chiều rộng booking theo phần trăm trên timeline 24h.
+   * Overnight (end ≤ start): cộng 24h → block kéo dài qua biên phải; container overflow sẽ clip.
+   */
   const getBookingPosition = (booking: Booking) => {
     const startMins = timeToMinutes(booking.startTime)
-    const endMins = timeToMinutes(booking.endTime)
+    let endMins = timeToMinutes(booking.endTime)
+    if (endMins <= startMins) endMins += 24 * 60
     const totalMins = 24 * 60
     const leftPct = (startMins / totalMins) * 100
     const widthPct = Math.max(((endMins - startMins) / totalMins) * 100, 0.8)
