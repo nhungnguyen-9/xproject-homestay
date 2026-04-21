@@ -36,6 +36,20 @@ export function durationHours(startTime: string, endTime: string): number {
 }
 
 /**
+ * Format Date thành "YYYY-MM-DD" theo local timezone của server.
+ *
+ * Dùng thay cho `toISOString().split('T')[0]`. Ở VN (UTC+7), `toISOString()`
+ * trả về UTC; sau 17:00 giờ VN cùng ngày đã rơi sang ngày hôm sau UTC → kết quả
+ * lệch 1 ngày so với ngày thật của người dùng. Server VN phải luôn dùng helper này.
+ */
+export function formatDateLocal(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/**
  * Parse "YYYY-MM-DD" → số ngày tính từ epoch (UTC). Dùng cho date arithmetic không phụ thuộc timezone.
  */
 export function dateToEpochDays(date: string): number {

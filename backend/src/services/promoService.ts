@@ -3,6 +3,7 @@ import { db } from '../config/database.js';
 import { promoCodes } from '../db/schema/index.js';
 import { AppError } from '../middleware/errorHandler.js';
 import type { RoomType } from '../types/index.js';
+import { formatDateLocal } from '../utils/time.js';
 
 /** Debounce: chỉ refresh tối đa 1 lần/60 giây */
 let lastRefreshTime = 0;
@@ -17,7 +18,7 @@ async function refreshStatuses() {
   if (now - lastRefreshTime < REFRESH_INTERVAL_MS) return;
   lastRefreshTime = now;
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatDateLocal(new Date());
   await db
     .update(promoCodes)
     .set({ status: 'expired', updatedAt: new Date() })
@@ -105,7 +106,7 @@ export async function validate(code: string, roomType: RoomType) {
     return { valid: false, error: 'Ma khuyen mai da het luot su dung' };
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatDateLocal(new Date());
   if (today < promo.startDate || today > promo.endDate) {
     return { valid: false, error: 'Ma khuyen mai ngoai thoi gian hieu luc' };
   }

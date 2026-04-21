@@ -6,6 +6,7 @@ import {
   addDaysISO,
   dateToEpochDays,
   computeAbsoluteMinutes,
+  formatDateLocal,
 } from './time.js'
 
 describe('timeToMinutes()', () => {
@@ -114,6 +115,27 @@ describe('dateToEpochDays()', () => {
     const a = dateToEpochDays('2026-04-20')
     const b = dateToEpochDays('2026-04-21')
     expect(b - a).toBe(1)
+  })
+})
+
+describe('formatDateLocal()', () => {
+  it('formats local Date to YYYY-MM-DD', () => {
+    // Build a Date in local timezone — avoid toISOString to keep test tz-safe.
+    const d = new Date(2026, 3, 21); // Apr 21, 2026 local
+    expect(formatDateLocal(d)).toBe('2026-04-21')
+  })
+  it('zero-pads single-digit month and day', () => {
+    const d = new Date(2026, 0, 5); // Jan 5, 2026 local
+    expect(formatDateLocal(d)).toBe('2026-01-05')
+  })
+  it('reflects local calendar date even when UTC date differs', () => {
+    // 23:30 local on Apr 21 VN (UTC+7) = 16:30 UTC on Apr 21 — same date here,
+    // but 07:00 local on Apr 22 VN = 00:00 UTC on Apr 22 — also same. We pick
+    // a case that diverges: late-evening local is often next-day UTC only when
+    // tz > 0; in VN (+7) it actually never flips backwards. So we assert the
+    // explicit invariant: result uses local getFullYear/Month/Date (not UTC).
+    const d = new Date(2026, 11, 31, 23, 59); // Dec 31 2026 23:59 local
+    expect(formatDateLocal(d)).toBe('2026-12-31')
   })
 })
 

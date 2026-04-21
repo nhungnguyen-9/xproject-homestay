@@ -1,18 +1,17 @@
 import { sql, and, eq, gte, lte } from 'drizzle-orm';
 import { db } from '../config/database.js';
 import { bookings, rooms, customers } from '../db/schema/index.js';
+import { formatDateLocal } from '../utils/time.js';
 
 /** Xác định khoảng ngày — mặc định là tháng hiện tại nếu không truyền */
 function getDateRange(startDate?: string, endDate?: string) {
-  const now = new Date();
-  const formatDate = (d: Date) => d.toISOString().split('T')[0];
-
   if (startDate && endDate) return { start: startDate, end: endDate };
 
-  // Default: current month
+  // Default: current month (theo local timezone)
+  const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return { start: formatDate(monthStart), end: formatDate(monthEnd) };
+  return { start: formatDateLocal(monthStart), end: formatDateLocal(monthEnd) };
 }
 
 /** Tính khoảng thời gian trước đó (cùng độ dài) để so sánh tăng trưởng */
@@ -23,8 +22,8 @@ function getPreviousPeriod(start: string, end: string) {
   const prevEnd = new Date(startDate.getTime() - 1);
   const prevStart = new Date(prevEnd.getTime() - duration);
   return {
-    prevStart: prevStart.toISOString().split('T')[0],
-    prevEnd: prevEnd.toISOString().split('T')[0],
+    prevStart: formatDateLocal(prevStart),
+    prevEnd: formatDateLocal(prevEnd),
   };
 }
 
@@ -122,7 +121,7 @@ export async function getDailyRevenue(startDate?: string, endDate?: string) {
   const current = new Date(start);
   const endDt = new Date(end);
   while (current <= endDt) {
-    const dateStr = current.toISOString().split('T')[0];
+    const dateStr = formatDateLocal(current);
     result.push({ date: dateStr, revenue: revenueMap.get(dateStr) || 0 });
     current.setDate(current.getDate() + 1);
   }
