@@ -272,6 +272,9 @@ interface RoomRowProps {
     currentTime: Date;
     onBookingClick?: (booking: Booking) => void;
     onEmptySlotClick?: (roomId: string, time: string) => void;
+    isFocused?: boolean;
+    isDimmed?: boolean;
+    onRoomNameClick?: (roomId: string) => void;
 }
 
 const RoomRow: React.FC<RoomRowProps> = ({
@@ -283,32 +286,51 @@ const RoomRow: React.FC<RoomRowProps> = ({
     currentTime,
     onBookingClick,
     onEmptySlotClick,
+    isFocused = false,
+    isDimmed = false,
+    onRoomNameClick,
 }) => {
     const isToday = isSameDay(selectedDate, currentTime);
     const isPastDate = selectedDate.getTime() < new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate()).getTime();
     const totalWidth = (endHour - startHour) * HOUR_WIDTH;
 
-    const roomTypeColors = {
-        standard: 'rounded-md m-1 text-black font-medium text-sm shrink-0',
-        vip: 'rounded-md m-1 text-black font-medium text-sm shrink-0',
-        supervip: 'rounded-md m-1 text-black font-medium text-sm shrink-0',
-    };
-
     const hourCount = endHour - startHour;
 
+    const rowHeight = isFocused ? 90 : ROW_HEIGHT;
+
     return (
-        <div className="flex border-b border-border" style={{ height: ROW_HEIGHT }}>
+        <div
+            className={cn(
+                'flex border-b border-border transition-all duration-300',
+                isFocused && 'border-2 border-primary rounded-lg bg-primary/5',
+                isDimmed && 'opacity-35',
+            )}
+            style={{ height: rowHeight }}
+        >
             <div
                 className={cn(
-                    'flex flex-col items-center justify-center gap-1 text-[#374151] text-sm shrink-0 font-semibold sticky left-0 bg-card z-10',
-                    roomTypeColors[room.type]
+                    'flex flex-col items-center justify-center gap-1 text-[#374151] text-sm shrink-0 font-semibold sticky left-0 z-10 rounded-md m-1',
+                    isFocused ? 'bg-primary/5' : 'bg-card',
                 )}
-                style={{
-                    width: ROOM_LABEL_WIDTH,
-                }}
+                style={{ width: ROOM_LABEL_WIDTH }}
             >
-                <span>{room.name}</span>
+                <button
+                    type="button"
+                    onClick={() => onRoomNameClick?.(room.id)}
+                    className="hover:text-primary transition-colors"
+                >
+                    {room.name}
+                </button>
                 <RoomTypeBadge type={room.type} size="sm" />
+                {isFocused && (
+                    <button
+                        type="button"
+                        onClick={() => onRoomNameClick?.(room.id)}
+                        className="text-[10px] text-primary hover:underline"
+                    >
+                        ✕ Bỏ chọn
+                    </button>
+                )}
             </div>
 
             <div
@@ -443,6 +465,8 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
     onBookingCreate,
     startHour = 0,
     endHour = 24,
+    focusedRoomId,
+    onFocusChange,
 }) => {
     const [selectedDate, setSelectedDate] = useState(date);
     const [filters, setFilters] = useState<FilterOption[]>([
@@ -539,6 +563,14 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
         onBookingCreate?.(newBooking);
     }, [onBookingCreate]);
 
+    const handleRoomNameClick = useCallback((roomId: string) => {
+        if (focusedRoomId === roomId) {
+            onFocusChange?.(null)
+        } else {
+            onFocusChange?.(roomId)
+        }
+    }, [focusedRoomId, onFocusChange])
+
     const totalWidth = (endHour - startHour) * HOUR_WIDTH + ROOM_LABEL_WIDTH;
 
     return (
@@ -627,6 +659,9 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
                                     currentTime={currentTime}
                                     onBookingClick={onBookingClick}
                                     onEmptySlotClick={handleEmptySlotClick}
+                                    isFocused={focusedRoomId === room.id}
+                                    isDimmed={focusedRoomId != null && focusedRoomId !== room.id}
+                                    onRoomNameClick={handleRoomNameClick}
                                 />
                             ))}
 

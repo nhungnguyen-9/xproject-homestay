@@ -8,6 +8,7 @@ export interface Room {
   id: string;
   name: string;
   type: RoomType;
+  branchId?: string | null;
   amenities?: string[];
   hourlyRate?: number;
   dailyRate?: number;
@@ -73,6 +74,8 @@ export interface ScheduleProps {
   onBookingCreate?: (booking: Omit<Booking, 'id'>) => void;
   startHour?: number;
   endHour?: number;
+  focusedRoomId?: string | null;
+  onFocusChange?: (roomId: string | null) => void;
   /** Map roomId → amenities array for dynamic legend rendering */
   roomAmenities?: Record<string, string[]>;
 }
