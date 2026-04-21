@@ -142,8 +142,16 @@ export const calculateBookingPrice = (
 
         // Giá = (số ngày * dailyRate) + (giờ lẻ * extraRate), nhưng không vượt quá (số ngày + 1) * dailyRate
         const basePrice = fullDays * priceConfig.dailyRate;
+        const cap = (fullDays + 1) * priceConfig.dailyRate;
+        if (hasDiscount && extraHours > 0) {
+            const startMin = timeToMinutes(times!.startTime);
+            const overageStart = startMin + fullDays * 24 * 60;
+            const overageEnd = overageStart + extraHours * 60;
+            const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
+            return Math.min(basePrice + overageCost, cap);
+        }
         const extraPrice = extraHours * priceConfig.extraHourRate;
-        return Math.min(basePrice + extraPrice, (fullDays + 1) * priceConfig.dailyRate);
+        return Math.min(basePrice + extraPrice, cap);
     }
 
     if (mode === "overnight") {
@@ -152,6 +160,13 @@ export const calculateBookingPrice = (
             return priceConfig.overnightRate;
         }
         const extraHours = Math.ceil(duration - OVERNIGHT_BASE_HOURS);
+        if (hasDiscount) {
+            const startMin = timeToMinutes(times!.startTime);
+            const overageStart = startMin + OVERNIGHT_BASE_HOURS * 60;
+            const overageEnd = overageStart + extraHours * 60;
+            const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
+            return Math.min(priceConfig.overnightRate + overageCost, priceConfig.dailyRate);
+        }
         // Giới hạn giá qua đêm + giờ lẻ không vượt quá dailyRate (giá 1 ngày)
         return Math.min(
             priceConfig.overnightRate + extraHours * priceConfig.extraHourRate,
@@ -173,7 +188,24 @@ export const calculateBookingPrice = (
 
     if (mode === "combo6h1h") {
         if (combo6h1hOption === 'discount') {
-            return Math.max(0, priceConfig.combo6h1hRate - priceConfig.combo6h1hDiscount);
+            const base = Math.max(0, priceConfig.combo6h1hRate - priceConfig.combo6h1hDiscount);
+            if (hasDiscount) {
+                const startMin = timeToMinutes(times!.startTime);
+                const overage = Math.max(0, Math.ceil(duration) - 6);
+                const overageStart = startMin + 6 * 60;
+                const overageEnd = overageStart + overage * 60;
+                const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
+                return base + overageCost;
+            }
+            return base;
+        }
+        if (hasDiscount) {
+            const startMin = timeToMinutes(times!.startTime);
+            const overage = Math.max(0, Math.ceil(duration) - 7);
+            const overageStart = startMin + 7 * 60;
+            const overageEnd = overageStart + overage * 60;
+            const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
+            return priceConfig.combo6h1hRate + overageCost;
         }
         return priceConfig.combo6h1hRate;
     }
