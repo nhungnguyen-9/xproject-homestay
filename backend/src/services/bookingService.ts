@@ -324,11 +324,14 @@ export async function create(
     customerId = await ensureCustomer(data.guestName ?? undefined, data.guestPhone ?? undefined);
   }
 
+  // Strip client-supplied totalPrice defensively — server owns pricing.
+  const { totalPrice: _clientTotalIgnored, ...dataWithoutClientTotal } = data;
+
   const saved = await db.transaction(async (tx) => {
     const [booking] = await tx
       .insert(bookings)
       .values({
-        ...data,
+        ...dataWithoutClientTotal,
         foodItems: resolvedFoodItems,
         totalPrice,
         customerId: customerId ?? data.customerId ?? undefined,
@@ -356,18 +359,45 @@ export async function create(
 }
 
 /**
- * Cập nhật booking — kiểm tra trùng lịch nếu thay đổi thời gian.
- * Chỉ admin mới được gọi (route đã enforce).
- * Note: không recompute totalPrice ở đây — update path dành cho admin chỉnh tay.
+ * Cập nhật booking — server-side pricing authority.
+ *
+ * Quy trình:
+ * 1. Load current booking (để merge patch với state hiện tại).
+ * 2. Nếu thay đổi thời gian/phòng/chế độ → check trùng lịch.
+ * 3. Strip client totalPrice — server tự tính.
+ * 4. Resolve food items: patch có thì re-fetch từ DB, không thì giữ nguyên.
+ * 5. Fetch room rates cho price compute.
+ * 6. Validate voucher (không increment — usage đã tăng ở create). Nếu voucher
+ *    không còn valid (ví dụ hết hạn giữa chừng), discount = 0 nhưng giữ voucher field.
+ * 7. Recompute totalPrice bằng calculatePrice trên merged state.
+ *
+ * Note: voucher swap (đổi mã khác) ở đây KHÔNG refund mã cũ / increment mã mới —
+ * scope đó nằm ngoài task này, cần flow riêng.
  */
 export async function update(id: string, data: BookingUpdateInput) {
-  if (data.startTime && data.endTime && data.date && data.roomId) {
+  const current = await getById(id);
+
+  const effective = {
+    roomId: data.roomId ?? current.roomId,
+    date: data.date ?? current.date,
+    startTime: data.startTime ?? current.startTime,
+    endTime: data.endTime ?? current.endTime,
+    mode: (data.mode ?? current.mode ?? 'hourly') as string,
+    combo6h1hOption: ((data.combo6h1hOption ?? current.combo6h1hOption ?? 'bonus_hour') as 'bonus_hour' | 'discount'),
+    voucher: data.voucher !== undefined ? data.voucher : current.voucher,
+  };
+
+  const timeChanged =
+    data.startTime !== undefined || data.endTime !== undefined ||
+    data.date !== undefined || data.roomId !== undefined ||
+    data.mode !== undefined;
+  if (timeChanged) {
     const hasConflict = await checkOverlap(
-      data.roomId,
-      data.date,
-      data.startTime,
-      data.endTime,
-      data.mode || 'hourly',
+      effective.roomId,
+      effective.date,
+      effective.startTime,
+      effective.endTime,
+      effective.mode,
       id,
     );
     if (hasConflict) {
@@ -375,11 +405,58 @@ export async function update(id: string, data: BookingUpdateInput) {
     }
   }
 
-  const { foodItems: rawFoodItems, ...rest } = data;
+  // Strip client-supplied totalPrice — server owns pricing.
+  const { foodItems: rawFoodItems, totalPrice: _clientTotalIgnored, ...rest } = data;
   const patch: Partial<typeof bookings.$inferInsert> = { ...rest, updatedAt: new Date() };
+
+  const effectiveFoodItems = rawFoodItems !== undefined
+    ? await resolveFoodItems(rawFoodItems ?? [])
+    : ((current.foodItems as Array<{ id: string; name: string; price: number; qty?: number }>) || []);
   if (rawFoodItems !== undefined) {
-    patch.foodItems = await resolveFoodItems(rawFoodItems ?? []);
+    patch.foodItems = effectiveFoodItems;
   }
+
+  const [room] = await db.select().from(rooms).where(eq(rooms.id, effective.roomId)).limit(1);
+  if (!room) {
+    throw new AppError(404, 'Room not found');
+  }
+
+  const priceConfig = {
+    hourlyRate: room.hourlyRate,
+    dailyRate: room.dailyRate,
+    overnightRate: room.overnightRate,
+    extraHourRate: room.extraHourRate,
+    combo3hRate: room.combo3hRate,
+    combo6h1hRate: room.combo6h1hRate,
+    combo6h1hDiscount: room.combo6h1hDiscount,
+  };
+
+  let discountAmount = 0;
+  if (effective.voucher) {
+    const validation = await promoService.validate(effective.voucher, room.type as RoomType);
+    if (validation.valid && validation.promo) {
+      const priceNoDiscount = calculatePrice(
+        effective.mode,
+        effective.startTime,
+        effective.endTime,
+        priceConfig,
+        effectiveFoodItems,
+        0,
+        effective.combo6h1hOption,
+      );
+      discountAmount = promoService.computeDiscount(validation.promo, priceNoDiscount);
+    }
+  }
+
+  patch.totalPrice = calculatePrice(
+    effective.mode,
+    effective.startTime,
+    effective.endTime,
+    priceConfig,
+    effectiveFoodItems,
+    discountAmount,
+    effective.combo6h1hOption,
+  );
 
   const [booking] = await db
     .update(bookings)
