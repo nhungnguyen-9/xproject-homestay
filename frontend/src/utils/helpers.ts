@@ -1,3 +1,5 @@
+import type { DiscountSlot } from '@/types/room';
+
 /**
  * Định dạng số tiền theo chuẩn Việt Nam (dấu chấm phân cách hàng nghìn)
  * @param price - Số tiền cần định dạng
@@ -80,6 +82,30 @@ export interface BookingPriceConfig {
     combo3hRate: number;
     combo6h1hRate: number;
     combo6h1hDiscount: number;
+    discountSlots?: DiscountSlot[];
+}
+
+function computeHourlyCostMinuteWalk(
+    startMin: number,
+    endMin: number,
+    hourlyRate: number,
+    slots: DiscountSlot[] | undefined,
+): number {
+    if (endMin <= startMin) return 0;
+    const perMinute = hourlyRate / 60;
+    const totalMinutes = endMin - startMin;
+    if (!slots || slots.length === 0) return Math.round(perMinute * totalMinutes);
+    let sum = 0;
+    for (let m = startMin; m < endMin; m++) {
+        let maxPct = 0;
+        for (const s of slots) {
+            const sStart = timeToMinutes(s.startTime);
+            const sEnd = timeToMinutes(s.endTime);
+            if (m >= sStart && m < sEnd && s.discountPercent > maxPct) maxPct = s.discountPercent;
+        }
+        sum += perMinute * (1 - maxPct / 100);
+    }
+    return Math.round(sum);
 }
 
 /**
@@ -88,15 +114,24 @@ export interface BookingPriceConfig {
  * @param duration - Thời lượng tính bằng giờ (bỏ qua với combo modes)
  * @param priceConfig - Cấu hình giá từ ROOM_PRICES hoặc RoomDetail
  * @param combo6h1hOption - Khi mode=combo6h1h: 'bonus_hour' (7h, full price) hoặc 'discount' (6h, trừ discount)
+ * @param times - Giờ nhận/trả phòng (HH:mm) — bắt buộc khi có discountSlots để áp đúng khung giờ
  * @returns Tổng giá phòng (chưa tính đồ ăn)
  */
 export const calculateBookingPrice = (
     mode: string,
     duration: number,
     priceConfig: BookingPriceConfig,
-    combo6h1hOption: 'bonus_hour' | 'discount' = 'bonus_hour'
+    combo6h1hOption: 'bonus_hour' | 'discount' = 'bonus_hour',
+    times?: { startTime: string; endTime: string },
 ): number => {
+    const hasDiscount = (priceConfig.discountSlots?.length ?? 0) > 0 && !!times;
+
     if (mode === "hourly") {
+        if (hasDiscount) {
+            const startMin = timeToMinutes(times!.startTime);
+            const billedMinutes = Math.max(1, Math.ceil(duration)) * 60;
+            return computeHourlyCostMinuteWalk(startMin, startMin + billedMinutes, priceConfig.hourlyRate, priceConfig.discountSlots);
+        }
         return Math.max(1, Math.ceil(duration)) * priceConfig.hourlyRate;
     }
 
@@ -125,6 +160,14 @@ export const calculateBookingPrice = (
     }
 
     if (mode === "combo3h") {
+        if (hasDiscount) {
+            const startMin = timeToMinutes(times!.startTime);
+            const overage = Math.max(0, Math.ceil(duration) - 3);
+            const overageStart = startMin + 3 * 60;
+            const overageEnd = overageStart + overage * 60;
+            const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
+            return priceConfig.combo3hRate + overageCost;
+        }
         return priceConfig.combo3hRate;
     }
 

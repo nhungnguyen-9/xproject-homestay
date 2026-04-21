@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { formatPrice, formatDate, formatDateInput, timeToMinutes, calculateDuration } from './helpers'
+import {
+  formatPrice, formatDate, formatDateInput, timeToMinutes, calculateDuration, calculateBookingPrice,
+} from './helpers'
+import type { DiscountSlot } from '@/types/room'
 
 describe('formatPrice', () => {
   it('formats zero', () => {
@@ -140,5 +143,46 @@ describe('calculateDuration', () => {
     const checkOut = new Date(2026, 2, 12)
     // 12:00 → 12:00 two days later = 48 hours
     expect(calculateDuration(checkIn, '12:00', checkOut, '12:00')).toBe(48)
+  })
+})
+
+describe('calculateBookingPrice — discount slots', () => {
+  // hourlyRate=60000 → 1000 VND/minute for clean arithmetic
+  const cfg = {
+    hourlyRate: 60000,
+    dailyRate: 500000,
+    overnightRate: 350000,
+    extraHourRate: 40000,
+    combo3hRate: 400000,
+    combo6h1hRate: 700000,
+    combo6h1hDiscount: 100000,
+  }
+
+  it('empty slots array → no discount', () => {
+    expect(calculateBookingPrice('hourly', 1, { ...cfg, discountSlots: [] }, 'bonus_hour', { startTime: '10:00', endTime: '11:00' })).toBe(60000)
+  })
+
+  it('fully inside a 20% slot', () => {
+    const slots: DiscountSlot[] = [{ startTime: '14:00', endTime: '17:00', discountPercent: 20 }]
+    expect(calculateBookingPrice('hourly', 1, { ...cfg, discountSlots: slots }, 'bonus_hour', { startTime: '14:00', endTime: '15:00' })).toBe(48000)
+  })
+
+  it('overlapping slots — highest wins', () => {
+    const slots: DiscountSlot[] = [
+      { startTime: '14:00', endTime: '16:00', discountPercent: 20 },
+      { startTime: '15:00', endTime: '17:00', discountPercent: 50 },
+    ]
+    // 14-15 @ 20% = 48000, 15-16 @ 50% = 30000, 16-17 @ 50% = 30000 = 108000
+    expect(calculateBookingPrice('hourly', 3, { ...cfg, discountSlots: slots }, 'bonus_hour', { startTime: '14:00', endTime: '17:00' })).toBe(108000)
+  })
+
+  it('no overlap → no discount', () => {
+    const slots: DiscountSlot[] = [{ startTime: '20:00', endTime: '22:00', discountPercent: 50 }]
+    expect(calculateBookingPrice('hourly', 2, { ...cfg, discountSlots: slots }, 'bonus_hour', { startTime: '10:00', endTime: '12:00' })).toBe(120000)
+  })
+
+  it('daily mode ignores slots', () => {
+    const slots: DiscountSlot[] = [{ startTime: '10:00', endTime: '20:00', discountPercent: 50 }]
+    expect(calculateBookingPrice('daily', 10, { ...cfg, discountSlots: slots }, 'bonus_hour', { startTime: '10:00', endTime: '20:00' })).toBe(cfg.dailyRate)
   })
 })
