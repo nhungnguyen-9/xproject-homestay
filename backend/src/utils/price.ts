@@ -1,4 +1,5 @@
 import { timeToMinutes } from './time.js';
+import type { DiscountSlot } from '../db/schema/rooms.js';
 
 /** Cấu hình bảng giá phòng */
 interface PriceConfig {
@@ -12,6 +13,42 @@ interface PriceConfig {
   combo6h1hRate?: number;
   /** Số tiền giảm áp dụng khi khách chọn option='discount' thay cho 1H bonus */
   combo6h1hDiscount?: number;
+  /** Khung giờ giảm giá áp dụng cho mode hourly và extraHourRate overage trong combo. */
+  discountSlots?: DiscountSlot[];
+}
+
+/**
+ * Tính chi phí cho khoảng [startMin, endMin) ở mức hourlyRate, áp dụng discount slots.
+ * Quy tắc khi slots chồng lên nhau: slot có discountPercent cao nhất thắng (max-wins).
+ * O(duration_minutes × slots) — ổn với <10 slot và booking <24h; nếu profiling cần, đổi sang sweep-line.
+ */
+function computeHourlyCost(
+  startMin: number,
+  endMin: number,
+  hourlyRate: number,
+  slots: DiscountSlot[] | undefined,
+): number {
+  if (endMin <= startMin) return 0;
+  const perMinute = hourlyRate / 60;
+  const totalMinutes = endMin - startMin;
+
+  if (!slots || slots.length === 0) {
+    return Math.round(perMinute * totalMinutes);
+  }
+
+  let sum = 0;
+  for (let m = startMin; m < endMin; m++) {
+    let maxPct = 0;
+    for (const s of slots) {
+      const sStart = timeToMinutes(s.startTime);
+      const sEnd = timeToMinutes(s.endTime);
+      if (m >= sStart && m < sEnd && s.discountPercent > maxPct) {
+        maxPct = s.discountPercent;
+      }
+    }
+    sum += perMinute * (1 - maxPct / 100);
+  }
+  return Math.round(sum);
 }
 
 /** Snapshot món ăn/thức uống kèm theo booking */
@@ -63,7 +100,15 @@ export function calculatePrice(
     case 'combo3h': {
       const base = priceConfig.combo3hRate ?? 0;
       const overage = Math.max(0, Math.ceil(durationHrs) - 3);
-      roomPrice = base + overage * priceConfig.extraHourRate;
+      const overageStart = startMin + 3 * 60;
+      const overageEnd = overageStart + overage * 60;
+      const overageCost = computeHourlyCost(
+        overageStart,
+        overageEnd,
+        priceConfig.extraHourRate,
+        priceConfig.discountSlots,
+      );
+      roomPrice = base + overageCost;
       break;
     }
     case 'combo6h1h': {
@@ -71,16 +116,39 @@ export function calculatePrice(
       if (combo6h1hOption === 'discount') {
         const base = Math.max(0, rate - (priceConfig.combo6h1hDiscount ?? 0));
         const overage = Math.max(0, Math.ceil(durationHrs) - 6);
-        roomPrice = base + overage * priceConfig.extraHourRate;
+        const overageStart = startMin + 6 * 60;
+        const overageEnd = overageStart + overage * 60;
+        const overageCost = computeHourlyCost(
+          overageStart,
+          overageEnd,
+          priceConfig.extraHourRate,
+          priceConfig.discountSlots,
+        );
+        roomPrice = base + overageCost;
       } else {
         const overage = Math.max(0, Math.ceil(durationHrs) - 7);
-        roomPrice = rate + overage * priceConfig.extraHourRate;
+        const overageStart = startMin + 7 * 60;
+        const overageEnd = overageStart + overage * 60;
+        const overageCost = computeHourlyCost(
+          overageStart,
+          overageEnd,
+          priceConfig.extraHourRate,
+          priceConfig.discountSlots,
+        );
+        roomPrice = rate + overageCost;
       }
       break;
     }
-    default: // hourly
-      roomPrice = Math.ceil(durationHrs) * priceConfig.hourlyRate;
+    default: { // hourly
+      const billedMinutes = Math.ceil(durationHrs) * 60;
+      roomPrice = computeHourlyCost(
+        startMin,
+        startMin + billedMinutes,
+        priceConfig.hourlyRate,
+        priceConfig.discountSlots,
+      );
       break;
+    }
   }
 
   const foodTotal = foodItems.reduce(

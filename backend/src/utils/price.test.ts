@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { calculatePrice } from './price.js'
+import type { DiscountSlot } from '../db/schema/rooms.js'
 
 const baseConfig = {
   hourlyRate: 169000,
@@ -152,5 +153,79 @@ describe('calculatePrice() — with discount', () => {
     const food = [{ price: 11000 }]
     // 169000 + 11000 - 30000 = 150000
     expect(calculatePrice('hourly', '10:00', '11:00', baseConfig, food, 30000)).toBe(150000)
+  })
+})
+
+describe('calculatePrice() — discount slots', () => {
+  // hourlyRate=60000 → 1000 VND/min, lets us keep arithmetic exact/integer.
+  const cfg = { ...baseConfig, hourlyRate: 60000 }
+
+  it('empty slots array: no discount applied (1h hourly = 60000)', () => {
+    const config = { ...cfg, discountSlots: [] as DiscountSlot[] }
+    expect(calculatePrice('hourly', '10:00', '11:00', config)).toBe(60000)
+  })
+
+  it('fully inside a 20% slot: 60000 * 0.80 = 48000', () => {
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '14:00', endTime: '17:00', discountPercent: 20 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('hourly', '14:00', '15:00', config)).toBe(48000)
+  })
+
+  it('partial overlap: 10:00-15:00 with slot 14:00-17:00@20% → 4h full + 1h*80% = 288000', () => {
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '14:00', endTime: '17:00', discountPercent: 20 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('hourly', '10:00', '15:00', config)).toBe(288000)
+  })
+
+  it('two non-overlapping slots inside booking window (50% + 25%) = 435000', () => {
+    const config = {
+      ...cfg,
+      discountSlots: [
+        { startTime: '11:00', endTime: '12:00', discountPercent: 50 },
+        { startTime: '15:00', endTime: '16:00', discountPercent: 25 },
+      ] as DiscountSlot[],
+    }
+    expect(calculatePrice('hourly', '10:00', '18:00', config)).toBe(435000)
+  })
+
+  it('two overlapping slots: max percent wins inside the overlap (20% / 50%) → 108000', () => {
+    const config = {
+      ...cfg,
+      discountSlots: [
+        { startTime: '14:00', endTime: '16:00', discountPercent: 20 },
+        { startTime: '15:00', endTime: '17:00', discountPercent: 50 },
+      ] as DiscountSlot[],
+    }
+    expect(calculatePrice('hourly', '14:00', '17:00', config)).toBe(108000)
+  })
+
+  it('slot does not overlap booking window: no discount', () => {
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '20:00', endTime: '22:00', discountPercent: 50 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('hourly', '10:00', '12:00', config)).toBe(120000)
+  })
+
+  it('daily mode ignores discount slots (untouched)', () => {
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '10:00', endTime: '20:00', discountPercent: 50 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('daily', '10:00', '20:00', config)).toBe(cfg.dailyRate)
+  })
+
+  it('combo3h overage gets discounted: base + 50%-off 2h overage = 440000', () => {
+    // Base combo3hRate=400000 covers 10:00-13:00 (no discount on combo base).
+    // Overage 13:00-15:00 fully inside a 50% slot → 2h * 40000 * 0.5 = 40000.
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '13:00', endTime: '15:00', discountPercent: 50 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('combo3h', '10:00', '15:00', config)).toBe(440000)
   })
 })
