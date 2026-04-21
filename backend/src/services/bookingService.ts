@@ -17,6 +17,15 @@ type BookingCreateInput = Omit<typeof bookings.$inferInsert, 'foodItems'> & {
 type BookingUpdateInput = Partial<BookingCreateInput>;
 
 /**
+ * Nhận diện lỗi Postgres 23P01 (exclusion_violation) từ EXCLUDE constraint overlap.
+ * Race-safety: in-app checkOverlap bắt 99% overlap, nhưng 2 request đồng thời
+ * có thể cùng lọt qua → DB constraint chặn lần sau; dịch sang 409 để client hiểu.
+ */
+function isOverlapViolation(err: unknown): boolean {
+  return !!err && typeof err === 'object' && (err as { code?: string }).code === '23P01';
+}
+
+/**
  * Lấy danh sách booking có phân trang và lọc.
  * Hỗ trợ lọc theo ngày, phòng, trạng thái, khách hàng.
  */
@@ -327,27 +336,35 @@ export async function create(
   // Strip client-supplied totalPrice defensively — server owns pricing.
   const { totalPrice: _clientTotalIgnored, ...dataWithoutClientTotal } = data;
 
-  const saved = await db.transaction(async (tx) => {
-    const [booking] = await tx
-      .insert(bookings)
-      .values({
-        ...dataWithoutClientTotal,
-        foodItems: resolvedFoodItems,
-        totalPrice,
-        customerId: customerId ?? data.customerId ?? undefined,
-        createdBy: userId,
-      })
-      .returning();
+  let saved: typeof bookings.$inferSelect;
+  try {
+    saved = await db.transaction(async (tx) => {
+      const [booking] = await tx
+        .insert(bookings)
+        .values({
+          ...dataWithoutClientTotal,
+          foodItems: resolvedFoodItems,
+          totalPrice,
+          customerId: customerId ?? data.customerId ?? undefined,
+          createdBy: userId,
+        })
+        .returning();
 
-    if (promoToApply) {
-      await tx
-        .update(promoCodes)
-        .set({ usedCount: sql`${promoCodes.usedCount} + 1`, updatedAt: new Date() })
-        .where(eq(promoCodes.id, promoToApply.id));
+      if (promoToApply) {
+        await tx
+          .update(promoCodes)
+          .set({ usedCount: sql`${promoCodes.usedCount} + 1`, updatedAt: new Date() })
+          .where(eq(promoCodes.id, promoToApply.id));
+      }
+
+      return booking;
+    });
+  } catch (err) {
+    if (isOverlapViolation(err)) {
+      throw new AppError(409, 'Phòng đã có lịch đặt trong khung giờ này');
     }
-
-    return booking;
-  });
+    throw err;
+  }
 
   // Post-commit, best-effort: auto-tạo cleaning slot 30p sau guest booking.
   // Không trigger cho category='internal' để tránh recursion.
@@ -458,11 +475,19 @@ export async function update(id: string, data: BookingUpdateInput) {
     effective.combo6h1hOption,
   );
 
-  const [booking] = await db
-    .update(bookings)
-    .set(patch)
-    .where(eq(bookings.id, id))
-    .returning();
+  let booking: typeof bookings.$inferSelect | undefined;
+  try {
+    [booking] = await db
+      .update(bookings)
+      .set(patch)
+      .where(eq(bookings.id, id))
+      .returning();
+  } catch (err) {
+    if (isOverlapViolation(err)) {
+      throw new AppError(409, 'Phòng đã có lịch đặt trong khung giờ này');
+    }
+    throw err;
+  }
 
   if (!booking) throw new AppError(404, 'Booking not found');
   return booking;
