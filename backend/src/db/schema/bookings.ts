@@ -24,6 +24,23 @@ import { users } from './users';
  * - createdBy: FK tới users — ai tạo booking
  *
  * Indexes: room+date (composite), date, customer, status, created_by
+ *
+ * ──────────────────────────────────────────────────────────────────────────
+ * DB-LEVEL INVARIANTS (migration 0006, không biểu diễn được trong Drizzle)
+ * ──────────────────────────────────────────────────────────────────────────
+ * - Extension: `btree_gist` (cho phép gist index trên text kết hợp range).
+ * - Generated column `time_range tsrange GENERATED ALWAYS AS (...) STORED`:
+ *     tsrange half-open `[start, end)`, tự wrap +1 ngày khi
+ *     `mode='overnight' OR end_time::time <= start_time::time`.
+ *     Mirror logic JS trong utils/bookingOverlap.ts.
+ * - Constraint `bookings_no_overlap EXCLUDE USING gist
+ *     (room_id WITH =, time_range WITH &&) WHERE (status <> 'cancelled')`:
+ *     bảo đảm ở tầng Postgres không có hai booking active cùng phòng trùng giờ.
+ *     Vi phạm → SQLSTATE 23P01 (exclusion_violation).
+ *
+ * Column `time_range` là generated (không insert/update trực tiếp) nên KHÔNG
+ * được khai báo trong Drizzle — drizzle-orm 0.39 không có tsrange type và
+ * không hỗ trợ EXCLUDE constraint. Xem `0006_booking_overlap_exclude.sql`.
  */
 export const bookings = pgTable('bookings', {
   id: text('id').primaryKey().$defaultFn(() => nanoid()),
