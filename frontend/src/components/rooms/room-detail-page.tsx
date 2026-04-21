@@ -1,4 +1,4 @@
-﻿import { useMemo } from 'react'
+﻿import { useMemo, useState } from 'react'
 import RoomSchedule from '../schedule/room-schedule'
 import { RoomImageGallery } from './RoomImageGallery'
 import { RoomTypeBadge } from './RoomTypeBadge'
@@ -68,6 +68,8 @@ export function RoomDetailPage({
     [room.images]
   )
 
+  const [focusedRoomId, setFocusedRoomId] = useState<string | null>(room.id)
+
   return (
     <div className="bg-[#fdeeee] px-4 md:px-6 pb-20 pt-10">
       <div className="mx-auto w-full max-w-6xl rounded-[18px] border border-[#f3c6cc] bg-white/70 px-4 md:px-6 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
@@ -89,6 +91,8 @@ export function RoomDetailPage({
               onDateChange={onDateChange}
               onBookingCreate={onBookingCreate}
               roomAmenities={roomAmenities}
+              focusedRoomId={focusedRoomId}
+              onFocusChange={setFocusedRoomId}
             />
           </div>
         </section>
