@@ -349,6 +349,30 @@ const RoomRow: React.FC<RoomRowProps> = ({
                     />
                 </div>
 
+                {/* Discount windows — amber strips behind booking layer, pill top-right */}
+                {(room.discountSlots?.length ?? 0) > 0 && (
+                    <div className="absolute inset-0 pointer-events-none z-[1]">
+                        {room.discountSlots!.map((s, idx) => {
+                            const startMin = timeToMinutes(s.startTime);
+                            const endMin = timeToMinutes(s.endTime);
+                            const left = ((startMin - startHour * 60) / 60) * HOUR_WIDTH;
+                            const width = ((endMin - startMin) / 60) * HOUR_WIDTH;
+                            if (width <= 0) return null;
+                            return (
+                                <div
+                                    key={`discount-${idx}`}
+                                    className="absolute top-0 bottom-0 bg-amber-100/40"
+                                    style={{ left: `${left}px`, width: `${width}px` }}
+                                >
+                                    <span className="absolute top-0.5 right-1 inline-flex items-center rounded-full bg-amber-200 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                        -{s.discountPercent}%
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
                 {/* Slot buttons 30 phút với + icon khi hover (min-height đủ để đạt 44px tap target) */}
                 <div className="absolute inset-0 flex" style={{ width: totalWidth }}>
                     {Array.from({ length: hourCount * 2 }).map((_, i) => {

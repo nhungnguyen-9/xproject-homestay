@@ -1,4 +1,5 @@
 import pepsi from "@/assets/pepsi.png";
+import type { DiscountSlot } from "@/types/room";
 
 /** Loại phòng: tiêu chuẩn, VIP, hoặc super VIP */
 export type RoomType = 'standard' | 'vip' | 'supervip';
@@ -17,6 +18,7 @@ export interface Room {
   combo3hRate?: number;
   combo6h1hRate?: number;
   combo6h1hDiscount?: number;
+  discountSlots?: DiscountSlot[];
 }
 
 /** Lấy PriceConfig từ Room — dùng giá thực từ API, fallback về ROOM_PRICES mặc định */

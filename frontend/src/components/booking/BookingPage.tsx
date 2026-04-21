@@ -45,6 +45,7 @@ export const BookingPage = () => {
                     combo3hRate: r.combo3hRate,
                     combo6h1hRate: r.combo6h1hRate,
                     combo6h1hDiscount: r.combo6h1hDiscount,
+                    discountSlots: r.discountSlots,
                 }))
                 setAllRooms(mappedRooms)
 
