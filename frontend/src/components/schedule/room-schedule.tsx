@@ -484,7 +484,7 @@ export const RoomSchedule: React.FC<ScheduleProps> = ({
     }, [rooms, filters]);
 
     const getBookingsForRoom = (roomId: string): Booking[] => {
-        return localBookings.filter((b) => b.roomId === roomId);
+        return localBookings.filter((b) => b.roomId === roomId && b.status !== 'cancelled');
     };
 
     // Đồng bộ selectedDate nếu prop `date` từ ngoài thay đổi

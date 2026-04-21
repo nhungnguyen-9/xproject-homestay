@@ -516,7 +516,7 @@ export function BookingSchedule() {
           </div>
 
           {rooms.map((room) => {
-            const roomBookings = bookings.filter((b) => b.roomId === room.id)
+            const roomBookings = bookings.filter((b) => b.roomId === room.id && b.status !== 'cancelled')
 
             return (
               <div
