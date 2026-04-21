@@ -18,7 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import type { RoomDetail, CreateRoomPayload } from '@/types/room';
+import type { RoomDetail, CreateRoomPayload, DiscountSlot } from '@/types/room';
 import type { Branch } from '@/types/branch';
 import * as branchService from '@/services/branchService';
 import { Loader2, X, Check } from 'lucide-react';
@@ -32,6 +32,7 @@ import {
     hasSharedWC,
     SHARED_WC_WARNING,
 } from '@/data/amenities';
+import { DiscountSlotsSection } from './DiscountSlotsSection';
 
 interface RoomFormModalProps {
     isOpen: boolean;
@@ -75,6 +76,7 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
     const [description, setDescription] = useState('');
     const [amenities, setAmenities] = useState<string[]>([]);
     const [amenityInput, setAmenityInput] = useState('');
+    const [discountSlots, setDiscountSlots] = useState<DiscountSlot[]>([]);
 
     // UI state
     const [errors, setErrors] = useState<FormErrors>({});
@@ -118,6 +120,7 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
                 setMaxGuests(String(room.maxGuests));
                 setDescription(room.description || '');
                 setAmenities(room.amenities || []);
+                setDiscountSlots(room.discountSlots || []);
             } else {
                 setName('');
                 setType('');
@@ -132,6 +135,7 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
                 setMaxGuests('2');
                 setDescription('');
                 setAmenities([]);
+                setDiscountSlots([]);
             }
             setAmenityInput('');
             setErrors({});
@@ -206,6 +210,7 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
             combo3hRate: Number(combo3hRate) || 0,
             combo6h1hRate: Number(combo6h1hRate) || 0,
             combo6h1hDiscount: Number(combo6h1hDiscount) || 0,
+            discountSlots,
         };
 
         setSubmitting(true);
@@ -392,6 +397,13 @@ export function RoomFormModal({ isOpen, onClose, onSuccess, room }: RoomFormModa
                             Số tiền giảm khi khách không lấy 1H bonus
                         </p>
                     </div>
+
+                    {/* Khung giờ giảm giá */}
+                    <DiscountSlotsSection
+                        value={discountSlots}
+                        onChange={setDiscountSlots}
+                        disabled={submitting}
+                    />
 
                     {/* Số khách tối đa */}
                     <div className="space-y-1.5">
