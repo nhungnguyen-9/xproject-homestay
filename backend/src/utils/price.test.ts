@@ -50,16 +50,15 @@ describe('calculatePrice() — daily mode', () => {
 })
 
 describe('calculatePrice() — overnight mode', () => {
-  it('calculates overnight rate for 10 hours', () => {
-    // 22:00–08:00 next day would be negative in single-day calc,
-    // but we use simple minute subtraction. Test a positive range.
-    // 08:00–18:00 = 10 hrs → ceil(10/24) = 1 day → 350000
+  it('flat overnightRate when duration ≤ base 11h window', () => {
+    // 08:00–18:00 = 10 hrs, within 11h base → flat 350000 (no overage)
     expect(calculatePrice('overnight', '08:00', '18:00', baseConfig)).toBe(350000)
   })
 
-  it('uses overnightRate per 24 hr unit', () => {
-    // 00:00–24:00 = 24 hrs → ceil(24/24) = 1 → 350000
-    expect(calculatePrice('overnight', '00:00', '24:00', baseConfig)).toBe(350000)
+  it('base + extraHourRate overage, capped at dailyRate', () => {
+    // 00:00–24:00 = 24 hrs → base 350000 + 13h × 40000 overage = 870000,
+    // capped at dailyRate 450000.
+    expect(calculatePrice('overnight', '00:00', '24:00', baseConfig)).toBe(450000)
   })
 })
 
@@ -211,7 +210,8 @@ describe('calculatePrice() — discount slots', () => {
     expect(calculatePrice('hourly', '10:00', '12:00', config)).toBe(120000)
   })
 
-  it('daily mode ignores discount slots (untouched)', () => {
+  it('daily base (no overage) is not discounted — slot inside base window has no effect', () => {
+    // 10h booking fits in 1 full day block with no overage → flat dailyRate.
     const config = {
       ...cfg,
       discountSlots: [{ startTime: '10:00', endTime: '20:00', discountPercent: 50 }] as DiscountSlot[],
@@ -227,5 +227,28 @@ describe('calculatePrice() — discount slots', () => {
       discountSlots: [{ startTime: '13:00', endTime: '15:00', discountPercent: 50 }] as DiscountSlot[],
     }
     expect(calculatePrice('combo3h', '10:00', '15:00', config)).toBe(440000)
+  })
+
+  it('overnight overage gets discounted: 13h booking, 2h overage at 50% = 390000', () => {
+    // 08:00–21:00 = 13h. Base 11h (08:00-19:00) @ overnightRate=350000.
+    // Overage 19:00-21:00 (2h) at extraHourRate=40000, fully inside 50% slot → 2*40000*0.5 = 40000.
+    // Total = min(350000 + 40000, dailyRate=450000) = 390000.
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '19:00', endTime: '21:00', discountPercent: 50 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('overnight', '08:00', '21:00', config)).toBe(390000)
+  })
+
+  it('daily overage gets discounted: 26h booking, 2h overage at 50% = 490000', () => {
+    // 26h → 1 full day + 2h overage. Times are numeric constructs (26:00) since
+    // calculatePrice derives duration from raw timeToMinutes.
+    // Base 1 × 450000. Overage 24:00-26:00 fully inside 50% slot → 2*40000*0.5 = 40000.
+    // Total = min(450000 + 40000, 2 × 450000=900000) = 490000.
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '24:00', endTime: '26:00', discountPercent: 50 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('daily', '00:00', '26:00', config)).toBe(490000)
   })
 })

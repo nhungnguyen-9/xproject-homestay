@@ -91,12 +91,37 @@ export function calculatePrice(
 
   let roomPrice: number;
   switch (mode) {
-    case 'daily':
-      roomPrice = Math.ceil(durationHrs / 24) * priceConfig.dailyRate;
+    case 'daily': {
+      const fullDays = Math.max(1, Math.floor(durationHrs / 24) || 1);
+      const remainingHours = durationHrs - fullDays * 24;
+      const extraHours = Math.max(0, Math.ceil(remainingHours));
+      const basePrice = fullDays * priceConfig.dailyRate;
+      const overageStart = startMin + fullDays * 24 * 60;
+      const overageEnd = overageStart + extraHours * 60;
+      const overageCost = computeHourlyCost(
+        overageStart,
+        overageEnd,
+        priceConfig.extraHourRate,
+        priceConfig.discountSlots,
+      );
+      roomPrice = Math.min(basePrice + overageCost, (fullDays + 1) * priceConfig.dailyRate);
       break;
-    case 'overnight':
-      roomPrice = Math.ceil(durationHrs / 24) * priceConfig.overnightRate;
+    }
+    case 'overnight': {
+      const OVERNIGHT_BASE_HOURS = 11;
+      const base = priceConfig.overnightRate;
+      const overage = Math.max(0, Math.ceil(durationHrs) - OVERNIGHT_BASE_HOURS);
+      const overageStart = startMin + OVERNIGHT_BASE_HOURS * 60;
+      const overageEnd = overageStart + overage * 60;
+      const overageCost = computeHourlyCost(
+        overageStart,
+        overageEnd,
+        priceConfig.extraHourRate,
+        priceConfig.discountSlots,
+      );
+      roomPrice = Math.min(base + overageCost, priceConfig.dailyRate);
       break;
+    }
     case 'combo3h': {
       const base = priceConfig.combo3hRate ?? 0;
       const overage = Math.max(0, Math.ceil(durationHrs) - 3);
