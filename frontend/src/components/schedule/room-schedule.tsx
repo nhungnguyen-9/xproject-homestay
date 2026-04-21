@@ -45,7 +45,7 @@ const isSameDay = (a: Date, b: Date): boolean => {
 
 /**
  * Tính vị trí (left, width) của booking trên timeline ngày đang xem.
- * - Same-day (`booking.date === viewingDate`): render từ startTime; nếu overnight (end ≤ start) cộng 24h cho width, block overflow bên phải (container clip).
+ * - Same-day (`booking.date === viewingDate`): render từ startTime; overnight clamp end tại 24:00 để không overflow viewport 24h — user xem tiếp ngày D+1 sẽ thấy slice wrap-in.
  * - Cross-day wrap-in: booking thuộc ngày `D-1` nhưng overnight sang `D` (đang viewing) → render slice [00:00, endTime).
  * - Ngày không liên quan: trả `{0, 0}` để caller bỏ qua.
  *
@@ -63,7 +63,8 @@ export const getBookingPosition = (
 
     if (booking.date === viewingDate) {
         const left = ((startMin - startHour * 60) / 60) * HOUR_WIDTH;
-        const width = ((endMin - startMin) / 60) * HOUR_WIDTH;
+        const clampedEndMin = Math.min(endMin, 24 * 60);
+        const width = ((clampedEndMin - startMin) / 60) * HOUR_WIDTH;
         return { left, width };
     }
 

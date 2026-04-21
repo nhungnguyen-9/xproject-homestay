@@ -20,20 +20,26 @@ describe('getBookingPosition — same-day render', () => {
     expect(width).toBe(2 * HOUR_WIDTH)
   })
 
-  it('handles overnight booking on its own date (22:00 → 06:00, 8h width, may overflow right)', () => {
+  it('clamps overnight booking on creation date to viewport end (22:00 → 06:00 → 2h visible)', () => {
     const { left, width } = getBookingPosition(mk(D, '22:00', '06:00'), D, 0)
     expect(left).toBe(22 * HOUR_WIDTH)
-    expect(width).toBe(8 * HOUR_WIDTH)
+    expect(width).toBe(2 * HOUR_WIDTH)
   })
 
-  it('handles overnight booking on its own date (23:30 → 05:30, 6h width)', () => {
+  it('clamps overnight booking on creation date (23:30 → 05:30 → 0.5h visible)', () => {
     const { width } = getBookingPosition(mk(D, '23:30', '05:30'), D, 0)
-    expect(width).toBe(6 * HOUR_WIDTH)
+    expect(width).toBe(0.5 * HOUR_WIDTH)
   })
 
-  it('treats end === start as overnight 24h (edge case)', () => {
+  it('clamps end === start overnight to viewport end (10:00 → 10:00 → 14h visible)', () => {
     const { width } = getBookingPosition(mk(D, '10:00', '10:00'), D, 0)
-    expect(width).toBe(24 * HOUR_WIDTH)
+    expect(width).toBe(14 * HOUR_WIDTH)
+  })
+
+  it('clamps overnight with non-zero startHour offset (startHour=6, 22:00 → 06:00 → 2h visible)', () => {
+    const { left, width } = getBookingPosition(mk(D, '22:00', '06:00'), D, 6)
+    expect(left).toBe((22 - 6) * HOUR_WIDTH)
+    expect(width).toBe(2 * HOUR_WIDTH)
   })
 
   it('never returns negative width for overnight same-day', () => {

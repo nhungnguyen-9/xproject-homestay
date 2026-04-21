@@ -318,7 +318,7 @@ export function BookingSchedule() {
 
   /**
    * Tính vị trí booking (%) cho timeline 24h của ngày đang xem.
-   * - Same-day: render từ startTime; overnight kéo qua biên phải, container clip.
+   * - Same-day: render từ startTime; overnight clamp tại biên phải 100% — slice còn lại render ngày D+1.
    * - Cross-day wrap-in (booking ngày hôm trước, overnight sang ngày đang xem): render slice [00:00, endTime).
    * - Không liên quan tới ngày đang xem: trả width 0 để caller bỏ qua.
    */
@@ -331,7 +331,8 @@ export function BookingSchedule() {
 
     if (booking.date === viewingDate) {
       const leftPct = (startMins / totalMins) * 100
-      const widthPct = Math.max(((endMins - startMins) / totalMins) * 100, 0.8)
+      const rawWidthPct = ((endMins - startMins) / totalMins) * 100
+      const widthPct = Math.max(Math.min(rawWidthPct, 100 - leftPct), 0.8)
       return { left: `${leftPct}%`, width: `${widthPct}%` }
     }
 
