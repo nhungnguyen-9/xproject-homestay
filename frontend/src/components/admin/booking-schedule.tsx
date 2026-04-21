@@ -10,10 +10,14 @@ import * as telegramService from '@/services/telegramService'
 import { BookingModal } from '@/components/admin/booking-modal'
 import { RoomTypeBadge } from '@/components/rooms/RoomTypeBadge'
 import { formatDate } from '@/utils/helpers'
+import { isSlotOccupied as checkSlotOccupied } from '@/utils/bookingOccupancy'
 import type { Booking, InternalTag } from '@/types/schedule'
 import { Plus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
-const TIME_SLOTS = Array.from({ length: 12 }, (_, i) => i * 2)
+const HEADER_HOURS = Array.from({ length: 24 }, (_, i) => i)
+const SLOT_MIN = 30
+const SLOT_COUNT = (24 * 60) / SLOT_MIN
+const DEFAULT_NEW_BOOKING_MIN = 120
 
 const STATUS_COLORS: Record<string, string> = {
   confirmed: 'bg-booking-confirmed-bg border-l-4 border-l-booking-confirmed text-booking-confirmed-text',
@@ -53,6 +57,12 @@ function addMinutes(time: string, mins: number): string {
   const total = timeToMinutes(time) + mins
   const h = Math.floor(total / 60) % 24
   const m = total % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+function minutesToTime(min: number): string {
+  const h = Math.floor(min / 60) % 24
+  const m = min % 60
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
@@ -156,10 +166,11 @@ export function BookingSchedule() {
     setSelectedDate(d)
   }
 
-  const handleEmptySlotClick = (roomId: string, slotHour: number) => {
+  const handleEmptySlotClick = (roomId: string, slotStartMin: number) => {
+    const endMin = Math.min(slotStartMin + DEFAULT_NEW_BOOKING_MIN, 24 * 60)
     setPrefillRoomId(roomId)
-    setPrefillStartTime(`${String(slotHour).padStart(2, '0')}:00`)
-    setPrefillEndTime(`${String(Math.min(slotHour + 2, 24)).padStart(2, '0')}:00`)
+    setPrefillStartTime(minutesToTime(slotStartMin))
+    setPrefillEndTime(endMin === 24 * 60 ? '00:00' : minutesToTime(endMin))
     setSelectedBooking(undefined)
     setModalMode('create')
     setShowModal(true)
@@ -313,15 +324,9 @@ export function BookingSchedule() {
     return { left: '0%', width: '0%' }
   }
 
-  const isSlotOccupied = (roomId: string, slotHour: number) => {
-    const slotStart = slotHour * 60
-    const slotEnd = (slotHour + 2) * 60
-    return bookings.some((b) => {
-      if (b.roomId !== roomId) return false
-      const bStart = timeToMinutes(b.startTime)
-      const bEnd = timeToMinutes(b.endTime)
-      return bStart < slotEnd && bEnd > slotStart
-    })
+  const isSlotOccupied = (roomId: string, slotStartMin: number) => {
+    const roomBookings = bookings.filter((b) => b.roomId === roomId)
+    return checkSlotOccupied(roomBookings, dateStr, slotStartMin, slotStartMin + SLOT_MIN)
   }
 
   const renderBookingBlock = (booking: Booking) => {
@@ -467,7 +472,7 @@ export function BookingSchedule() {
               Phòng
             </div>
             <div className="flex-1 flex">
-              {TIME_SLOTS.map((hour) => (
+              {HEADER_HOURS.map((hour) => (
                 <div
                   key={hour}
                   className="flex-1 text-center py-2 text-xs font-medium text-muted-foreground border-r border-border last:border-r-0"
@@ -495,19 +500,24 @@ export function BookingSchedule() {
 
                 <div className="flex-1 relative h-12">
                   <div className="absolute inset-0 flex">
-                    {TIME_SLOTS.map((slotHour) => {
-                      const occupied = isSlotOccupied(room.id, slotHour)
+                    {Array.from({ length: SLOT_COUNT }).map((_, idx) => {
+                      const slotStartMin = idx * SLOT_MIN
+                      const occupied = isSlotOccupied(room.id, slotStartMin)
+                      const isHourBoundary = slotStartMin % 60 === 0
                       return (
                         <div
-                          key={slotHour}
-                          className="flex-1 border-r border-border last:border-r-0 relative"
+                          key={idx}
+                          className={cn(
+                            'flex-1 last:border-r-0 relative',
+                            isHourBoundary ? 'border-r border-border' : 'border-r border-border/30',
+                          )}
                         >
                           {!occupied && (
                             <button
                               type="button"
-                              onClick={() => handleEmptySlotClick(room.id, slotHour)}
+                              onClick={() => handleEmptySlotClick(room.id, slotStartMin)}
                               className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary z-[5]"
-                              title="Thêm booking"
+                              title={`Thêm booking lúc ${minutesToTime(slotStartMin)}`}
                             >
                               <Plus className="h-4 w-4" />
                             </button>

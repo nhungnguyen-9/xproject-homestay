@@ -366,6 +366,7 @@ export function BookingModal({
                     id="startTime"
                     type="time"
                     lang="vi-VN"
+                    step={1800}
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     className="mt-1"
@@ -380,6 +381,7 @@ export function BookingModal({
                     id="endTime"
                     type="time"
                     lang="vi-VN"
+                    step={1800}
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     className="mt-1"

@@ -21,9 +21,14 @@ import {
 import { RoomTypeBadge } from '@/components/rooms/RoomTypeBadge';
 
 const HOUR_WIDTH = 80;
+const SLOT_MIN = 30;
+const SLOT_WIDTH = (HOUR_WIDTH * SLOT_MIN) / 60;
 const ROOM_LABEL_WIDTH = 80;
 const HEADER_HEIGHT = 50;
 const ROW_HEIGHT = 60;
+
+const padMin = (n: number) => String(n).padStart(2, '0');
+const minutesToTime = (min: number): string => `${padMin(Math.floor(min / 60))}:${padMin(min % 60)}`;
 
 const timeToMinutes = (time: string): number => {
     const [hours, minutes] = time.split(':').map(Number);
@@ -324,44 +329,39 @@ const RoomRow: React.FC<RoomRowProps> = ({
                     />
                 </div>
 
-                {/* Slot buttons 1h với + icon khi hover (min-height đủ để đạt 44px tap target) */}
+                {/* Slot buttons 30 phút với + icon khi hover (min-height đủ để đạt 44px tap target) */}
                 <div className="absolute inset-0 flex" style={{ width: totalWidth }}>
-                    {Array.from({ length: hourCount }).map((_, i) => {
-                        const slotHour = startHour + i
-                        const slotStart = slotHour * 60
-                        const slotEnd = (slotHour + 1) * 60
+                    {Array.from({ length: hourCount * 2 }).map((_, i) => {
+                        const slotStart = startHour * 60 + i * SLOT_MIN
+                        const slotEnd = slotStart + SLOT_MIN
+                        const slotLabel = minutesToTime(slotStart)
                         const occupied = isSlotOccupied(bookings, formatDateInput(selectedDate), slotStart, slotEnd)
-                        const isPast = isPastDate || (isToday && (
-                            slotHour < currentTime.getHours() ||
-                            (slotHour === currentTime.getHours() && currentTime.getMinutes() > 0)
-                        ))
+                        const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes()
+                        const isPast = isPastDate || (isToday && slotStart < nowMin)
                         return (
                             <div
                                 key={i}
                                 className="relative"
-                                style={{ width: HOUR_WIDTH, minHeight: 44 }}
+                                style={{ width: SLOT_WIDTH, minHeight: 44 }}
                             >
                                 {occupied ? (
                                     <div
                                         className="absolute inset-0 bg-rose-200/40 cursor-not-allowed z-[4]"
-                                        aria-label={`Slot ${String(slotHour).padStart(2, '0')}:00 đã có booking`}
+                                        aria-label={`Slot ${slotLabel} đã có booking`}
                                         aria-disabled="true"
                                     />
                                 ) : isPast ? (
                                     <div
                                         className="absolute inset-0 bg-gray-200/50 cursor-not-allowed z-[4]"
-                                        aria-label={`Slot ${String(slotHour).padStart(2, '0')}:00 đã qua, không thể đặt`}
+                                        aria-label={`Slot ${slotLabel} đã qua, không thể đặt`}
                                         aria-disabled="true"
                                     />
                                 ) : (
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            const timeString = `${String(slotHour).padStart(2, '0')}:00`
-                                            onEmptySlotClick?.(room.id, timeString)
-                                        }}
+                                        onClick={() => onEmptySlotClick?.(room.id, slotLabel)}
                                         className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary z-[5] hover:cursor-pointer"
-                                        aria-label={`Đặt phòng ${room.name} lúc ${String(slotHour).padStart(2, '0')}:00`}
+                                        aria-label={`Đặt phòng ${room.name} lúc ${slotLabel}`}
                                     >
                                         <Plus className="h-4 w-4" />
                                     </button>
