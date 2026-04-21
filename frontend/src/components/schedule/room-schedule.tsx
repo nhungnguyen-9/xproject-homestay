@@ -303,7 +303,6 @@ const RoomRow: React.FC<RoomRowProps> = ({
             className={cn(
                 'flex border-b border-border transition-all duration-300',
                 isFocused && 'border border-primary/60 rounded-lg bg-primary/5 ring-1 ring-primary/20',
-                isDimmed && 'opacity-35',
             )}
             style={{ height: rowHeight }}
         >
