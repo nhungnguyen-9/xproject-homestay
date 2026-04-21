@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
+import { toast } from "sonner"
 import { GalleryGrid } from "../gallery-grid"
 import { getAll, imageUrl } from "@/services/roomService"
 import * as branchService from "@/services/branchService"
@@ -51,8 +52,9 @@ export const RestRoomPage = () => {
                 if (branchData.length > 0) {
                     setActiveBranchId(branchData[0].id)
                 }
-            } catch {
-                // silently fail
+            } catch (err) {
+                console.error('Failed to load data:', err)
+                toast.error('Không tải được dữ liệu')
             } finally {
                 setLoading(false)
             }

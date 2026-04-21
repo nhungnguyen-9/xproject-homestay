@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import { HeroBanner } from '../hero/hero-banner'
 import { ReviewsSection } from './reviews-section'
@@ -15,7 +16,10 @@ export const Home = () => {
   useEffect(() => {
     branchService.getAll()
       .then(setBranches)
-      .catch(() => { })
+      .catch((err) => {
+        console.error('Failed to load branches:', err)
+        toast.error('Không tải được danh sách chi nhánh')
+      })
       .finally(() => setLoading(false))
   }, [])
 
