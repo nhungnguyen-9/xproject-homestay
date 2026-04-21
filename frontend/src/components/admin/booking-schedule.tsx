@@ -1,15 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import * as roomService from '@/services/roomService'
@@ -87,9 +77,6 @@ export function BookingSchedule() {
   const [prefillRoomId, setPrefillRoomId] = useState<string | undefined>(undefined)
   const [prefillStartTime, setPrefillStartTime] = useState<string | undefined>(undefined)
   const [prefillEndTime, setPrefillEndTime] = useState<string | undefined>(undefined)
-
-  const [showCleaningPrompt, setShowCleaningPrompt] = useState(false)
-  const [cleaningAfterBooking, setCleaningAfterBooking] = useState<Booking | null>(null)
 
   const [contextMenu, setContextMenu] = useState<{
     x: number
@@ -242,16 +229,6 @@ export function BookingSchedule() {
           saved = await bookingService.update(id, rest)
         }
 
-        // Khi chuyển sang checked-out → đề xuất thêm dọn phòng
-        if (
-          saved.category === 'guest' &&
-          saved.status === 'checked-out' &&
-          selectedBooking?.status !== 'checked-out'
-        ) {
-          setCleaningAfterBooking(saved)
-          setShowCleaningPrompt(true)
-        }
-
         if (saved.category === 'guest') {
           const room = rooms.find((r) => r.id === saved.roomId)
           if (saved.status === 'confirmed' && selectedBooking?.status !== 'confirmed') {
@@ -290,34 +267,6 @@ export function BookingSchedule() {
       await refreshBookings()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Xóa booking thất bại')
-    }
-  }
-
-  const handleCleaningConfirm = async () => {
-    if (!cleaningAfterBooking) return
-    const cleaningStart = cleaningAfterBooking.endTime
-    const cleaningEnd = addMinutes(cleaningAfterBooking.endTime, 30)
-
-    try {
-      await bookingService.create({
-        roomId: cleaningAfterBooking.roomId,
-        date: cleaningAfterBooking.date,
-        startTime: cleaningStart,
-        endTime: cleaningEnd,
-        status: 'confirmed',
-        totalPrice: 0,
-        category: 'internal',
-        internalTag: 'cleaning',
-        internalNote: 'Dọn phòng sau check-out',
-        createdBy: authService.getAuth().userName,
-      })
-      toast.success('Đã thêm 30p dọn phòng')
-      await refreshBookings()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Thêm dọn phòng thất bại')
-    } finally {
-      setShowCleaningPrompt(false)
-      setCleaningAfterBooking(null)
     }
   }
 
@@ -585,33 +534,6 @@ export function BookingSchedule() {
         onSave={handleSave}
         onDelete={handleDelete}
       />
-
-      <AlertDialog open={showCleaningPrompt} onOpenChange={setShowCleaningPrompt}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Thêm 30p dọn phòng?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Khách vừa check-out. Bạn có muốn thêm 30 phút dọn phòng sau checkout không?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                setShowCleaningPrompt(false)
-                setCleaningAfterBooking(null)
-              }}
-            >
-              Không
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleCleaningConfirm}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              Thêm dọn phòng
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {contextMenu && (
         <div
