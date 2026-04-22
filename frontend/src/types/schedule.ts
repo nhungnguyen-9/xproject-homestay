@@ -1,4 +1,3 @@
-import pepsi from "@/assets/pepsi.png";
 import type { DiscountSlot } from "@/types/room";
 
 /** Loại phòng: tiêu chuẩn, VIP, hoặc super VIP */
@@ -128,7 +127,6 @@ export interface BookingFormData {
   guestPhone: string;
   idImages: File[];
   foodItems: FoodItem[];
-  selectedComboIds?: string[];
   note: string;
   voucher: string;
   acceptTerms: boolean;
@@ -183,49 +181,3 @@ export const ROOM_PRICES: Record<RoomType, PriceConfig> = {
   },
 };
 
-/** Danh sách đồ ăn/đồ uống có thể đặt kèm */
-export const FOOD_ITEMS: FoodItem[] = [
-  {
-    id: 'f1',
-    name: 'Pepsi',
-    price: 15000,
-    image: pepsi,
-  },
-  {
-    id: 'f2',
-    name: 'Coca Cola',
-    price: 15000,
-    image: pepsi,
-  },
-  {
-    id: 'f3',
-    name: 'Sting',
-    price: 15000,
-    image: pepsi,
-  },
-  {
-    id: 'f4',
-    name: 'Mỳ Ly',
-    price: 20000,
-    image: pepsi,
-  },
-  {
-    id: 'f5',
-    name: 'Nước Suối',
-    price: 10000,
-    image: pepsi,
-  },
-  {
-    id: 'f6',
-    name: 'Xúc Xích',
-    price: 15000,
-    image: pepsi,
-  },
-];
-
-/** Danh sách combo đồ ăn ưu đãi */
-export const COMBO_ITEMS: FoodItem[] = [
-  { id: 'c1', name: '1 MỲ LY + 1 XÚC SÍCH + 1 SUỐI', price: 25000 },
-  { id: 'c2', name: '2 ÁO GIÁP', price: 20000 },
-  { id: 'c3', name: '1 SNACK + 1 SUỐI', price: 15000 },
-];

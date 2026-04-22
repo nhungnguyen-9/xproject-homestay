@@ -19,6 +19,7 @@ import { RevenueDashboard } from './components/admin/revenue-dashboard.tsx';
 import { RoomManagement } from './components/admin/room-management.tsx';
 import { BranchManagement } from './components/admin/branch-management.tsx';
 import { StaffManagement } from './components/admin/staff-management.tsx';
+import { ServiceManagement } from './components/admin/service-management.tsx';
 import * as telegramService from './services/telegramService';
 import { BookingPage } from './components/booking/BookingPage.tsx';
 import { ImageLibraryPage } from './components/images-library/ImageLibraryPage.tsx';
@@ -57,6 +58,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="settings" element={<AdminSettingsPage />} />
             <Route path="management" element={<RoomManagement />} />
             <Route path="branches" element={<BranchManagement />} />
+            <Route path="services" element={<ServiceManagement />} />
             <Route path="staff" element={<StaffManagement />} />
           </Route>
         </Route>

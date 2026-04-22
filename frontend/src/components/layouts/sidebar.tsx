@@ -11,6 +11,7 @@ import {
   ChevronRight,
   BedDouble,
   Building2,
+  UtensilsCrossed,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -22,6 +23,7 @@ const NAV_ITEMS: { label: string; icon: LucideIcon; to: string; permission?: str
   { label: "Quản lý phòng", icon: BedDouble, to: "/admin/management", permission: 'rooms' },
   { label: "Chi nhánh", icon: Building2, to: "/admin/branches", permission: 'rooms' },
   { label: "Khách hàng", icon: Users, to: "/admin/customers", permission: 'customers' },
+  { label: "Dịch vụ", icon: UtensilsCrossed, to: "/admin/services", permission: 'rooms' },
   { label: "Khuyến mãi", icon: Tag, to: "/admin/promos", permission: 'promos' },
   { label: "Telegram", icon: Send, to: "/admin/telegram", permission: 'telegram' },
   { label: "Cài đặt", icon: Settings, to: "/admin/settings" },

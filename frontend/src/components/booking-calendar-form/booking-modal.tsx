@@ -5,9 +5,10 @@ import {
     type Room,
     type BookingFormData,
     type Booking,
-    FOOD_ITEMS,
+    type FoodItem,
     getRoomPriceConfig,
 } from "@/types/schedule";
+import * as foodItemService from "@/services/foodItemService";
 import {
     Check,
     ChevronLeft,
@@ -60,6 +61,24 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     const [submittedFormData, setSubmittedFormData] =
         useState<BookingFormData | null>(null);
     const [showFoodModal, setShowFoodModal] = useState(false);
+    const [apiFoodItems, setApiFoodItems] = useState<FoodItem[]>([]);
+
+    React.useEffect(() => {
+        if (!open) return;
+        let cancelled = false;
+        foodItemService.getPublic().then((data) => {
+            if (cancelled) return;
+            setApiFoodItems(data.map((d) => ({
+                id: d.id,
+                name: d.name,
+                price: d.price,
+                image: d.image ?? undefined,
+                selected: false,
+                qty: 0,
+            })));
+        }).catch(() => {});
+        return () => { cancelled = true; };
+    }, [open]);
 
     const initialFormData = useMemo((): BookingFormData => {
         const checkInHour = selectedTime.split(":")[0] || "06";
@@ -80,13 +99,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             guestName: "",
             guestPhone: "",
             idImages: [],
-            foodItems: FOOD_ITEMS.map((item) => ({ ...item, selected: false, qty: 0 })),
-            selectedComboIds: [],
+            foodItems: apiFoodItems.map((item) => ({ ...item, selected: false, qty: 0 })),
             note: "",
             voucher: "",
             acceptTerms: false,
         };
-    }, [room, rooms, selectedDate, selectedTime]);
+    }, [room, rooms, selectedDate, selectedTime, apiFoodItems]);
 
     const [formData, setFormData] = useState<BookingFormData>(initialFormData);
 

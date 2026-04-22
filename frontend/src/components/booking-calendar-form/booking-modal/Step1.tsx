@@ -329,55 +329,16 @@ export const Step1: React.FC<Step1Props> = ({ formData, setFormData, rooms, pric
             <div className="bg-white border rounded-lg shadow-sm px-3 sm:px-4 py-4 sm:py-5">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
                     <div className="flex-1">
-                        <h4 className="font-semibold text-gray-800 text-base sm:text-lg mb-2">Đồ ăn & Uống</h4>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-1">Phòng không có sẵn đồ ăn & nước uống.</p>
+                        <h4 className="font-semibold text-gray-800 text-base sm:text-lg mb-2">Dịch vụ thêm</h4>
+                        <p className="text-xs sm:text-sm text-gray-600 mb-1">Phòng không có sẵn dịch vụ thêm.</p>
                         <p className="text-xs sm:text-sm text-gray-600">Tình iu vui lòng đặt trước để tụi mình chuẩn bị nghen 🍹 🍰</p>
                     </div>
                     <button type="button" onClick={() => onOpenFoodModal?.()}
                         className="flex font-semibold text-white cursor-pointer items-center justify-center gap-2 bg-status-warning px-3 sm:px-4 py-2 rounded-md shadow hover:bg-status-warning/90 transition-colors whitespace-nowrap text-sm w-full sm:w-auto">
-                        <ShoppingCart className="w-4 h-4" /> Thêm món
+                        <ShoppingCart className="w-4 h-4" /> Thêm dịch vụ
                     </button>
                 </div>
 
-                {/* <div className="space-y-3">
-                    <p className="text-xs sm:text-sm font-semibold text-gray-700">Combo đặc biệt:</p>
-                    <div className="space-y-2">
-                        {COMBO_ITEMS.map(combo => {
-                            const sel = formData.selectedComboIds?.includes(combo.id) || false;
-                            return (
-                                <button key={combo.id} type="button"
-                                    onClick={() => upd({ selectedComboIds: sel ? (formData.selectedComboIds || []).filter(id => id !== combo.id) : [...(formData.selectedComboIds || []), combo.id] })}
-                                    className={cn("w-full text-left flex items-center justify-between py-2.5 px-3 sm:px-4 rounded-lg border-2 cursor-pointer transition-all",
-                                        sel ? "border-primary bg-primary/5" : "border-border/50 hover:border-border bg-card")}>
-                                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                                        <div className={cn("w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0", sel ? "border-primary bg-primary" : "border-border")}>
-                                            {sel && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
-                                        </div>
-                                        <span className={cn("text-xs sm:text-sm font-medium truncate", sel ? "text-primary" : "text-gray-700")}>{combo.name}</span>
-                                    </div>
-                                    <span className={cn("text-xs sm:text-sm font-semibold ml-2 flex-shrink-0", sel ? "text-primary" : "text-gray-500")}>{formatPrice(combo.price)} VNĐ</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {selFood.length > 0 && (
-                        <div className="mt-3 pt-3 border-t space-y-2">
-                            {selFood.map(item => (
-                                <div key={item.id} className="flex items-center justify-between gap-2">
-                                    <span className="text-xs sm:text-sm text-gray-700 flex-1 min-w-0 truncate">{item.name} <span className="text-gray-500">x{item.qty}</span></span>
-                                    <span className="text-xs sm:text-sm font-semibold text-gray-700 flex-shrink-0">{formatPrice((item.qty || 0) * item.price)} VND</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {((formData.selectedComboIds?.length || 0) > 0 || selFood.length > 0) && (
-                        <div className="flex justify-end pt-2 mt-2 border-t">
-                            <span className="text-xs sm:text-sm">Tổng: <span className="font-bold text-primary">{formatPrice(foodTotal)} VND</span></span>
-                        </div>
-                    )}
-                </div> */}
             </div>
         </div>
     );

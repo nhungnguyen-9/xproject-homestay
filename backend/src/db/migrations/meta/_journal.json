@@ -57,6 +57,13 @@
       "when": 1776786975729,
       "tag": "0007_room_discount_slots",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1776849801753,
+      "tag": "0008_equal_blackheart",
+      "breakpoints": true
     }
   ]
 }

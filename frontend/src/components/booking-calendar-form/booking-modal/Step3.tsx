@@ -1,6 +1,5 @@
 import React from "react";
 import type { BookingFormData } from "@/types/schedule";
-import { COMBO_ITEMS } from "@/types/schedule";
 import {
     formatPrice,
 } from "@/utils/helpers";
@@ -17,13 +16,10 @@ interface Step3Props {
 export const Step3: React.FC<Step3Props> = ({ formData, price }) => {
 
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);
-    const foodItemsTotal = selectedFoodItems.reduce(
+    const foodTotal = selectedFoodItems.reduce(
         (sum, item) => sum + item.price * (item.qty || 0),
         0,
     );
-    const selectedCombos = COMBO_ITEMS.filter((c) => formData.selectedComboIds?.includes(c.id));
-    const comboTotal = selectedCombos.reduce((sum, combo) => sum + combo.price, 0);
-    const foodTotal = foodItemsTotal + comboTotal;
     const totalPrice = price + foodTotal;
 
     const { bankId, bankAccount, accountName } = BANK_CONFIG;
@@ -50,9 +46,26 @@ export const Step3: React.FC<Step3Props> = ({ formData, price }) => {
                     <h5 className="font-semibold mb-2">Nội Dung Chuyển Khoản</h5>
                     <p className="text-sm text-gray-700 mb-3">Bước 1: Mở app ngân hàng/ ví, chọn Quét mã QR hoặc chuyển khoản thủ công.</p>
                     <p className="text-sm text-gray-700 mb-3">Bước 2: Ghi nội dung chuyển khoản: <strong>{transferContent}</strong></p>
-                    <div className="text-sm text-muted-foreground bg-status-warning-muted rounded-lg p-3">
-                        <p className="mb-1">Số tiền cần thanh toán:</p>
-                        <p className="text-lg font-bold text-primary">{formatPrice(totalPrice)} VNĐ</p>
+                    <div className="text-sm text-muted-foreground bg-status-warning-muted rounded-lg p-3 space-y-1.5">
+                        <div className="flex justify-between">
+                            <span>Giá phòng</span>
+                            <span className="font-medium text-gray-800">{formatPrice(price)} VNĐ</span>
+                        </div>
+                        {selectedFoodItems.length > 0 && (
+                            <>
+                                <div className="text-xs font-medium text-gray-500 mt-1">Dịch vụ thêm:</div>
+                                {selectedFoodItems.map(item => (
+                                    <div key={item.id} className="flex justify-between pl-2">
+                                        <span className="text-gray-600">{item.name} <span className="text-gray-400">x{item.qty}</span></span>
+                                        <span className="font-medium text-gray-800">{formatPrice(item.price * (item.qty || 0))} VNĐ</span>
+                                    </div>
+                                ))}
+                            </>
+                        )}
+                        <div className="flex justify-between border-t pt-2 mt-2">
+                            <span className="font-bold">Tổng thanh toán</span>
+                            <span className="text-lg font-bold text-primary">{formatPrice(totalPrice)} VNĐ</span>
+                        </div>
                     </div>
                     <div className="mt-4">
                         <p className="text-sm text-gray-600">Hoặc quét mã QR bên cạnh để thanh toán nhanh.</p>

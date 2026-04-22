@@ -5,7 +5,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { BookingFormData } from "@/types/schedule";
-import { COMBO_ITEMS } from "@/types/schedule";
 import { formatDate, formatPrice } from "@/utils/helpers";
 import { ImageUpload, ROOM_TYPE_LABELS } from "./index";
 import * as customerService from "@/services/customerService";
@@ -40,8 +39,7 @@ export const Step2: React.FC<Step2Props> = ({ formData, setFormData, price, dura
     }, [formData.guestPhone, upd]);
 
     const selFood = formData.foodItems.filter(f => (f.qty || 0) > 0);
-    const foodTotal = selFood.reduce((s, i) => s + i.price * (i.qty || 0), 0)
-        + COMBO_ITEMS.filter(c => formData.selectedComboIds?.includes(c.id)).reduce((s, c) => s + c.price, 0);
+    const foodTotal = selFood.reduce((s, i) => s + i.price * (i.qty || 0), 0);
     const totalPrice = price + foodTotal;
     const hasIdImages = lookupResult && lookupResult !== 'loading' && lookupResult.hasIdImages;
 
@@ -155,11 +153,16 @@ export const Step2: React.FC<Step2Props> = ({ formData, setFormData, price, dura
                             <span className="text-gray-500">Giá phòng</span>
                             <span className="font-medium">{formatPrice(price)} VND</span>
                         </div>
-                        {foodTotal > 0 && (
-                            <div className="flex justify-between">
-                                <span className="text-gray-500">Đồ ăn & uống</span>
-                                <span className="font-medium">{formatPrice(foodTotal)} VND</span>
-                            </div>
+                        {selFood.length > 0 && (
+                            <>
+                                <div className="text-gray-500 text-xs font-medium mt-1">Dịch vụ thêm:</div>
+                                {selFood.map(item => (
+                                    <div key={item.id} className="flex justify-between pl-2">
+                                        <span className="text-gray-600">{item.name} <span className="text-gray-400">x{item.qty}</span></span>
+                                        <span className="font-medium">{formatPrice(item.price * (item.qty || 0))} VND</span>
+                                    </div>
+                                ))}
+                            </>
                         )}
                         <div className="flex justify-between items-center border-t pt-2 mt-4">
                             <span className="font-bold text-sm text-gray-800">TỔNG THANH TOÁN</span>

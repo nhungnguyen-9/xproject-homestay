@@ -169,6 +169,60 @@ export async function deleteCustomerIdImage(customerId: string, filename: string
 
 
 /**
+ * Lưu ảnh dịch vụ thêm vào uploads/food-items/.
+ * Validate MIME type, dung lượng (5MB), và magic bytes.
+ */
+export async function saveFoodItemImage(file: File, itemId: string, index: number): Promise<string> {
+  if (!ALLOWED_MIME_TYPES.has(file.type)) {
+    throw new Error(`Loại file không được hỗ trợ: ${file.type}. Chỉ chấp nhận JPEG, PNG, WebP`);
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`File quá lớn: ${(file.size / 1024 / 1024).toFixed(1)}MB. Tối đa 5MB`);
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  const magicBytes = validateMagicBytes(buffer);
+  if (!magicBytes) {
+    throw new Error('File không phải ảnh hợp lệ. Nội dung file không khớp với định dạng ảnh.');
+  }
+
+  const ext = magicBytes.ext;
+  const filename = `${itemId}-${Date.now()}-${index}${ext}`;
+  const dir = path.join(UPLOADS_ROOT, 'food-items');
+
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true });
+  }
+
+  await writeFile(path.join(dir, filename), buffer);
+
+  return filename;
+}
+
+/**
+ * Xóa file ảnh dịch vụ thêm khỏi disk.
+ * @param imageUrl - URL ảnh (dạng /uploads/food-items/filename)
+ * @returns true nếu xóa thành công, false nếu file không tồn tại
+ */
+export async function deleteFoodItemImage(imageUrl: string): Promise<boolean> {
+  const filename = path.basename(imageUrl);
+  const filepath = path.join(UPLOADS_ROOT, 'food-items', filename);
+
+  if (!filepath.startsWith(path.join(UPLOADS_ROOT, 'food-items'))) {
+    throw new Error('Đường dẫn file không hợp lệ');
+  }
+
+  try {
+    await unlink(filepath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Lưu file ảnh vào thư mục uploads/branches/.
  * Validate cả MIME type lẫn magic bytes header để chống giả mạo.
  * @param file - File từ multipart form data
