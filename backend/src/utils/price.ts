@@ -123,7 +123,13 @@ export function calculatePrice(
       break;
     }
     case 'combo3h': {
-      const base = priceConfig.combo3hRate ?? 0;
+      const comboRate = priceConfig.combo3hRate ?? 0;
+      const base = computeHourlyCost(
+        startMin,
+        startMin + 3 * 60,
+        comboRate / 3,
+        priceConfig.discountSlots,
+      );
       const overage = Math.max(0, Math.ceil(durationHrs) - 3);
       const overageStart = startMin + 3 * 60;
       const overageEnd = overageStart + overage * 60;
@@ -139,7 +145,13 @@ export function calculatePrice(
     case 'combo6h1h': {
       const rate = priceConfig.combo6h1hRate ?? 0;
       if (combo6h1hOption === 'discount') {
-        const base = Math.max(0, rate - (priceConfig.combo6h1hDiscount ?? 0));
+        const discountedRate = Math.max(0, rate - (priceConfig.combo6h1hDiscount ?? 0));
+        const base = computeHourlyCost(
+          startMin,
+          startMin + 6 * 60,
+          discountedRate / 6,
+          priceConfig.discountSlots,
+        );
         const overage = Math.max(0, Math.ceil(durationHrs) - 6);
         const overageStart = startMin + 6 * 60;
         const overageEnd = overageStart + overage * 60;
@@ -151,6 +163,12 @@ export function calculatePrice(
         );
         roomPrice = base + overageCost;
       } else {
+        const base = computeHourlyCost(
+          startMin,
+          startMin + 7 * 60,
+          rate / 7,
+          priceConfig.discountSlots,
+        );
         const overage = Math.max(0, Math.ceil(durationHrs) - 7);
         const overageStart = startMin + 7 * 60;
         const overageEnd = overageStart + overage * 60;
@@ -160,7 +178,7 @@ export function calculatePrice(
           priceConfig.extraHourRate,
           priceConfig.discountSlots,
         );
-        roomPrice = rate + overageCost;
+        roomPrice = base + overageCost;
       }
       break;
     }

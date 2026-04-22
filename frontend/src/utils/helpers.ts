@@ -177,35 +177,38 @@ export const calculateBookingPrice = (
     if (mode === "combo3h") {
         if (hasDiscount) {
             const startMin = timeToMinutes(times!.startTime);
+            const baseCost = computeHourlyCostMinuteWalk(startMin, startMin + 3 * 60, priceConfig.combo3hRate / 3, priceConfig.discountSlots);
             const overage = Math.max(0, Math.ceil(duration) - 3);
             const overageStart = startMin + 3 * 60;
             const overageEnd = overageStart + overage * 60;
             const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
-            return priceConfig.combo3hRate + overageCost;
+            return baseCost + overageCost;
         }
         return priceConfig.combo3hRate;
     }
 
     if (mode === "combo6h1h") {
         if (combo6h1hOption === 'discount') {
-            const base = Math.max(0, priceConfig.combo6h1hRate - priceConfig.combo6h1hDiscount);
+            const flatBase = Math.max(0, priceConfig.combo6h1hRate - priceConfig.combo6h1hDiscount);
             if (hasDiscount) {
                 const startMin = timeToMinutes(times!.startTime);
+                const baseCost = computeHourlyCostMinuteWalk(startMin, startMin + 6 * 60, flatBase / 6, priceConfig.discountSlots);
                 const overage = Math.max(0, Math.ceil(duration) - 6);
                 const overageStart = startMin + 6 * 60;
                 const overageEnd = overageStart + overage * 60;
                 const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
-                return base + overageCost;
+                return baseCost + overageCost;
             }
-            return base;
+            return flatBase;
         }
         if (hasDiscount) {
             const startMin = timeToMinutes(times!.startTime);
+            const baseCost = computeHourlyCostMinuteWalk(startMin, startMin + 7 * 60, priceConfig.combo6h1hRate / 7, priceConfig.discountSlots);
             const overage = Math.max(0, Math.ceil(duration) - 7);
             const overageStart = startMin + 7 * 60;
             const overageEnd = overageStart + overage * 60;
             const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
-            return priceConfig.combo6h1hRate + overageCost;
+            return baseCost + overageCost;
         }
         return priceConfig.combo6h1hRate;
     }

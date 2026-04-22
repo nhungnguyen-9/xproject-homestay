@@ -220,7 +220,7 @@ describe('calculatePrice() — discount slots', () => {
   })
 
   it('combo3h overage gets discounted: base + 50%-off 2h overage = 440000', () => {
-    // Base combo3hRate=400000 covers 10:00-13:00 (no discount on combo base).
+    // Base combo3hRate=400000 covers 10:00-13:00 (slot does not overlap base window).
     // Overage 13:00-15:00 fully inside a 50% slot → 2h * 40000 * 0.5 = 40000.
     const config = {
       ...cfg,
@@ -250,5 +250,87 @@ describe('calculatePrice() — discount slots', () => {
       discountSlots: [{ startTime: '24:00', endTime: '26:00', discountPercent: 50 }] as DiscountSlot[],
     }
     expect(calculatePrice('daily', '00:00', '26:00', config)).toBe(490000)
+  })
+
+  it('combo3h base gets discounted: 50% slot covers full 3h base window', () => {
+    // combo3hRate=400000, hourly equiv = 400000/3 ≈ 133333.33/hr.
+    // 10:00-13:00 fully inside 50% slot → 3h * (400000/3) * 0.5 = 200000.
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '10:00', endTime: '13:00', discountPercent: 50 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('combo3h', '10:00', '13:00', config)).toBe(200000)
+  })
+
+  it('combo3h base partially discounted: 50% slot covers 1h of 3h base', () => {
+    // combo3hRate=400000, hourly equiv = 400000/3.
+    // 10:00-11:00 (1h) inside 50% slot → 1h*(400000/3)*0.5 = 66667.
+    // 11:00-13:00 (2h) no discount → 2h*(400000/3) = 266667.
+    // Total base = 333333 (rounded from minute-level sum).
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '10:00', endTime: '11:00', discountPercent: 50 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('combo3h', '10:00', '13:00', config)).toBe(333333)
+  })
+
+  it('combo3h base + overage both discounted by same slot', () => {
+    // combo3hRate=400000, hourly equiv = 400000/3.
+    // Slot 10:00-15:00@50% covers both base (10:00-13:00) and overage (13:00-15:00).
+    // Base: 3h * (400000/3) * 0.5 = 200000.
+    // Overage: 2h * 40000 * 0.5 = 40000.
+    // Total = 240000.
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '10:00', endTime: '15:00', discountPercent: 50 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('combo3h', '10:00', '15:00', config)).toBe(240000)
+  })
+
+  it('combo6h1h bonus_hour base gets discounted: 50% slot covers full 7h', () => {
+    // combo6h1hRate=700000, hourly equiv = 700000/7 = 100000/hr.
+    // 10:00-17:00 fully inside 50% slot → 7h * 100000 * 0.5 = 350000.
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '10:00', endTime: '17:00', discountPercent: 50 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('combo6h1h', '10:00', '17:00', config, [], 0, 'bonus_hour')).toBe(350000)
+  })
+
+  it('combo6h1h bonus_hour base partially discounted: 50% slot covers 2h of 7h', () => {
+    // combo6h1hRate=700000, hourly equiv = 100000/hr.
+    // 10:00-12:00 (2h) inside 50% slot → 2*100000*0.5 = 100000.
+    // 12:00-17:00 (5h) no discount → 5*100000 = 500000.
+    // Total = 600000.
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '10:00', endTime: '12:00', discountPercent: 50 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('combo6h1h', '10:00', '17:00', config, [], 0, 'bonus_hour')).toBe(600000)
+  })
+
+  it('combo6h1h discount option base gets discounted: 50% slot covers full 6h', () => {
+    // combo6h1hRate=700000, discount=100000 → discountedRate=600000, hourly equiv = 100000/hr.
+    // 10:00-16:00 fully inside 50% slot → 6h * 100000 * 0.5 = 300000.
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '10:00', endTime: '16:00', discountPercent: 50 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('combo6h1h', '10:00', '16:00', config, [], 0, 'discount')).toBe(300000)
+  })
+
+  it('combo6h1h discount option base partially discounted + overage', () => {
+    // discountedRate=600000, hourly equiv = 100000/hr.
+    // Slot 14:00-18:00@50%:
+    //   Base 10:00-14:00 (4h) no discount → 4*100000 = 400000.
+    //   Base 14:00-16:00 (2h) 50% off → 2*100000*0.5 = 100000.
+    //   Base total = 500000.
+    // Overage 16:00-18:00 (2h) extraHourRate=40000, 50% off → 2*40000*0.5 = 40000.
+    // Total = 540000.
+    const config = {
+      ...cfg,
+      discountSlots: [{ startTime: '14:00', endTime: '18:00', discountPercent: 50 }] as DiscountSlot[],
+    }
+    expect(calculatePrice('combo6h1h', '10:00', '18:00', config, [], 0, 'discount')).toBe(540000)
   })
 })

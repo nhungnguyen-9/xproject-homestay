@@ -210,6 +210,40 @@ describe('calculateBookingPrice — discount slots', () => {
     expect(calculateBookingPrice('overnight', 13, { ...cfg, discountSlots: slots }, 'bonus_hour', { startTime: '10:00', endTime: '23:00' })).toBe(390000)
   })
 
+  it('combo3h — slot covering base hours discounts the base rate', () => {
+    // combo3hRate=400000, equiv hourly=400000/3, perMin=400000/3/60
+    // 14:00-17:00 (180 min) fully inside 20% slot → 180*(400000/180)*0.8 = 320000
+    const slots: DiscountSlot[] = [{ startTime: '14:00', endTime: '17:00', discountPercent: 20 }]
+    expect(calculateBookingPrice('combo3h', 3, { ...cfg, discountSlots: slots }, 'bonus_hour', { startTime: '14:00', endTime: '17:00' })).toBe(320000)
+  })
+
+  it('combo3h — slot covering base + overage discounts both', () => {
+    // 14:00-18:00 (4h), slot 14:00-18:00 @ 50%
+    // base: 180 min * (400000/3/60) * 0.5 = 200000
+    // overage: 1h = 60 min * (40000/60) * 0.5 = 20000
+    const slots: DiscountSlot[] = [{ startTime: '14:00', endTime: '18:00', discountPercent: 50 }]
+    expect(calculateBookingPrice('combo3h', 4, { ...cfg, discountSlots: slots }, 'bonus_hour', { startTime: '14:00', endTime: '18:00' })).toBe(220000)
+  })
+
+  it('combo6h1h bonus_hour — slot covering base hours discounts the base rate', () => {
+    // combo6h1hRate=700000, 7h base, equiv hourly=100000, perMin=100000/60
+    // 14:00-21:00 (420 min) fully inside 20% slot → 420*(100000/60)*0.8 = 560000
+    const slots: DiscountSlot[] = [{ startTime: '14:00', endTime: '21:00', discountPercent: 20 }]
+    expect(calculateBookingPrice('combo6h1h', 7, { ...cfg, discountSlots: slots }, 'bonus_hour', { startTime: '14:00', endTime: '21:00' })).toBe(560000)
+  })
+
+  it('combo6h1h discount — slot covering base hours discounts the base rate', () => {
+    // flatBase=600000, 6h base, equiv hourly=100000, perMin=100000/60
+    // 14:00-20:00 (360 min) fully inside 20% slot → 360*(100000/60)*0.8 = 480000
+    const slots: DiscountSlot[] = [{ startTime: '14:00', endTime: '20:00', discountPercent: 20 }]
+    expect(calculateBookingPrice('combo6h1h', 6, { ...cfg, discountSlots: slots }, 'discount', { startTime: '14:00', endTime: '20:00' })).toBe(480000)
+  })
+
+  it('combo3h — no slot overlap → full base rate', () => {
+    const slots: DiscountSlot[] = [{ startTime: '20:00', endTime: '22:00', discountPercent: 50 }]
+    expect(calculateBookingPrice('combo3h', 3, { ...cfg, discountSlots: slots }, 'bonus_hour', { startTime: '14:00', endTime: '17:00' })).toBe(400000)
+  })
+
   it('daily 26h with overage — slot outside time-of-day range billed at full rate', () => {
     // fullDays=1, extraHours=2. basePrice = 500000.
     // overageStart = 10:00 + 24h = minute 2040 (= day 2 10:00 in absolute minutes).
