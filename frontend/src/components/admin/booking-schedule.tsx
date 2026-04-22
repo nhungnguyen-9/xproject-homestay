@@ -131,7 +131,6 @@ export function BookingSchedule() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     bookingService.getByDate(dateStr)
       .then(data => { if (!cancelled) setBookings(data) })
       .catch(err => { if (!cancelled) toast.error(err instanceof Error ? err.message : 'Không tải được lịch đặt phòng') })
@@ -150,6 +149,7 @@ export function BookingSchedule() {
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const d = new Date(e.target.value + 'T00:00:00')
     if (!isNaN(d.getTime())) {
+      setLoading(true)
       setSelectedDate(d)
     }
   }
@@ -157,12 +157,14 @@ export function BookingSchedule() {
   const handlePrevDay = () => {
     const d = new Date(selectedDate)
     d.setDate(d.getDate() - 1)
+    setLoading(true)
     setSelectedDate(d)
   }
 
   const handleNextDay = () => {
     const d = new Date(selectedDate)
     d.setDate(d.getDate() + 1)
+    setLoading(true)
     setSelectedDate(d)
   }
 

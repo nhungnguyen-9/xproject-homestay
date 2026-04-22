@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getBookingPosition } from './room-schedule'
+import { getBookingPosition } from './schedule-utils'
 
 const HOUR_WIDTH = 80
 const D = '2026-04-20'

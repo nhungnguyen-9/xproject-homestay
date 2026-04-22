@@ -18,8 +18,8 @@ import {
     SHARED_WC_WARNING,
 } from '@/data/amenities';
 import { RoomTypeBadge } from '@/components/rooms/RoomTypeBadge';
+import { HOUR_WIDTH, getBookingPosition } from './schedule-utils';
 
-const HOUR_WIDTH = 80;
 const SLOT_MIN = 30;
 const SLOT_WIDTH = (HOUR_WIDTH * SLOT_MIN) / 60;
 const ROOM_LABEL_WIDTH = 80;
@@ -45,41 +45,6 @@ const isSameDay = (a: Date, b: Date): boolean => {
         a.getMonth() === b.getMonth() &&
         a.getDate() === b.getDate()
     );
-};
-
-/**
- * Tính vị trí (left, width) của booking trên timeline ngày đang xem.
- * - Same-day (`booking.date === viewingDate`): render từ startTime; overnight clamp end tại 24:00 để không overflow viewport 24h — user xem tiếp ngày D+1 sẽ thấy slice wrap-in.
- * - Cross-day wrap-in: booking thuộc ngày `D-1` nhưng overnight sang `D` (đang viewing) → render slice [00:00, endTime).
- * - Ngày không liên quan: trả `{0, 0}` để caller bỏ qua.
- *
- * Giả định: caller đã filter bookings chỉ gồm (date === viewingDate) hoặc (date === viewingDate - 1 AND overnight) — như `bookingService.getByDate` đang làm.
- */
-export const getBookingPosition = (
-    booking: Pick<Booking, 'date' | 'startTime' | 'endTime'>,
-    viewingDate: string,
-    startHour: number
-): { left: number; width: number } => {
-    const startMin = timeToMinutes(booking.startTime);
-    let endMin = timeToMinutes(booking.endTime);
-    const isOvernight = endMin <= startMin;
-    if (isOvernight) endMin += 24 * 60;
-
-    if (booking.date === viewingDate) {
-        const left = ((startMin - startHour * 60) / 60) * HOUR_WIDTH;
-        const clampedEndMin = Math.min(endMin, 24 * 60);
-        const width = ((clampedEndMin - startMin) / 60) * HOUR_WIDTH;
-        return { left, width };
-    }
-
-    if (isOvernight) {
-        const wrapEndMin = endMin - 24 * 60;
-        const left = ((0 - startHour * 60) / 60) * HOUR_WIDTH;
-        const width = (wrapEndMin / 60) * HOUR_WIDTH;
-        return { left, width };
-    }
-
-    return { left: 0, width: 0 };
 };
 
 interface FilterButtonProps {
@@ -302,6 +267,7 @@ const RoomRow: React.FC<RoomRowProps> = ({
             className={cn(
                 'flex border-b border-border transition-all duration-300',
                 isFocused && 'border border-primary/60 rounded-lg bg-primary/5 ring-1 ring-primary/20',
+                isDimmed && 'opacity-40',
             )}
             style={{ height: rowHeight }}
         >
