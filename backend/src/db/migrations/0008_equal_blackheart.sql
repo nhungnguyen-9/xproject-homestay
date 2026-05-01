@@ -1,0 +1,2 @@
+ALTER TABLE "food_items" DROP CONSTRAINT "food_items_category_check";--> statement-breakpoint
+ALTER TABLE "food_items" ADD CONSTRAINT "food_items_category_check" CHECK ("food_items"."category" IN ('item', 'combo', 'drink', 'service'));

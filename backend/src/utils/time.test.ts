@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { timeToMinutes, hasTimeOverlap, durationHours } from './time.js'
+import {
+  timeToMinutes,
+  hasTimeOverlap,
+  durationHours,
+  addDaysISO,
+  dateToEpochDays,
+  computeAbsoluteMinutes,
+  formatDateLocal,
+} from './time.js'
 
 describe('timeToMinutes()', () => {
   it('converts 00:00 to 0', () => {
@@ -81,5 +89,84 @@ describe('durationHours()', () => {
 
   it('calculates correctly across many hours', () => {
     expect(durationHours('08:00', '20:00')).toBe(12)
+  })
+})
+
+describe('addDaysISO()', () => {
+  it('adds one day across month boundary', () => {
+    expect(addDaysISO('2026-04-30', 1)).toBe('2026-05-01')
+  })
+  it('subtracts one day across month boundary', () => {
+    expect(addDaysISO('2026-05-01', -1)).toBe('2026-04-30')
+  })
+  it('handles leap year (Feb 28 → Feb 29)', () => {
+    expect(addDaysISO('2024-02-28', 1)).toBe('2024-02-29')
+  })
+  it('handles non-leap year (Feb 28 → Mar 1)', () => {
+    expect(addDaysISO('2026-02-28', 1)).toBe('2026-03-01')
+  })
+  it('returns same date when days = 0', () => {
+    expect(addDaysISO('2026-04-21', 0)).toBe('2026-04-21')
+  })
+})
+
+describe('dateToEpochDays()', () => {
+  it('returns different values for consecutive days', () => {
+    const a = dateToEpochDays('2026-04-20')
+    const b = dateToEpochDays('2026-04-21')
+    expect(b - a).toBe(1)
+  })
+})
+
+describe('formatDateLocal()', () => {
+  it('formats local Date to YYYY-MM-DD', () => {
+    // Build a Date in local timezone — avoid toISOString to keep test tz-safe.
+    const d = new Date(2026, 3, 21); // Apr 21, 2026 local
+    expect(formatDateLocal(d)).toBe('2026-04-21')
+  })
+  it('zero-pads single-digit month and day', () => {
+    const d = new Date(2026, 0, 5); // Jan 5, 2026 local
+    expect(formatDateLocal(d)).toBe('2026-01-05')
+  })
+  it('reflects local calendar date even when UTC date differs', () => {
+    // 23:30 local on Apr 21 VN (UTC+7) = 16:30 UTC on Apr 21 — same date here,
+    // but 07:00 local on Apr 22 VN = 00:00 UTC on Apr 22 — also same. We pick
+    // a case that diverges: late-evening local is often next-day UTC only when
+    // tz > 0; in VN (+7) it actually never flips backwards. So we assert the
+    // explicit invariant: result uses local getFullYear/Month/Date (not UTC).
+    const d = new Date(2026, 11, 31, 23, 59); // Dec 31 2026 23:59 local
+    expect(formatDateLocal(d)).toBe('2026-12-31')
+  })
+})
+
+describe('computeAbsoluteMinutes()', () => {
+  it('same-day hourly: start < end, no wrap', () => {
+    const r = computeAbsoluteMinutes('2026-04-21', '14:00', '16:00', 'hourly', '2026-04-21')
+    expect(r).toEqual({ start: 14 * 60, end: 16 * 60 })
+  })
+
+  it('overnight mode: wraps endTime +24h even when textually earlier', () => {
+    const r = computeAbsoluteMinutes('2026-04-21', '22:00', '06:00', 'overnight', '2026-04-21')
+    expect(r).toEqual({ start: 22 * 60, end: 6 * 60 + 1440 })
+  })
+
+  it('endTime < startTime without overnight mode still detected as wrap', () => {
+    const r = computeAbsoluteMinutes('2026-04-21', '22:00', '06:00', 'hourly', '2026-04-21')
+    expect(r).toEqual({ start: 22 * 60, end: 6 * 60 + 1440 })
+  })
+
+  it('next-day booking relative to refDate (ref is earlier)', () => {
+    const r = computeAbsoluteMinutes('2026-04-22', '06:00', '10:00', 'hourly', '2026-04-21')
+    expect(r).toEqual({ start: 1440 + 6 * 60, end: 1440 + 10 * 60 })
+  })
+
+  it('previous-day booking relative to refDate produces negative start', () => {
+    const r = computeAbsoluteMinutes('2026-04-20', '22:00', '06:00', 'overnight', '2026-04-21')
+    expect(r).toEqual({ start: -1440 + 22 * 60, end: -1440 + 6 * 60 + 1440 })
+  })
+
+  it('zero-duration range (endTime == startTime) does not wrap', () => {
+    const r = computeAbsoluteMinutes('2026-04-21', '10:00', '10:00', 'hourly', '2026-04-21')
+    expect(r).toEqual({ start: 600, end: 600 })
   })
 })

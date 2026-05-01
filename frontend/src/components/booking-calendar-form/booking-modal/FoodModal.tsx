@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import type { FoodItem } from "@/types/schedule";
 import { formatPrice } from "@/utils/helpers";
 import { cn } from "@/lib/utils";
+import { BACKEND_ORIGIN } from "@/services/branchService";
 
 interface FoodModalProps {
     open: boolean;
@@ -37,7 +38,7 @@ export const FoodModal: React.FC<FoodModalProps> = ({ open, onOpenChange, items,
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-3xl w-[90vw] sm:w-[86vw] max-h-[80vh] flex flex-col p-0 overflow-hidden" style={{ maxWidth: 980 }}>
                 <DialogHeader className="bg-primary text-primary-foreground p-3 sm:p-4 rounded-t-md">
-                    <DialogTitle className="font-semibold text-base sm:text-lg">Đồ ăn & uống</DialogTitle>
+                    <DialogTitle className="font-semibold text-base sm:text-lg">Dịch vụ thêm</DialogTitle>
                 </DialogHeader>
 
                 <div className="p-2 sm:p-3 flex-1 overflow-y-auto">
@@ -54,7 +55,7 @@ export const FoodModal: React.FC<FoodModalProps> = ({ open, onOpenChange, items,
 
                                 <div className="h-48 flex items-center justify-center bg-muted/50 rounded-md overflow-hidden mb-3">
                                     {item.image ? (
-                                        <img src={item.image} alt={item.name} className="object-contain max-h-full max-w-full" />
+                                        <img src={item.image.startsWith('http') ? item.image : `${BACKEND_ORIGIN}${item.image}`} alt={item.name} className="object-contain max-h-full max-w-full" />
                                     ) : (
                                         <div className="text-xs text-gray-400">Hình ảnh</div>
                                     )}

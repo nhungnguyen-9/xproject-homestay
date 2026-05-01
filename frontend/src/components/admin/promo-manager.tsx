@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -48,18 +48,30 @@ function formatDateShort(dateStr: string): string {
  * Hiển thị danh sách promo codes, cho phép tạo/sửa/xoá và lọc theo trạng thái
  */
 export function PromoManager() {
-  const [promos, setPromos] = useState<PromoCode[]>(() => {
-    promoService.refreshStatuses()
-    return promoService.getAll()
-  })
+  const [promos, setPromos] = useState<PromoCode[]>([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterStatus>('all')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingPromo, setEditingPromo] = useState<PromoCode | undefined>(undefined)
   const [deleteTarget, setDeleteTarget] = useState<PromoCode | null>(null)
 
-  function loadPromos() {
-    setPromos(promoService.getAll())
-  }
+  const loadPromos = useCallback(async () => {
+    try {
+      const data = await promoService.getAll()
+      setPromos(data)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Không tải được danh sách mã khuyến mãi')
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    promoService.getAll()
+      .then(data => { if (!cancelled) setPromos(data) })
+      .catch(err => { if (!cancelled) toast.error(err instanceof Error ? err.message : 'Không tải được danh sách mã khuyến mãi') })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
 
   const filtered = useMemo(() => {
     if (filter === 'all') return promos
@@ -86,27 +98,44 @@ export function PromoManager() {
     setModalOpen(true)
   }
 
-  function handleSave(data: Omit<PromoCode, 'id' | 'usedCount' | 'createdAt'>) {
-    if (editingPromo) {
-      promoService.update(editingPromo.id, data)
-    } else {
-      promoService.create(data)
+  async function handleSave(data: Omit<PromoCode, 'id' | 'usedCount' | 'createdAt'>) {
+    try {
+      if (editingPromo) {
+        await promoService.update(editingPromo.id, data)
+      } else {
+        await promoService.create(data)
+      }
+      await loadPromos()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Lưu mã khuyến mãi thất bại')
+      throw err
     }
-    loadPromos()
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleteTarget) return
-    promoService.remove(deleteTarget.id)
-    toast.success(`Đã xóa mã ${deleteTarget.code}`)
-    setDeleteTarget(null)
-    loadPromos()
+    try {
+      await promoService.remove(deleteTarget.id)
+      toast.success(`Đã xóa mã ${deleteTarget.code}`)
+      setDeleteTarget(null)
+      await loadPromos()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Xóa mã thất bại')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-slate-800">Mã khuyến mãi</h2>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-foreground">Mã khuyến mãi</h2>
         <div className="flex items-center gap-3">
           <select
             value={filter}

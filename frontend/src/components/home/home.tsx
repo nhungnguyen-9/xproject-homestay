@@ -1,82 +1,119 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
+import { motion } from 'framer-motion'
 import { HeroBanner } from '../hero/hero-banner'
-import { GalleryGrid } from '../gallery-grid'
 import { ReviewsSection } from './reviews-section'
-
-const filterCategories = ["Hôm nay", "Giá thấp"]
-
-const MOCK_ROOMS = [
-  {
-    title: "Chi Nhánh Cam 01",
-    price: "3 tiếng/199K • Qua đêm/299K",
-    images: [
-      "/images/generated-1773763911137.png",
-      "/images/generated-1773764116868.png",
-      "/images/generated-1773764146153.png",
-      "/images/generated-1773764166795.png",
-      "/images/generated-1773764183697.png",
-    ],
-  },
-  {
-    title: "Chi Nhánh Cam 02",
-    price: "3 tiếng/219K • Qua đêm/319K",
-    images: [
-      "/images/generated-1773764199921.png",
-      "/images/generated-1773764218357.png",
-      "/images/generated-1773764255793.png",
-      "/images/generated-1773764270784.png",
-      "/images/generated-1773764296856.png",
-    ],
-  },
-  {
-    title: "Chi Nhánh Cam 03",
-    price: "3 tiếng/249K • Qua đêm/349K",
-    images: [
-      "/images/generated-1773764315880.png",
-      "/images/generated-1773764350601.png",
-      "/images/generated-1773764375449.png",
-      "/images/generated-1773764415086.png",
-    ],
-  },
-]
+import * as branchService from '@/services/branchService'
+import type { Branch } from '@/types/branch'
+import { MapPin } from 'lucide-react'
 
 export const Home = () => {
-  const [activeFilter, setActiveFilter] = useState("Hôm nay")
+  const navigate = useNavigate()
+  const [branches, setBranches] = useState<Branch[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    branchService.getAll()
+      .then(setBranches)
+      .catch((err) => {
+        console.error('Failed to load branches:', err)
+        toast.error('Không tải được danh sách chi nhánh')
+      })
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
     <div className="flex flex-col gap-6 pb-20">
       <HeroBanner />
 
       <div className="px-8 mt-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-[28px] font-extrabold text-[#2B2B2B] tracking-tight">
-            Danh sách chi nhánh
-          </h2>
-
-          <div className="flex flex-wrap items-center gap-3">
-            {filterCategories.map((filter) => {
-              const isActive = filter === activeFilter;
-              return (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-all hover:scale-105 shadow-sm
-                    ${isActive
-                      ? 'bg-nhacam-primary text-white hover:bg-nhacam-primary-hover shadow-md'
-                      : 'bg-card text-secondary hover:bg-accent'
-                    }`}
-                >
-                  {filter}
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        <h2 className="text-[28px] font-extrabold text-[#2B2B2B] tracking-tight">
+          Danh sách chi nhánh
+        </h2>
       </div>
 
-      <GalleryGrid items={MOCK_ROOMS} />
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <p className="text-sm text-gray-500">Đang tải danh sách chi nhánh...</p>
+        </div>
+      ) : branches.length > 0 ? (
+        <motion.div
+          className="mx-auto grid w-full grid-cols-1 gap-5 px-8 sm:grid-cols-2 lg:grid-cols-3"
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
+        >
+          {branches.map((branch) => (
+            <BranchCard
+              key={branch.id}
+              branch={branch}
+              onClick={() => navigate(`/phong-nghi?branchId=${branch.id}`)}
+            />
+          ))}
+        </motion.div>
+      ) : (
+        <div className="flex justify-center py-12">
+          <p className="text-sm text-gray-500">Chưa có chi nhánh nào</p>
+        </div>
+      )}
 
       <ReviewsSection />
     </div>
+  )
+}
+
+import type { Variants } from 'framer-motion'
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' as const } },
+}
+
+/** Card chi nhánh — hiển thị ảnh collage, tên, địa chỉ */
+function BranchCard({ branch, onClick }: { branch: Branch; onClick: () => void }) {
+  const images = (branch.images || []).map(branchService.imageUrl)
+  const img = (i: number) => images[i] || images[0] || '/images/placeholder-room.png'
+  const hasImages = images.length > 0
+
+  return (
+    <motion.div
+      variants={cardVariants}
+      onClick={onClick}
+      className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-md cursor-pointer"
+    >
+      {/* Image area */}
+      {hasImages ? (
+        <div className="flex h-[200px] gap-2">
+          <div className="relative flex-[5] overflow-hidden rounded-xl">
+            <img src={img(0)} alt={branch.name} className="h-full w-full object-cover" loading="lazy" />
+          </div>
+          {images.length > 1 && (
+            <div className="relative flex-[3] overflow-hidden rounded-xl">
+              <img src={img(1)} alt={branch.name} className="h-full w-full object-cover" loading="lazy" />
+            </div>
+          )}
+          {images.length > 2 && (
+            <div className="flex flex-[2] flex-col gap-2">
+              {[2, 3, 4].map((i) => images[i] ? (
+                <div key={i} className="relative flex-1 overflow-hidden rounded-xl">
+                  <img src={img(i)} alt={`${branch.name} ${i}`} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                </div>
+              ) : null)}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex h-[200px] items-center justify-center rounded-xl bg-gray-100">
+          <MapPin className="size-12 text-gray-300" />
+        </div>
+      )}
+
+      {/* Info */}
+      <div className="flex flex-col gap-0.5 px-1 pb-1">
+        <h3 className="text-[17px] font-extrabold text-[#2B2B2B]">{branch.name}</h3>
+        <p className="text-[13px] font-semibold text-[#6A635B]">{branch.address}</p>
+      </div>
+    </motion.div>
   )
 }

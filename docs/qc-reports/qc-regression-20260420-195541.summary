@@ -1,0 +1,8 @@
+[PASS] backend:test
+[PASS] frontend:test
+[PASS] backend:build
+[PASS] frontend:build
+[FAIL] frontend:lint (exit=1)
+
+Summary: PASS=4 FAIL=1
+Log: /home/tav/Documents/xproject-homestay/docs/qc-reports/qc-regression-20260420-195541.log

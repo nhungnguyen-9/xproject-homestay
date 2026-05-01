@@ -1,4 +1,5 @@
 import type { BookingFormData, Booking } from "@/types/schedule";
+import { formatDateInput } from "@/utils/helpers";
 
 /** Chuyển chuỗi ngày (YYYY-MM-DD) và giờ (HH:mm) thành timestamp tuyệt đối (local time) */
 function toTimestamp(dateStr: string, time: string): number {
@@ -25,6 +26,8 @@ export const validateStep1 = (
     duration: number,
     _selectedDate: Date
 ): Record<string, string> => {
+    // _selectedDate giữ lại cho tương thích API với caller hiện tại
+    void _selectedDate;
     const newErrors: Record<string, string> = {};
 
     if (duration < 0.5) {
@@ -32,10 +35,10 @@ export const validateStep1 = (
     }
 
     const inDate = formData.checkInDate instanceof Date
-        ? formData.checkInDate.toISOString().split('T')[0]
+        ? formatDateInput(formData.checkInDate)
         : String(formData.checkInDate);
     const outDate = formData.checkOutDate instanceof Date
-        ? formData.checkOutDate.toISOString().split('T')[0]
+        ? formatDateInput(formData.checkOutDate)
         : String(formData.checkOutDate);
 
     const newStart = toTimestamp(inDate, formData.checkInTime);
@@ -43,6 +46,13 @@ export const validateStep1 = (
     
     // Nếu checkout <= checkin, cộng thêm 24h (trường hợp cùng ngày nhưng ghi giờ ngược)
     if (newEnd <= newStart) newEnd += 24 * 60 * 60 * 1000;
+
+    // Safety net: không cho đặt phòng trong quá khứ
+    const now = Date.now();
+    if (newStart < now) {
+        newErrors.time = "Không thể đặt phòng trong quá khứ";
+        return newErrors;
+    }
 
     // Phát hiện trùng lịch: so sánh với TẤT CẢ booking của phòng này
     const roomBookings = bookings.filter((b) => b.roomId === formData.roomId && b.status !== 'cancelled');

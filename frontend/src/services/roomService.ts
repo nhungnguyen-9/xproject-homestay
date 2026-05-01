@@ -1,5 +1,5 @@
 import { apiFetch } from './apiClient';
-import type { RoomDetail } from '@/types/room';
+import type { RoomDetail, CreateRoomPayload } from '@/types/room';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://103.57.220.186/api/v1';
 /** Gốc server backend (bỏ /api/v1) — dùng để truy cập file tĩnh */
@@ -32,6 +32,35 @@ export async function getAll(params?: { branchId?: string; type?: string }): Pro
  */
 export async function getById(id: string): Promise<RoomDetail> {
   return apiFetch<RoomDetail>(`/rooms/${id}`, { skipAuth: true });
+}
+
+/**
+ * Tạo phòng mới (Admin only)
+ */
+export async function create(data: CreateRoomPayload): Promise<RoomDetail> {
+  return apiFetch<RoomDetail>('/rooms', {
+    method: 'POST',
+    body: data,
+  });
+}
+
+/**
+ * Cập nhật thông tin phòng (Admin only)
+ */
+export async function update(id: string, data: Partial<CreateRoomPayload>): Promise<RoomDetail> {
+  return apiFetch<RoomDetail>(`/rooms/${id}`, {
+    method: 'PUT',
+    body: data,
+  });
+}
+
+/**
+ * Vô hiệu hóa phòng — soft delete (Admin only)
+ */
+export async function deactivate(id: string): Promise<void> {
+  await apiFetch<void>(`/rooms/${id}`, {
+    method: 'DELETE',
+  });
 }
 
 /**

@@ -99,7 +99,7 @@ export function TelegramConfig() {
   const botDisplayName = configSaved && botToken ? '@NhaCamBot' : null
 
   return (
-    <div className="flex flex-col gap-8 p-6">
+    <div className="flex flex-col gap-6">
       <h2 className="text-xl font-bold text-foreground">Cấu hình Telegram</h2>
 
       <section className="rounded-xl border border-border bg-card p-6 shadow-sm">

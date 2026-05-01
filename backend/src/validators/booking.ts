@@ -8,7 +8,8 @@ const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 /**
  * Schema validate tạo booking mới
  * - roomId, date (YYYY-MM-DD), startTime/endTime (HH:mm): bắt buộc
- * - mode: hourly/daily/overnight (mặc định hourly)
+ * - mode: hourly/daily/overnight/combo3h/combo6h1h (mặc định hourly)
+ * - combo6h1hOption: chỉ dùng khi mode='combo6h1h' — 'bonus_hour' (mặc định) | 'discount'
  * - category: guest/internal (mặc định guest)
  * - foodItems: danh sách đồ ăn kèm theo
  * - totalPrice: tổng tiền (tính sẵn từ frontend)
@@ -18,7 +19,8 @@ export const createBookingSchema = z.object({
   date: z.string().regex(dateRegex, 'Date must be YYYY-MM-DD'),
   startTime: z.string().regex(timeRegex, 'Start time must be HH:mm'),
   endTime: z.string().regex(timeRegex, 'End time must be HH:mm'),
-  mode: z.enum(['hourly', 'daily', 'overnight']).default('hourly'),
+  mode: z.enum(['hourly', 'daily', 'overnight', 'combo3h', 'combo6h1h']).default('hourly'),
+  combo6h1hOption: z.enum(['bonus_hour', 'discount']).optional(),
   guestName: z.string().optional(),
   guestPhone: z.string().optional(),
   status: z.enum(['pending', 'confirmed', 'checked-in', 'checked-out', 'cancelled']).default('pending'),
@@ -29,11 +31,12 @@ export const createBookingSchema = z.object({
   adults: z.number().int().min(1).default(2),
   foodItems: z.array(z.object({
     id: z.string(),
-    name: z.string(),
-    price: z.number(),
+    name: z.string().optional(),
+    price: z.number().optional(),
     qty: z.number().int().min(1).optional(),
   })).default([]),
-  totalPrice: z.number().int().min(0).default(0),
+  // totalPrice from client là gợi ý hiển thị, bị ignore — server tự tính từ room rates + foodItems (DB) + promo.
+  totalPrice: z.number().int().min(0).optional(),
   voucher: z.string().optional(),
 });
 
@@ -51,5 +54,6 @@ export const checkOverlapSchema = z.object({
   date: z.string().regex(dateRegex),
   startTime: z.string().regex(timeRegex),
   endTime: z.string().regex(timeRegex),
+  mode: z.enum(['hourly', 'daily', 'overnight', 'combo3h', 'combo6h1h']).optional(),
   excludeId: z.string().optional(),
 });

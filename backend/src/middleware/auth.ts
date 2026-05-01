@@ -38,3 +38,24 @@ export async function authMiddleware(c: Context, next: Next) {
     return c.json({ error: 'Unauthorized: Invalid token' }, 401);
   }
 }
+
+/**
+ * Middleware xác thực JWT tùy chọn — nếu có Bearer token hợp lệ thì gắn user vào context,
+ * nếu không có token hoặc token sai thì vẫn cho đi tiếp (handler tự xử lý phân quyền mềm).
+ * Dùng cho các route công khai nhưng có ẩn/hiện dữ liệu nhạy cảm theo trạng thái đăng nhập.
+ */
+export async function optionalAuth(c: Context, next: Next) {
+  const authHeader = c.req.header('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    if (token) {
+      try {
+        const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+        c.set('user', payload);
+      } catch {
+        // Token sai/hết hạn → coi như khách vãng lai, không gắn user
+      }
+    }
+  }
+  await next();
+}

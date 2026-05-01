@@ -5,9 +5,10 @@ import {
     type Room,
     type BookingFormData,
     type Booking,
-    ROOM_PRICES,
-    FOOD_ITEMS,
+    type FoodItem,
+    getRoomPriceConfig,
 } from "@/types/schedule";
+import * as foodItemService from "@/services/foodItemService";
 import {
     Check,
     ChevronLeft,
@@ -17,12 +18,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
     calculateDuration,
     calculateBookingPrice,
+    formatDateInput,
 } from "@/utils/helpers";
 import * as customerService from "@/services/customerService";
 import {
     StepIndicator,
     PaymentModal,
-    Snowfall,
     Step1,
     Step2,
     Step3,
@@ -60,6 +61,24 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     const [submittedFormData, setSubmittedFormData] =
         useState<BookingFormData | null>(null);
     const [showFoodModal, setShowFoodModal] = useState(false);
+    const [apiFoodItems, setApiFoodItems] = useState<FoodItem[]>([]);
+
+    React.useEffect(() => {
+        if (!open) return;
+        let cancelled = false;
+        foodItemService.getPublic().then((data) => {
+            if (cancelled) return;
+            setApiFoodItems(data.map((d) => ({
+                id: d.id,
+                name: d.name,
+                price: d.price,
+                image: d.image ?? undefined,
+                selected: false,
+                qty: 0,
+            })));
+        }).catch(() => {});
+        return () => { cancelled = true; };
+    }, [open]);
 
     const initialFormData = useMemo((): BookingFormData => {
         const checkInHour = selectedTime.split(":")[0] || "06";
@@ -80,13 +99,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             guestName: "",
             guestPhone: "",
             idImages: [],
-            foodItems: FOOD_ITEMS.map((item) => ({ ...item, selected: false, qty: 0 })),
-            selectedComboIds: [],
+            foodItems: apiFoodItems.map((item) => ({ ...item, selected: false, qty: 0 })),
             note: "",
             voucher: "",
             acceptTerms: false,
         };
-    }, [room, rooms, selectedDate, selectedTime]);
+    }, [room, rooms, selectedDate, selectedTime, apiFoodItems]);
 
     const [formData, setFormData] = useState<BookingFormData>(initialFormData);
 
@@ -118,10 +136,18 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         formData.checkOutTime,
     ]);
 
-    // Tính giá phòng bằng helper tập trung để đảm bảo tính đúng đắn cho các ca phụ thu
+    const selectedRoom = useMemo(() => rooms.find(r => r.id === formData.roomId) ?? room, [rooms, formData.roomId, room]);
+
     const price = useMemo(() => {
-        return calculateBookingPrice(formData.mode, duration, ROOM_PRICES[formData.roomType]);
-    }, [formData.roomType, formData.mode, duration]);
+        const priceConfig = selectedRoom ? getRoomPriceConfig(selectedRoom) : getRoomPriceConfig({ type: formData.roomType });
+        return calculateBookingPrice(
+            formData.mode,
+            duration,
+            priceConfig,
+            formData.combo6h1hOption,
+            { startTime: formData.checkInTime, endTime: formData.checkOutTime },
+        );
+    }, [selectedRoom, formData.roomType, formData.mode, duration, formData.combo6h1hOption, formData.checkInTime, formData.checkOutTime]);
 
     const selectedFoodItems = formData.foodItems.filter((f) => (f.qty || 0) > 0);
     const foodTotal = selectedFoodItems.reduce(
@@ -196,7 +222,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 adults: formData.adults,
                 foodItems: selectedFoodItems,
                 totalPrice,
-                date: formData.checkInDate.toISOString().split('T')[0],
+                date: formatDateInput(formData.checkInDate),
                 category: 'guest' as const,
             };
             onBookingCreate?.(newBooking);

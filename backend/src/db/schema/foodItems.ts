@@ -9,7 +9,7 @@ import { nanoid } from 'nanoid';
  * - id: khóa chính (nanoid)
  * - name: tên món
  * - price: giá bán (VND, integer)
- * - category: phân loại ('item' | 'combo'), có CHECK constraint
+ * - category: phân loại ('item' | 'combo' | 'drink' | 'service'), có CHECK constraint
  * - isActive: trạng thái hiển thị (ẩn món mà không cần xóa)
  * - sortOrder: thứ tự hiển thị
  */
@@ -22,5 +22,5 @@ export const foodItems = pgTable('food_items', {
   isActive: boolean('is_active').default(true).notNull(),
   sortOrder: integer('sort_order').default(0).notNull(),
 }, (table) => [
-  check('food_items_category_check', sql`${table.category} IN ('item', 'combo')`),
+  check('food_items_category_check', sql`${table.category} IN ('item', 'combo', 'drink', 'service')`),
 ]);

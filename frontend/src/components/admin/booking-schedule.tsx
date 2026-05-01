@@ -1,27 +1,23 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { demoRooms } from '@/data/demo-schedule'
+import * as roomService from '@/services/roomService'
 import * as bookingService from '@/services/bookingService'
 import * as authService from '@/services/authService'
 import * as customerService from '@/services/customerService'
 import * as telegramService from '@/services/telegramService'
 import { BookingModal } from '@/components/admin/booking-modal'
+import { RoomTypeBadge } from '@/components/rooms/RoomTypeBadge'
+import { formatDate } from '@/utils/helpers'
+import { isSlotOccupied as checkSlotOccupied } from '@/utils/bookingOccupancy'
 import type { Booking, InternalTag } from '@/types/schedule'
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
-const TIME_SLOTS = Array.from({ length: 12 }, (_, i) => i * 2)
+const HEADER_HOURS = Array.from({ length: 24 }, (_, i) => i)
+const SLOT_MIN = 30
+const SLOT_COUNT = (24 * 60) / SLOT_MIN
+const DEFAULT_NEW_BOOKING_MIN = 120
 
 const STATUS_COLORS: Record<string, string> = {
   confirmed: 'bg-booking-confirmed-bg border-l-4 border-l-booking-confirmed text-booking-confirmed-text',
@@ -32,7 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const TAG_COLORS: Record<InternalTag, string> = {
-  cleaning: 'bg-tag-cleaning-bg border-l-4 border-l-tag-cleaning text-tag-cleaning-text',
+  cleaning: 'bg-sky-200 border-l-4 border-l-sky-500 text-sky-900',
   maintenance: 'bg-tag-maintenance-bg border-l-4 border-l-tag-maintenance text-tag-maintenance-text',
   locked: 'bg-tag-locked-bg border-l-4 border-l-tag-locked text-tag-locked-text',
   custom: 'bg-tag-custom-bg border-l-4 border-l-tag-custom text-tag-custom-text',
@@ -64,6 +60,12 @@ function addMinutes(time: string, mins: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
+function minutesToTime(min: number): string {
+  const h = Math.floor(min / 60) % 24
+  const m = min % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
 function formatDateISO(d: Date): string {
   const year = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')
@@ -87,9 +89,6 @@ export function BookingSchedule() {
   const [prefillStartTime, setPrefillStartTime] = useState<string | undefined>(undefined)
   const [prefillEndTime, setPrefillEndTime] = useState<string | undefined>(undefined)
 
-  const [showCleaningPrompt, setShowCleaningPrompt] = useState(false)
-  const [cleaningAfterBooking, setCleaningAfterBooking] = useState<Booking | null>(null)
-
   const [contextMenu, setContextMenu] = useState<{
     x: number
     y: number
@@ -99,19 +98,45 @@ export function BookingSchedule() {
 
   const dateStr = formatDateISO(selectedDate)
 
-  const [bookings, setBookings] = useState<Booking[]>(() => {
-    bookingService.init()
-    return bookingService.getByDate(dateStr)
-  })
+  const [rooms, setRooms] = useState<import('@/types/schedule').Room[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const refreshBookings = useCallback(() => {
-    const data = bookingService.getByDate(dateStr)
-    setBookings(data)
+  useEffect(() => {
+    roomService.getAll().then((data) => {
+      setRooms(data.map((r) => ({
+        id: r.id,
+        name: r.name,
+        type: r.type as import('@/types/schedule').RoomType,
+        amenities: r.amenities || [],
+        hourlyRate: r.hourlyRate,
+        dailyRate: r.dailyRate,
+        overnightRate: r.overnightRate,
+        extraHourRate: r.extraHourRate,
+        combo3hRate: r.combo3hRate,
+        combo6h1hRate: r.combo6h1hRate,
+        combo6h1hDiscount: r.combo6h1hDiscount,
+      })))
+    }).catch(() => toast.error('Không tải được danh sách phòng'))
+  }, [])
+
+  const refreshBookings = useCallback(async () => {
+    try {
+      const data = await bookingService.getByDate(dateStr)
+      setBookings(data)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Không tải được lịch đặt phòng')
+    }
   }, [dateStr])
 
   useEffect(() => {
-    refreshBookings()
-  }, [refreshBookings])
+    let cancelled = false
+    bookingService.getByDate(dateStr)
+      .then(data => { if (!cancelled) setBookings(data) })
+      .catch(err => { if (!cancelled) toast.error(err instanceof Error ? err.message : 'Không tải được lịch đặt phòng') })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [dateStr])
 
   useEffect(() => {
     const handleClick = () => setContextMenu(null)
@@ -124,6 +149,7 @@ export function BookingSchedule() {
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const d = new Date(e.target.value + 'T00:00:00')
     if (!isNaN(d.getTime())) {
+      setLoading(true)
       setSelectedDate(d)
     }
   }
@@ -131,32 +157,40 @@ export function BookingSchedule() {
   const handlePrevDay = () => {
     const d = new Date(selectedDate)
     d.setDate(d.getDate() - 1)
+    setLoading(true)
     setSelectedDate(d)
   }
 
   const handleNextDay = () => {
     const d = new Date(selectedDate)
     d.setDate(d.getDate() + 1)
+    setLoading(true)
     setSelectedDate(d)
   }
 
-  const handleEmptySlotClick = (roomId: string, slotHour: number) => {
+  const handleEmptySlotClick = (roomId: string, slotStartMin: number) => {
+    const endMin = Math.min(slotStartMin + DEFAULT_NEW_BOOKING_MIN, 24 * 60)
     setPrefillRoomId(roomId)
-    setPrefillStartTime(`${String(slotHour).padStart(2, '0')}:00`)
-    setPrefillEndTime(`${String(Math.min(slotHour + 2, 24)).padStart(2, '0')}:00`)
+    setPrefillStartTime(minutesToTime(slotStartMin))
+    setPrefillEndTime(endMin === 24 * 60 ? '00:00' : minutesToTime(endMin))
     setSelectedBooking(undefined)
     setModalMode('create')
     setShowModal(true)
   }
 
-  const handleBookingClick = (booking: Booking) => {
+  const handleBookingClick = async (booking: Booking) => {
     if (!isAdmin) return
-    setSelectedBooking(booking)
-    setModalMode('edit')
-    setPrefillRoomId(undefined)
-    setPrefillStartTime(undefined)
-    setPrefillEndTime(undefined)
-    setShowModal(true)
+    try {
+      const full = await bookingService.getById(booking.id)
+      setSelectedBooking(full)
+      setModalMode('edit')
+      setPrefillRoomId(undefined)
+      setPrefillStartTime(undefined)
+      setPrefillEndTime(undefined)
+      setShowModal(true)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Không tải được chi tiết booking')
+    }
   }
 
   const handleBookingContextMenu = (e: React.MouseEvent, booking: Booking) => {
@@ -165,128 +199,144 @@ export function BookingSchedule() {
     setContextMenu({ x: e.clientX, y: e.clientY, booking })
   }
 
-  const handleAddCleaningAfter = (booking: Booking) => {
+  const handleAddCleaningAfter = async (booking: Booking) => {
     setContextMenu(null)
     const cleaningStart = booking.endTime
     const cleaningEnd = addMinutes(booking.endTime, 30)
 
-    bookingService.create({
-      roomId: booking.roomId,
-      date: dateStr,
-      startTime: cleaningStart,
-      endTime: cleaningEnd,
-      status: 'confirmed',
-      totalPrice: 0,
-      category: 'internal',
-      internalTag: 'cleaning',
-      internalNote: 'Dọn phòng sau check-out',
-      createdBy: authService.getAuth().userName,
-    })
-
-    toast.success('Đã thêm 30p dọn phòng')
-    refreshBookings()
+    try {
+      await bookingService.create({
+        roomId: booking.roomId,
+        date: dateStr,
+        startTime: cleaningStart,
+        endTime: cleaningEnd,
+        status: 'confirmed',
+        totalPrice: 0,
+        category: 'internal',
+        internalTag: 'cleaning',
+        internalNote: 'Dọn phòng sau check-out',
+        createdBy: authService.getAuth().userName,
+      })
+      toast.success('Đã thêm 30p dọn phòng')
+      await refreshBookings()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Thêm dọn phòng thất bại')
+    }
   }
 
-  const handleSave = (bookingData: Omit<Booking, 'id'> | Booking) => {
-    let saved: Booking
+  const handleSave = async (bookingData: Omit<Booking, 'id'> | Booking) => {
+    try {
+      let saved: Booking
 
-    if ('id' in bookingData) {
-      const { id, ...rest } = bookingData
-      saved = bookingService.update(id, rest)
+      if ('id' in bookingData) {
+        const { id, ...rest } = bookingData
 
-      // Khi chuyển sang checked-out → đề xuất thêm dọn phòng
-      if (
-        saved.category === 'guest' &&
-        saved.status === 'checked-out' &&
-        selectedBooking?.status !== 'checked-out'
-      ) {
-        setCleaningAfterBooking(saved)
-        setShowCleaningPrompt(true)
-      }
+        // Nếu status thay đổi, gọi endpoint status transition riêng; còn lại dùng PUT
+        if (selectedBooking && rest.status !== selectedBooking.status) {
+          saved = await bookingService.updateStatus(id, rest.status)
+          const restNoStatus: Partial<typeof rest> = { ...rest }
+          delete restNoStatus.status
+          if (Object.keys(restNoStatus).length > 0) {
+            saved = await bookingService.update(id, restNoStatus)
+          }
+        } else {
+          saved = await bookingService.update(id, rest)
+        }
 
-      if (saved.category === 'guest') {
-        const room = demoRooms.find((r) => r.id === saved.roomId)
-        if (saved.status === 'confirmed' && selectedBooking?.status !== 'confirmed') {
-          telegramService.notify(saved, 'confirmed', room?.name || saved.roomId)
-        } else if (saved.status === 'checked-in' && selectedBooking?.status !== 'checked-in') {
-          telegramService.notify(saved, 'checked_in', room?.name || saved.roomId)
+        if (saved.category === 'guest') {
+          const room = rooms.find((r) => r.id === saved.roomId)
+          if (saved.status === 'confirmed' && selectedBooking?.status !== 'confirmed') {
+            telegramService.notify(saved, 'confirmed', room?.name || saved.roomId)
+          } else if (saved.status === 'checked-in' && selectedBooking?.status !== 'checked-in') {
+            telegramService.notify(saved, 'checked_in', room?.name || saved.roomId)
+          }
+        }
+
+        toast.success('Đã cập nhật booking')
+      } else {
+        saved = await bookingService.create(bookingData)
+
+        // Tự động tạo khách hàng + gửi Telegram khi booking mới là khách
+        if (saved.category === 'guest') {
+          if (saved.guestPhone && saved.guestName) {
+            customerService.ensureCustomerExists(saved.guestName, saved.guestPhone).catch(() => {})
+          }
+          const room = rooms.find((r) => r.id === saved.roomId)
+          telegramService.notify(saved, 'new_booking', room?.name || saved.roomId)
+        }
+
+        toast.success('Đã tạo booking mới')
+
+        // BE auto-tạo cleaning 30p sau guest booking. Nếu là overnight,
+        // cleaning rơi vào ngày D+1 → timeline ngày D không hiển thị.
+        // Cho admin 1 toast hint để biết cleaning đã được scheduled.
+        if (saved.category === 'guest') {
+          const startMin = timeToMinutes(saved.startTime)
+          const endMin = timeToMinutes(saved.endTime)
+          if (endMin <= startMin) {
+            const nextDay = new Date(saved.date + 'T00:00:00')
+            nextDay.setDate(nextDay.getDate() + 1)
+            toast.info(`🧹 Dọn phòng 30p lúc ${saved.endTime} ngày ${formatDate(nextDay)} (hôm sau)`)
+          }
         }
       }
 
-      toast.success('Đã cập nhật booking')
-    } else {
-      saved = bookingService.create(bookingData)
+      await refreshBookings()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Lưu booking thất bại')
+    }
+  }
 
-      // Tự động tạo khách hàng + gửi Telegram khi booking mới là khách
-      if (saved.category === 'guest') {
-        if (saved.guestPhone && saved.guestName) {
-          customerService.ensureCustomerExists(saved.guestName, saved.guestPhone)
-        }
-        const room = demoRooms.find((r) => r.id === saved.roomId)
-        telegramService.notify(saved, 'new_booking', room?.name || saved.roomId)
-      }
+  const handleDelete = async (id: string) => {
+    try {
+      await bookingService.remove(id)
+      toast.success('Đã xóa booking')
+      await refreshBookings()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Xóa booking thất bại')
+    }
+  }
 
-      toast.success('Đã tạo booking mới')
+  /**
+   * Tính vị trí booking (%) cho timeline 24h của ngày đang xem.
+   * - Same-day: render từ startTime; overnight clamp tại biên phải 100% — slice còn lại render ngày D+1.
+   * - Cross-day wrap-in (booking ngày hôm trước, overnight sang ngày đang xem): render slice [00:00, endTime).
+   * - Không liên quan tới ngày đang xem: trả width 0 để caller bỏ qua.
+   */
+  const getBookingPosition = (booking: Booking, viewingDate: string) => {
+    const startMins = timeToMinutes(booking.startTime)
+    let endMins = timeToMinutes(booking.endTime)
+    const isOvernight = endMins <= startMins
+    if (isOvernight) endMins += 24 * 60
+    const totalMins = 24 * 60
+
+    if (booking.date === viewingDate) {
+      const leftPct = (startMins / totalMins) * 100
+      const rawWidthPct = ((endMins - startMins) / totalMins) * 100
+      const widthPct = Math.max(Math.min(rawWidthPct, 100 - leftPct), 0.8)
+      return { left: `${leftPct}%`, width: `${widthPct}%` }
     }
 
-    refreshBookings()
+    if (isOvernight) {
+      const wrapEndMins = endMins - 24 * 60
+      const widthPct = Math.max((wrapEndMins / totalMins) * 100, 0.8)
+      return { left: '0%', width: `${widthPct}%` }
+    }
+
+    return { left: '0%', width: '0%' }
   }
 
-  const handleDelete = (id: string) => {
-    bookingService.remove(id)
-    toast.success('Đã xóa booking')
-    refreshBookings()
-  }
-
-  const handleCleaningConfirm = () => {
-    if (!cleaningAfterBooking) return
-    const cleaningStart = cleaningAfterBooking.endTime
-    const cleaningEnd = addMinutes(cleaningAfterBooking.endTime, 30)
-
-    bookingService.create({
-      roomId: cleaningAfterBooking.roomId,
-      date: cleaningAfterBooking.date,
-      startTime: cleaningStart,
-      endTime: cleaningEnd,
-      status: 'confirmed',
-      totalPrice: 0,
-      category: 'internal',
-      internalTag: 'cleaning',
-      internalNote: 'Dọn phòng sau check-out',
-      createdBy: authService.getAuth().userName,
-    })
-
-    toast.success('Đã thêm 30p dọn phòng')
-    setShowCleaningPrompt(false)
-    setCleaningAfterBooking(null)
-    refreshBookings()
-  }
-
-  /** Tính vị trí và chiều rộng booking theo phần trăm trên timeline 24h */
-  const getBookingPosition = (booking: Booking) => {
-    const startMins = timeToMinutes(booking.startTime)
-    const endMins = timeToMinutes(booking.endTime)
-    const totalMins = 24 * 60
-    const leftPct = (startMins / totalMins) * 100
-    const widthPct = Math.max(((endMins - startMins) / totalMins) * 100, 0.8)
-    return { left: `${leftPct}%`, width: `${widthPct}%` }
-  }
-
-  const isSlotOccupied = (roomId: string, slotHour: number) => {
-    const slotStart = slotHour * 60
-    const slotEnd = (slotHour + 2) * 60
-    return bookings.some((b) => {
-      if (b.roomId !== roomId) return false
-      const bStart = timeToMinutes(b.startTime)
-      const bEnd = timeToMinutes(b.endTime)
-      return bStart < slotEnd && bEnd > slotStart
-    })
+  const isSlotOccupied = (roomId: string, slotStartMin: number) => {
+    const roomBookings = bookings.filter((b) => b.roomId === roomId)
+    return checkSlotOccupied(roomBookings, dateStr, slotStartMin, slotStartMin + SLOT_MIN)
   }
 
   const renderBookingBlock = (booking: Booking) => {
     const isInternal = booking.category === 'internal'
     const isStaff = role === 'staff'
-    const pos = getBookingPosition(booking)
+    const pos = getBookingPosition(booking, dateStr)
+
+    if (pos.width === '0%') return null
 
     if (isInternal) {
       const tag = booking.internalTag || 'custom'
@@ -320,8 +370,8 @@ export function BookingSchedule() {
           }}
           onClick={() => handleBookingClick(booking)}
         >
-          <span className="shrink-0">{TAG_ICONS[tag]}</span>
           <span className="truncate font-medium">{TAG_LABELS[tag]}</span>
+          <span className="shrink-0">{TAG_ICONS[tag]}</span>
         </div>
       )
     }
@@ -350,10 +400,18 @@ export function BookingSchedule() {
     )
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   return (
-    <div className="p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <h2 className="text-xl font-bold text-slate-800">Lịch phòng</h2>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h2 className="text-xl font-bold text-foreground">Lịch phòng</h2>
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handlePrevDay}>
@@ -416,7 +474,7 @@ export function BookingSchedule() {
               Phòng
             </div>
             <div className="flex-1 flex">
-              {TIME_SLOTS.map((hour) => (
+              {HEADER_HOURS.map((hour) => (
                 <div
                   key={hour}
                   className="flex-1 text-center py-2 text-xs font-medium text-muted-foreground border-r border-border last:border-r-0"
@@ -427,8 +485,8 @@ export function BookingSchedule() {
             </div>
           </div>
 
-          {demoRooms.map((room) => {
-            const roomBookings = bookings.filter((b) => b.roomId === room.id)
+          {rooms.map((room) => {
+            const roomBookings = bookings.filter((b) => b.roomId === room.id && b.status !== 'cancelled')
 
             return (
               <div
@@ -437,35 +495,31 @@ export function BookingSchedule() {
               >
                 <div className="w-24 shrink-0 px-3 py-2 border-r border-border bg-card">
                   <div className="font-semibold text-sm text-slate-800">{room.name}</div>
-                  <div
-                    className={cn(
-                      'text-[10px] uppercase font-medium',
-                      room.type === 'supervip'
-                        ? 'text-room-supervip'
-                        : room.type === 'vip'
-                          ? 'text-room-vip'
-                          : 'text-muted-foreground'
-                    )}
-                  >
-                    {room.type}
+                  <div className="mt-1">
+                    <RoomTypeBadge type={room.type} size="sm" />
                   </div>
                 </div>
 
                 <div className="flex-1 relative h-12">
                   <div className="absolute inset-0 flex">
-                    {TIME_SLOTS.map((slotHour) => {
-                      const occupied = isSlotOccupied(room.id, slotHour)
+                    {Array.from({ length: SLOT_COUNT }).map((_, idx) => {
+                      const slotStartMin = idx * SLOT_MIN
+                      const occupied = isSlotOccupied(room.id, slotStartMin)
+                      const isHourBoundary = slotStartMin % 60 === 0
                       return (
                         <div
-                          key={slotHour}
-                          className="flex-1 border-r border-border last:border-r-0 relative"
+                          key={idx}
+                          className={cn(
+                            'flex-1 last:border-r-0 relative',
+                            isHourBoundary ? 'border-r border-border' : 'border-r border-border/30',
+                          )}
                         >
                           {!occupied && (
                             <button
                               type="button"
-                              onClick={() => handleEmptySlotClick(room.id, slotHour)}
+                              onClick={() => handleEmptySlotClick(room.id, slotStartMin)}
                               className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary z-[5]"
-                              title="Thêm booking"
+                              title={`Thêm booking lúc ${minutesToTime(slotStartMin)}`}
                             >
                               <Plus className="h-4 w-4" />
                             </button>
@@ -506,33 +560,6 @@ export function BookingSchedule() {
         onSave={handleSave}
         onDelete={handleDelete}
       />
-
-      <AlertDialog open={showCleaningPrompt} onOpenChange={setShowCleaningPrompt}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Thêm 30p dọn phòng?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Khách vừa check-out. Bạn có muốn thêm 30 phút dọn phòng sau checkout không?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                setShowCleaningPrompt(false)
-                setCleaningAfterBooking(null)
-              }}
-            >
-              Không
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleCleaningConfirm}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              Thêm dọn phòng
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {contextMenu && (
         <div

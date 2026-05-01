@@ -1,192 +1,86 @@
 import type { PromoCode } from '@/types/promo';
 import type { RoomType } from '@/types/schedule';
-import { demoPromos } from '@/data/demo-promos';
+import { apiFetch } from './apiClient';
 
-const STORAGE_KEY = 'nhacam_promos';
+/** Payload tạo mã khuyến mãi — khớp createPromoSchema backend */
+export type CreatePromoPayload = Omit<PromoCode, 'id' | 'usedCount' | 'createdAt'>;
 
-function save(promos: PromoCode[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(promos));
+/** Kết quả kiểm tra mã khuyến mãi */
+export interface ValidateResult {
+  valid: boolean;
+  error?: string;
+  promo?: PromoCode;
 }
 
-function load(): PromoCode[] {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return [];
-  return JSON.parse(stored);
+/** Kết quả áp dụng mã khuyến mãi — backend tự tăng usedCount */
+export interface ApplyResult {
+  discountAmount: number;
+  finalTotal: number;
 }
 
-/**
- * Khởi tạo dữ liệu khuyến mãi mẫu nếu localStorage chưa có
- */
-export function init(): void {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    save(demoPromos);
-  }
+/** Lấy toàn bộ danh sách mã khuyến mãi (có thể lọc theo status) */
+export async function getAll(status?: PromoCode['status']): Promise<PromoCode[]> {
+  const qs = status ? `?status=${status}` : '';
+  return apiFetch<PromoCode[]>(`/promos${qs}`);
 }
 
-/**
- * Lấy toàn bộ danh sách mã khuyến mãi
- * @returns Mảng tất cả mã khuyến mãi
- */
-export function getAll(): PromoCode[] {
-  return load();
+/** Tìm mã khuyến mãi theo ID */
+export async function getById(id: string): Promise<PromoCode> {
+  return apiFetch<PromoCode>(`/promos/${id}`);
 }
 
-/**
- * Tìm mã khuyến mãi theo ID
- * @param id - Mã định danh khuyến mãi
- * @returns Mã khuyến mãi tìm thấy hoặc undefined
- */
-export function getById(id: string): PromoCode | undefined {
-  return load().find((p) => p.id === id);
+/** Tìm mã khuyến mãi theo code — duyệt danh sách (backend không có endpoint riêng) */
+export async function getByCode(code: string): Promise<PromoCode | undefined> {
+  const all = await getAll();
+  const upper = code.toUpperCase();
+  return all.find((p) => p.code.toUpperCase() === upper);
 }
 
-/**
- * Tìm mã khuyến mãi theo mã code (không phân biệt hoa thường)
- * @param code - Mã khuyến mãi dạng chuỗi
- * @returns Mã khuyến mãi tìm thấy hoặc undefined
- */
-export function getByCode(code: string): PromoCode | undefined {
-  return load().find((p) => p.code.toUpperCase() === code.toUpperCase());
+/** Tạo mã khuyến mãi mới (admin only) */
+export async function create(data: CreatePromoPayload): Promise<PromoCode> {
+  return apiFetch<PromoCode>('/promos', {
+    method: 'POST',
+    body: { ...data, code: data.code.toUpperCase() },
+  });
 }
 
-/**
- * Tạo mã khuyến mãi mới với ID tự động tăng
- * @param promo - Dữ liệu khuyến mãi (không bao gồm id, usedCount, createdAt)
- * @returns Mã khuyến mãi đã tạo
- */
-export function create(
-  promo: Omit<PromoCode, 'id' | 'usedCount' | 'createdAt'>,
-): PromoCode {
-  const promos = load();
-  const maxId = promos.reduce((max, p) => {
-    const num = parseInt(p.id.replace('pr', ''), 10);
-    return isNaN(num) ? max : Math.max(max, num);
-  }, 0);
-
-  const newPromo: PromoCode = {
-    ...promo,
-    id: `pr${maxId + 1}`,
-    usedCount: 0,
-    createdAt: new Date().toISOString().split('T')[0],
-  };
-
-  promos.push(newPromo);
-  save(promos);
-  return newPromo;
+/** Cập nhật mã khuyến mãi (admin only) */
+export async function update(id: string, data: Partial<CreatePromoPayload>): Promise<PromoCode> {
+  const body: Partial<CreatePromoPayload> = { ...data };
+  if (body.code) body.code = body.code.toUpperCase();
+  return apiFetch<PromoCode>(`/promos/${id}`, {
+    method: 'PUT',
+    body,
+  });
 }
 
-/**
- * Cập nhật thông tin mã khuyến mãi theo ID
- * @param id - Mã định danh khuyến mãi cần cập nhật
- * @param data - Các trường cần thay đổi
- * @returns Mã khuyến mãi sau khi cập nhật
- */
-export function update(id: string, data: Partial<PromoCode>): PromoCode {
-  const promos = load();
-  const index = promos.findIndex((p) => p.id === id);
-  if (index === -1) {
-    throw new Error(`Promo ${id} not found`);
-  }
-  promos[index] = { ...promos[index], ...data };
-  save(promos);
-  return promos[index];
-}
-
-/**
- * Xoá mã khuyến mãi theo ID
- * @param id - Mã định danh khuyến mãi cần xoá
- */
-export function remove(id: string): void {
-  const promos = load().filter((p) => p.id !== id);
-  save(promos);
+/** Xoá mã khuyến mãi (admin only) */
+export async function remove(id: string): Promise<void> {
+  await apiFetch<{ message: string }>(`/promos/${id}`, { method: 'DELETE' });
 }
 
 /**
  * Kiểm tra tính hợp lệ của mã khuyến mãi cho loại phòng cụ thể
- * @param code - Mã khuyến mãi cần kiểm tra
- * @param roomType - Loại phòng áp dụng
- * @returns Kết quả xác thực gồm valid, error (nếu có) và promo (nếu hợp lệ)
+ * Không tăng usedCount — chỉ kiểm tra
  */
-export function validate(
+export async function validate(code: string, roomType: RoomType): Promise<ValidateResult> {
+  return apiFetch<ValidateResult>('/promos/validate', {
+    method: 'POST',
+    body: { code: code.toUpperCase(), roomType },
+  });
+}
+
+/**
+ * Áp dụng mã khuyến mãi — tăng usedCount atomically ở backend
+ * Throws nếu code không hợp lệ (400)
+ */
+export async function apply(
   code: string,
   roomType: RoomType,
-): { valid: boolean; error?: string; promo?: PromoCode } {
-  const promo = getByCode(code);
-  if (!promo) {
-    return { valid: false, error: 'Mã khuyến mãi không tồn tại' };
-  }
-  if (promo.status !== 'active') {
-    return { valid: false, error: 'Mã khuyến mãi đã hết hạn hoặc bị vô hiệu' };
-  }
-  if (promo.usedCount >= promo.maxUses) {
-    return { valid: false, error: 'Mã khuyến mãi đã hết lượt sử dụng' };
-  }
-  const today = new Date().toISOString().split('T')[0];
-  if (today < promo.startDate || today > promo.endDate) {
-    return { valid: false, error: 'Mã khuyến mãi ngoài thời gian hiệu lực' };
-  }
-  if (
-    promo.applicableRoomTypes.length > 0 &&
-    !promo.applicableRoomTypes.includes(roomType)
-  ) {
-    return { valid: false, error: 'Mã khuyến mãi không áp dụng cho loại phòng này' };
-  }
-  return { valid: true, promo };
-}
-
-/**
- * Áp dụng giảm giá và tăng số lần sử dụng của mã khuyến mãi
- * @param promoId - Mã định danh khuyến mãi
- * @param originalPrice - Giá gốc trước khi giảm
- * @returns Giá sau khi giảm (tối thiểu 0)
- */
-export function applyDiscount(promoId: string, originalPrice: number): number {
-  const promo = getById(promoId);
-  if (!promo) return originalPrice;
-
-  let discounted: number;
-  if (promo.discountType === 'percent') {
-    discounted = originalPrice * (1 - promo.discountValue / 100);
-  } else {
-    discounted = originalPrice - promo.discountValue;
-  }
-
-  update(promoId, { usedCount: promo.usedCount + 1 });
-
-  return Math.max(0, Math.round(discounted));
-}
-
-/**
- * Cập nhật trạng thái tất cả mã khuyến mãi dựa trên ngày hiện tại và số lần sử dụng
- */
-export function refreshStatuses(): void {
-  const promos = load();
-  const today = new Date().toISOString().split('T')[0];
-  let changed = false;
-
-  for (const promo of promos) {
-    if (promo.status === 'disabled') continue;
-
-    const shouldExpire =
-      today > promo.endDate || promo.usedCount >= promo.maxUses;
-
-    if (shouldExpire && promo.status !== 'expired') {
-      promo.status = 'expired';
-      changed = true;
-    } else if (
-      !shouldExpire &&
-      promo.status === 'expired' &&
-      today >= promo.startDate &&
-      today <= promo.endDate &&
-      promo.usedCount < promo.maxUses
-    ) {
-      promo.status = 'active';
-      changed = true;
-    }
-  }
-
-  if (changed) {
-    save(promos);
-  }
+  originalPrice: number,
+): Promise<ApplyResult> {
+  return apiFetch<ApplyResult>('/promos/apply', {
+    method: 'POST',
+    body: { code: code.toUpperCase(), roomType, originalPrice },
+  });
 }

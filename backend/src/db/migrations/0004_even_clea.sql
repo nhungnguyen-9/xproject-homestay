@@ -1,0 +1,1 @@
+ALTER TABLE "branches" ADD COLUMN "images" jsonb DEFAULT '[]'::jsonb;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import {
@@ -11,7 +11,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/utils/helpers'
-import * as promoService from '@/services/promoService'
 import type { PromoCode } from '@/types/promo'
 import type { RoomType } from '@/types/schedule'
 
@@ -19,7 +18,7 @@ interface PromoModalProps {
   open: boolean
   onClose: () => void
   promo?: PromoCode
-  onSave: (data: Omit<PromoCode, 'id' | 'usedCount' | 'createdAt'>) => void
+  onSave: (data: Omit<PromoCode, 'id' | 'usedCount' | 'createdAt'>) => Promise<void> | void
 }
 
 const ROOM_TYPE_OPTIONS: { value: RoomType; label: string }[] = [
@@ -107,7 +106,7 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
     return `${formatPrice(discountValue)}đ`
   }, [discountType, discountValue])
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const rawData = {
       code: code.toUpperCase(),
       discountType,
@@ -147,20 +146,19 @@ export function PromoModal({ open, onClose, promo, onSave }: PromoModalProps) {
       newErrors.endDate = 'Ngày kết thúc phải sau ngày bắt đầu'
     }
 
-    const existing = promoService.getByCode(rawData.code)
-    if (existing && (!promo || existing.id !== promo.id)) {
-      newErrors.code = 'Mã khuyến mãi đã tồn tại'
-    }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       return
     }
 
     setErrors({})
-    onSave(rawData)
-    toast.success(isEdit ? 'Đã cập nhật mã khuyến mãi' : 'Đã tạo mã khuyến mãi mới')
-    onClose()
+    try {
+      await onSave(rawData)
+      toast.success(isEdit ? 'Đã cập nhật mã khuyến mãi' : 'Đã tạo mã khuyến mãi mới')
+      onClose()
+    } catch {
+      // Toast đã được show trong promo-manager, không đóng modal để user sửa lại
+    }
   }
 
   return (

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import {
@@ -32,13 +32,15 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { demoRooms } from '@/data/demo-schedule'
+import { RoomTypeBadge } from '@/components/rooms/RoomTypeBadge'
 import * as bookingService from '@/services/bookingService'
+import * as roomService from '@/services/roomService'
 import * as promoService from '@/services/promoService'
 import * as authService from '@/services/authService'
-import type { Booking, BookingStatus, InternalTag, RoomType } from '@/types/schedule'
-import { ROOM_PRICES } from '@/types/schedule'
-import { calculateBookingPrice } from '@/utils/helpers'
+import type { PromoCode } from '@/types/promo'
+import type { Booking, BookingStatus, InternalTag, Room, RoomType } from '@/types/schedule'
+import { getRoomPriceConfig } from '@/types/schedule'
+import { calculateBookingPrice, formatDate, formatDateInput } from '@/utils/helpers'
 
 interface BookingModalProps {
   open: boolean
@@ -54,26 +56,26 @@ interface BookingModalProps {
 }
 
 const INTERNAL_TAGS: { value: InternalTag; label: string; icon: string }[] = [
-  { value: 'cleaning', label: 'Don phong', icon: '🧹' },
-  { value: 'maintenance', label: 'Bao tri', icon: '🔧' },
-  { value: 'locked', label: 'Khoa phong', icon: '🚫' },
-  { value: 'custom', label: 'Tuy chinh', icon: '📝' },
+  { value: 'cleaning', label: 'Dọn phòng', icon: '🧹' },
+  { value: 'maintenance', label: 'Bảo trì', icon: '🔧' },
+  { value: 'locked', label: 'Khóa phòng', icon: '🚫' },
+  { value: 'custom', label: 'Tùy chỉnh', icon: '📝' },
 ]
 
 const STATUS_OPTIONS: { value: BookingStatus; label: string }[] = [
-  { value: 'pending', label: 'Cho xac nhan' },
-  { value: 'confirmed', label: 'Da xac nhan' },
-  { value: 'checked-in', label: 'Da nhan phong' },
-  { value: 'checked-out', label: 'Da tra phong' },
-  { value: 'cancelled', label: 'Da huy' },
+  { value: 'pending', label: 'Chờ xác nhận' },
+  { value: 'confirmed', label: 'Đã xác nhận' },
+  { value: 'checked-in', label: 'Đã nhận phòng' },
+  { value: 'checked-out', label: 'Đã trả phòng' },
+  { value: 'cancelled', label: 'Đã hủy' },
 ]
 
 const guestSchema = z.object({
-  guestName: z.string().min(1, 'Ten khach hang la bat buoc'),
+  guestName: z.string().min(1, 'Tên khách hàng là bắt buộc'),
   guestPhone: z
     .string()
-    .min(1, 'So dien thoai la bat buoc')
-    .regex(/^0\d{9,10}$/, 'So dien thoai khong hop le (VD: 0901234567)'),
+    .min(1, 'Số điện thoại là bắt buộc')
+    .regex(/^0\d{9,10}$/, 'Số điện thoại không hợp lệ (VD: 0901234567)'),
   startTime: z.string().min(1),
   endTime: z.string().min(1),
 })
@@ -103,13 +105,31 @@ export function BookingModal({
   const isAdmin = authService.isAdmin()
   const isEdit = mode === 'edit'
 
+  const [rooms, setRooms] = useState<Room[]>([])
+  useEffect(() => {
+    roomService.getAll().then((data) => {
+      setRooms(data.map((r) => ({
+        id: r.id, name: r.name, type: r.type,
+        amenities: r.amenities || [],
+        hourlyRate: r.hourlyRate, dailyRate: r.dailyRate,
+        overnightRate: r.overnightRate, extraHourRate: r.extraHourRate,
+        combo3hRate: r.combo3hRate, combo6h1hRate: r.combo6h1hRate,
+        combo6h1hDiscount: r.combo6h1hDiscount,
+      })))
+    }).catch(() => {})
+  }, [])
+
   const [activeTab, setActiveTab] = useState<'guest' | 'internal'>(
     booking?.category === 'internal' ? 'internal' : 'guest'
   )
 
-  const [roomId, setRoomId] = useState(booking?.roomId || prefillRoomId || demoRooms[0].id)
+  const [roomId, setRoomId] = useState(booking?.roomId || prefillRoomId || '')
+
+  useEffect(() => {
+    if (!roomId && rooms.length > 0) setRoomId(rooms[0].id)
+  }, [rooms, roomId])
   const [date, setDate] = useState(
-    booking?.date || prefillDate || new Date().toISOString().split('T')[0]
+    booking?.date || prefillDate || formatDateInput(new Date())
   )
   const [startTime, setStartTime] = useState(booking?.startTime || prefillStartTime || '08:00')
   const [endTime, setEndTime] = useState(booking?.endTime || prefillEndTime || '10:00')
@@ -130,38 +150,53 @@ export function BookingModal({
     valid: boolean
     message: string
   } | null>(null)
+  const [validatedPromo, setValidatedPromo] = useState<PromoCode | null>(null)
+  const [validatingVoucher, setValidatingVoucher] = useState(false)
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const validateVoucher = useCallback(() => {
+  const validateVoucher = useCallback(async () => {
     if (!voucher.trim()) {
       setVoucherStatus(null)
+      setValidatedPromo(null)
       return
     }
-    const room = demoRooms.find((r) => r.id === roomId)
+    const room = rooms.find((r) => r.id === roomId)
     const roomType: RoomType = room?.type || 'standard'
-    const result = promoService.validate(voucher.trim().toUpperCase(), roomType)
-    if (result.valid && result.promo) {
-      const discountText =
-        result.promo.discountType === 'percent'
-          ? `${result.promo.discountValue}%`
-          : `${result.promo.discountValue.toLocaleString('vi-VN')}d`
-      setVoucherStatus({ valid: true, message: `Giam ${discountText}` })
-    } else {
-      setVoucherStatus({ valid: false, message: result.error || 'Ma khong hop le' })
+    setValidatingVoucher(true)
+    try {
+      const result = await promoService.validate(voucher.trim().toUpperCase(), roomType)
+      if (result.valid && result.promo) {
+        const discountText =
+          result.promo.discountType === 'percent'
+            ? `${result.promo.discountValue}%`
+            : `${result.promo.discountValue.toLocaleString('vi-VN')}d`
+        setVoucherStatus({ valid: true, message: `Giảm ${discountText}` })
+        setValidatedPromo(result.promo)
+      } else {
+        setVoucherStatus({ valid: false, message: result.error || 'Mã không hợp lệ' })
+        setValidatedPromo(null)
+      }
+    } catch (err) {
+      setVoucherStatus({ valid: false, message: err instanceof Error ? err.message : 'Không kiểm tra được mã' })
+      setValidatedPromo(null)
+    } finally {
+      setValidatingVoucher(false)
     }
-  }, [voucher, roomId])
+  }, [voucher, roomId, rooms])
 
   const timeToMinutes = (time: string): number => {
     const [h, m] = time.split(':').map(Number)
     return h * 60 + m
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const newErrors: Record<string, string> = {}
 
-    if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
-      newErrors.endTime = 'Gio ket thuc phai sau gio bat dau'
+    // `endTime === startTime` = zero-duration → invalid.
+    // `endTime < startTime` = overnight (cross-midnight) → valid, BE sẽ validate overlap.
+    if (timeToMinutes(endTime) === timeToMinutes(startTime)) {
+      newErrors.endTime = 'Giờ kết thúc không được trùng giờ bắt đầu'
     }
 
     if (activeTab === 'guest') {
@@ -188,8 +223,14 @@ export function BookingModal({
     }
 
     const excludeId = isEdit && booking ? booking.id : undefined
-    if (bookingService.hasConflict(roomId, date, startTime, endTime, excludeId)) {
-      toast.error('Trung lich! Da co booking trong khung gio nay.')
+    try {
+      const conflict = await bookingService.hasConflict(roomId, date, startTime, endTime, excludeId)
+      if (conflict) {
+        toast.error('Trung lich! Da co booking trong khung gio nay.')
+        return
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Không kiểm tra được trùng lịch')
       return
     }
 
@@ -226,27 +267,24 @@ export function BookingModal({
   }
 
   const calculatePrice = (): number => {
-    const room = demoRooms.find((r) => r.id === roomId)
+    const room = rooms.find((r) => r.id === roomId)
     if (!room) return 0
-    const priceConfig = ROOM_PRICES[room.type]
+    const priceConfig = getRoomPriceConfig(room)
     
-    // Giả định Admin modal hiện tại chỉ hỗ trợ tính theo giờ (hourly) hoặc cần logic xác định mode
-    // Vì Admin modal không có trường 'mode', ta mặc định là 'hourly' hoặc tính dựa trên thời gian
-    const minutes = timeToMinutes(endTime) - timeToMinutes(startTime)
-    const hours = Math.max(0, minutes / 60)
+    // Admin modal không có trường 'mode' → mặc định 'hourly'.
+    // Overnight (end ≤ start): cộng 24h để tính đúng duration.
+    const startMin = timeToMinutes(startTime)
+    let endMin = timeToMinutes(endTime)
+    if (endMin <= startMin) endMin += 24 * 60
+    const hours = (endMin - startMin) / 60
     
-    // Sử dụng helper để tính giá chuẩn
-    let price = calculateBookingPrice('hourly', hours, priceConfig)
+    let price = calculateBookingPrice('hourly', hours, priceConfig, 'bonus_hour', { startTime, endTime })
 
-    if (voucher.trim()) {
-      const roomType: RoomType = room.type
-      const result = promoService.validate(voucher.trim().toUpperCase(), roomType)
-      if (result.valid && result.promo) {
-        if (result.promo.discountType === 'percent') {
-          price = Math.round(price * (1 - result.promo.discountValue / 100))
-        } else {
-          price = Math.max(0, price - result.promo.discountValue)
-        }
+    if (voucher.trim() && validatedPromo && validatedPromo.code === voucher.trim().toUpperCase()) {
+      if (validatedPromo.discountType === 'percent') {
+        price = Math.round(price * (1 - validatedPromo.discountValue / 100))
+      } else {
+        price = Math.max(0, price - validatedPromo.discountValue)
       }
     }
 
@@ -267,12 +305,12 @@ export function BookingModal({
         <DialogContent className="sm:max-w-[520px]">
           <DialogHeader>
             <DialogTitle>
-              {isEdit ? 'Chinh sua booking' : 'Tao booking moi'}
+              {isEdit ? 'Chỉnh sửa booking' : 'Tạo booking mới'}
             </DialogTitle>
             <DialogDescription>
               {isEdit
-                ? 'Cap nhat thong tin booking hien tai'
-                : 'Dien thong tin de tao booking moi'}
+                ? 'Cập nhật thông tin booking hiện tại'
+                : 'Điền thông tin để tạo booking mới'}
             </DialogDescription>
           </DialogHeader>
 
@@ -282,24 +320,27 @@ export function BookingModal({
           >
             <TabsList className="w-full">
               <TabsTrigger value="guest" className="flex-1">
-                Khach hang
+                Khách hàng
               </TabsTrigger>
               <TabsTrigger value="internal" className="flex-1">
-                Noi bo
+                Nội bộ
               </TabsTrigger>
             </TabsList>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div className="col-span-2">
-                <Label htmlFor="room">Phong</Label>
+                <Label htmlFor="room">Phòng</Label>
                 <Select value={roomId} onValueChange={setRoomId}>
                   <SelectTrigger className="mt-1 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {demoRooms.map((r) => (
+                    {rooms.map((r) => (
                       <SelectItem key={r.id} value={r.id}>
-                        {r.name} ({r.type})
+                        <span className="inline-flex items-center gap-2">
+                          <span>{r.name}</span>
+                          <RoomTypeBadge type={r.type} size="sm" />
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -307,7 +348,7 @@ export function BookingModal({
               </div>
 
               <div>
-                <Label htmlFor="date">Ngay</Label>
+                <Label htmlFor="date">Ngày</Label>
                 <Input
                   id="date"
                   type="date"
@@ -319,10 +360,12 @@ export function BookingModal({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label htmlFor="startTime">Bat dau</Label>
+                  <Label htmlFor="startTime">Bắt đầu</Label>
                   <Input
                     id="startTime"
                     type="time"
+                    lang="vi-VN"
+                    step={1800}
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     className="mt-1"
@@ -332,10 +375,12 @@ export function BookingModal({
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="endTime">Ket thuc</Label>
+                  <Label htmlFor="endTime">Kết thúc</Label>
                   <Input
                     id="endTime"
                     type="time"
+                    lang="vi-VN"
+                    step={1800}
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     className="mt-1"
@@ -343,18 +388,31 @@ export function BookingModal({
                   {errors.endTime && (
                     <p className="text-xs text-status-error-foreground mt-0.5">{errors.endTime}</p>
                   )}
+                  {(() => {
+                    const startMin = timeToMinutes(startTime)
+                    const endMin = timeToMinutes(endTime)
+                    if (endMin >= startMin) return null
+                    const d = new Date(date + 'T00:00:00')
+                    if (isNaN(d.getTime())) return null
+                    d.setDate(d.getDate() + 1)
+                    return (
+                      <p className="text-xs text-amber-600 mt-0.5">
+                        Qua đêm — kết thúc {formatDate(d)}
+                      </p>
+                    )
+                  })()}
                 </div>
               </div>
             </div>
 
             <TabsContent value="guest" className="mt-3 flex flex-col gap-3">
               <div>
-                <Label htmlFor="guestName">Ten khach hang</Label>
+                <Label htmlFor="guestName">Tên khách hàng</Label>
                 <Input
                   id="guestName"
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
-                  placeholder="Nguyen Van A"
+                  placeholder="Nguyễn Văn A"
                   className="mt-1"
                 />
                 {errors.guestName && (
@@ -363,7 +421,7 @@ export function BookingModal({
               </div>
 
               <div>
-                <Label htmlFor="guestPhone">So dien thoai</Label>
+                <Label htmlFor="guestPhone">Số điện thoại</Label>
                 <Input
                   id="guestPhone"
                   value={guestPhone}
@@ -377,7 +435,7 @@ export function BookingModal({
               </div>
 
               <div>
-                <Label htmlFor="status">Trang thai</Label>
+                <Label htmlFor="status">Trạng thái</Label>
                 <Select
                   value={status}
                   onValueChange={(v) => setStatus(v as BookingStatus)}
@@ -396,7 +454,7 @@ export function BookingModal({
               </div>
 
               <div>
-                <Label htmlFor="voucher">Ma khuyen mai</Label>
+                <Label htmlFor="voucher">Mã khuyến mãi</Label>
                 <div className="flex gap-2 mt-1">
                   <Input
                     id="voucher"
@@ -404,6 +462,7 @@ export function BookingModal({
                     onChange={(e) => {
                       setVoucher(e.target.value)
                       setVoucherStatus(null)
+                      setValidatedPromo(null)
                     }}
                     placeholder="SUMMER20"
                     className="flex-1"
@@ -413,9 +472,10 @@ export function BookingModal({
                     variant="outline"
                     size="sm"
                     onClick={validateVoucher}
+                    disabled={validatingVoucher}
                     className="shrink-0"
                   >
-                    Kiem tra
+                    {validatingVoucher ? 'Đang kiểm tra...' : 'Kiểm tra'}
                   </Button>
                 </div>
                 {voucherStatus && (
@@ -431,12 +491,12 @@ export function BookingModal({
               </div>
 
               <div>
-                <Label htmlFor="note">Ghi chu</Label>
+                <Label htmlFor="note">Ghi chú</Label>
                 <Textarea
                   id="note"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Ghi chu them..."
+                  placeholder="Ghi chú thêm..."
                   rows={2}
                   className="mt-1"
                 />
@@ -445,7 +505,7 @@ export function BookingModal({
 
             <TabsContent value="internal" className="mt-3 flex flex-col gap-3">
               <div>
-                <Label>Loai noi bo</Label>
+                <Label>Loại nội bộ</Label>
                 <div className="grid grid-cols-2 gap-2 mt-1">
                   {INTERNAL_TAGS.map((tag) => (
                     <button
@@ -467,12 +527,12 @@ export function BookingModal({
               </div>
 
               <div>
-                <Label htmlFor="internalNote">Ghi chu noi bo</Label>
+                <Label htmlFor="internalNote">Ghi chú nội bộ</Label>
                 <Textarea
                   id="internalNote"
                   value={internalNote}
                   onChange={(e) => setInternalNote(e.target.value)}
-                  placeholder="Ly do, chi tiet..."
+                  placeholder="Lý do, chi tiết..."
                   rows={2}
                   className="mt-1"
                 />
@@ -487,17 +547,17 @@ export function BookingModal({
                 className="mr-auto text-destructive border-destructive/20 hover:bg-destructive/5"
                 onClick={() => setShowDeleteConfirm(true)}
               >
-                Xoa
+                Xóa
               </Button>
             )}
             <Button variant="outline" onClick={onClose}>
-              Huy
+              Hủy
             </Button>
             <Button
               onClick={handleSave}
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              {isEdit ? 'Cap nhat' : 'Tao moi'}
+              {isEdit ? 'Cập nhật' : 'Tạo mới'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -506,18 +566,18 @@ export function BookingModal({
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xoa booking?</AlertDialogTitle>
+            <AlertDialogTitle>Xóa booking?</AlertDialogTitle>
             <AlertDialogDescription>
-              Ban co chac muon xoa booking nay? Hanh dong nay khong thể hoan tac.
+              Bạn có chắc muốn xóa booking này? Hành động này không thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Huy</AlertDialogCancel>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive hover:bg-destructive/90 text-white"
             >
-              Xoa
+              Xóa
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

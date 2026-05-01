@@ -2,10 +2,21 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { Button } from '@/components/ui/button';
 import * as roomService from '@/services/roomService';
-import type { RoomDetail } from '@/types/room';
+import type { RoomDetail, CreateRoomPayload } from '@/types/room';
 import { formatPrice } from '@/utils/helpers';
-import { Loader2, ImageIcon, RefreshCw } from 'lucide-react';
+import { Loader2, ImageIcon, RefreshCw, Plus, Pencil, Ban } from 'lucide-react';
 import { toast } from 'sonner';
+import { RoomFormModal } from './room-form-modal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 /** Nhãn tiếng Việt cho loại phòng */
 const ROOM_TYPE_LABELS: Record<string, string> = {
@@ -15,12 +26,19 @@ const ROOM_TYPE_LABELS: Record<string, string> = {
 };
 
 /**
- * Trang quản lý phòng — hiển thị danh sách phòng, upload/xoá/sắp xếp ảnh cho từng phòng
+ * Trang quản lý phòng — hiển thị danh sách phòng, CRUD phòng, upload/xoá/sắp xếp ảnh cho từng phòng
  */
 export function RoomManagement() {
   const [rooms, setRooms] = useState<RoomDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // CRUD modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<RoomDetail | null>(null);
+
+  // Deactivate confirmation state
+  const [confirmDeactivateRoom, setConfirmDeactivateRoom] = useState<RoomDetail | null>(null);
 
   const fetchRooms = useCallback(async () => {
     setLoading(true);
@@ -95,6 +113,53 @@ export function RoomManagement() {
     }
   }, [updateRoomImages, fetchRooms]);
 
+  /** Mở modal tạo phòng mới */
+  const handleOpenCreate = useCallback(() => {
+    setEditingRoom(null);
+    setModalOpen(true);
+  }, []);
+
+  /** Mở modal chỉnh sửa phòng */
+  const handleOpenEdit = useCallback((room: RoomDetail) => {
+    setEditingRoom(room);
+    setModalOpen(true);
+  }, []);
+
+  /** Xử lý submit form (tạo mới hoặc cập nhật) */
+  const handleFormSuccess = useCallback(async (data: CreateRoomPayload) => {
+    try {
+      if (editingRoom) {
+        await roomService.update(editingRoom.id, data);
+        toast.success('Cập nhật phòng thành công');
+      } else {
+        await roomService.create(data);
+        toast.success('Tạo phòng mới thành công');
+      }
+      fetchRooms();
+    } catch (err) {
+      toast.error(
+        editingRoom
+          ? `Cập nhật thất bại: ${err instanceof Error ? err.message : 'Lỗi'}`
+          : `Tạo phòng thất bại: ${err instanceof Error ? err.message : 'Lỗi'}`
+      );
+      throw err; // Re-throw để modal biết có lỗi
+    }
+  }, [editingRoom, fetchRooms]);
+
+  /** Xử lý vô hiệu hóa phòng sau khi confirm */
+  const handleConfirmDeactivate = useCallback(async () => {
+    if (!confirmDeactivateRoom) return;
+    try {
+      await roomService.deactivate(confirmDeactivateRoom.id);
+      toast.success(`Đã vô hiệu hóa phòng "${confirmDeactivateRoom.name}"`);
+      fetchRooms();
+    } catch (err) {
+      toast.error(`Vô hiệu hóa thất bại: ${err instanceof Error ? err.message : 'Lỗi'}`);
+    } finally {
+      setConfirmDeactivateRoom(null);
+    }
+  }, [confirmDeactivateRoom, fetchRooms]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -115,12 +180,17 @@ export function RoomManagement() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Quản lý hình ảnh phòng</h2>
-        <Button variant="outline" size="sm" onClick={fetchRooms}>
-          <RefreshCw className="mr-2 size-4" /> Làm mới
-        </Button>
+        <h2 className="text-xl font-bold text-foreground">Quản lý phòng</h2>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={fetchRooms}>
+            <RefreshCw className="mr-2 size-4" /> Làm mới
+          </Button>
+          <Button size="sm" onClick={handleOpenCreate}>
+            <Plus className="mr-2 size-4" /> Thêm phòng
+          </Button>
+        </div>
       </div>
 
       {rooms.length === 0 ? (
@@ -135,30 +205,69 @@ export function RoomManagement() {
               onRemove={(url) => handleRemove(room.id, url)}
               onReorder={(imgs) => handleReorder(room.id, imgs)}
               onReplace={(url, file) => handleReplace(room.id, url, file)}
+              onEdit={() => handleOpenEdit(room)}
+              onDeactivate={() => setConfirmDeactivateRoom(room)}
             />
           ))}
         </div>
       )}
+
+      {/* Room Form Modal — tạo mới / chỉnh sửa */}
+      <RoomFormModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSuccess={handleFormSuccess}
+        room={editingRoom}
+      />
+
+      {/* Confirmation Dialog — vô hiệu hóa phòng */}
+      <AlertDialog
+        open={!!confirmDeactivateRoom}
+        onOpenChange={(open) => { if (!open) setConfirmDeactivateRoom(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận vô hiệu hóa</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc muốn vô hiệu hóa phòng &ldquo;{confirmDeactivateRoom?.name}&rdquo;?
+              Phòng sẽ không còn hiển thị cho khách hàng nhưng dữ liệu vẫn được giữ lại.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Huỷ</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDeactivate}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Vô hiệu hóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-/** Card hiển thị thông tin phòng + grid upload ảnh */
+/** Card hiển thị thông tin phòng + grid upload ảnh + nút Sửa/Vô hiệu hóa */
 function RoomImageCard({
   room,
   onUpload,
   onRemove,
   onReorder,
   onReplace,
+  onEdit,
+  onDeactivate,
 }: {
   room: RoomDetail;
   onUpload: (files: File[]) => Promise<void>;
   onRemove: (imageUrl: string) => Promise<void>;
   onReorder: (images: string[]) => void;
   onReplace: (imageUrl: string, newFile: File) => Promise<void>;
+  onEdit: () => void;
+  onDeactivate: () => void;
 }) {
   return (
-    <div className="rounded-lg border bg-white p-5 shadow-sm">
+    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
       <div className="mb-4 flex items-center gap-3">
         <div className="flex size-10 items-center justify-center rounded-lg bg-nhacam-primary/10">
           <ImageIcon className="size-5 text-nhacam-primary" />
@@ -170,9 +279,17 @@ function RoomImageCard({
             &middot; {formatPrice(room.hourlyRate)}/giờ
           </p>
         </div>
-        <span className="text-sm text-muted-foreground">
-          {room.images.length}/5 ảnh
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            {room.images.length}/5 ảnh
+          </span>
+          <Button variant="outline" size="sm" onClick={onEdit}>
+            <Pencil className="mr-1 size-3.5" /> Sửa
+          </Button>
+          <Button variant="outline" size="sm" onClick={onDeactivate} className="text-destructive hover:text-destructive">
+            <Ban className="mr-1 size-3.5" /> Vô hiệu hóa
+          </Button>
+        </div>
       </div>
 
       <ImageUpload

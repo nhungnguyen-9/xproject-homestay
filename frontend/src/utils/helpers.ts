@@ -1,3 +1,5 @@
+import type { DiscountSlot } from '@/types/room';
+
 /**
  * Định dạng số tiền theo chuẩn Việt Nam (dấu chấm phân cách hàng nghìn)
  * @param price - Số tiền cần định dạng
@@ -71,19 +73,65 @@ export const calculateDuration = (
     return Math.max(0, totalMinutes / 60);
 };
 
+/** Subset trường giá mà calculateBookingPrice cần — phủ toàn bộ mode */
+export interface BookingPriceConfig {
+    hourlyRate: number;
+    dailyRate: number;
+    overnightRate: number;
+    extraHourRate: number;
+    combo3hRate: number;
+    combo6h1hRate: number;
+    combo6h1hDiscount: number;
+    discountSlots?: DiscountSlot[];
+}
+
+function computeHourlyCostMinuteWalk(
+    startMin: number,
+    endMin: number,
+    hourlyRate: number,
+    slots: DiscountSlot[] | undefined,
+): number {
+    if (endMin <= startMin) return 0;
+    const perMinute = hourlyRate / 60;
+    const totalMinutes = endMin - startMin;
+    if (!slots || slots.length === 0) return Math.round(perMinute * totalMinutes);
+    let sum = 0;
+    for (let m = startMin; m < endMin; m++) {
+        let maxPct = 0;
+        for (const s of slots) {
+            const sStart = timeToMinutes(s.startTime);
+            const sEnd = timeToMinutes(s.endTime);
+            if (m >= sStart && m < sEnd && s.discountPercent > maxPct) maxPct = s.discountPercent;
+        }
+        sum += perMinute * (1 - maxPct / 100);
+    }
+    return Math.round(sum);
+}
+
 /**
  * Tính giá phòng dựa trên loại phòng, chế độ đặt, và thời lượng
- * @param mode - Chế độ đặt (hourly, daily, overnight)
- * @param duration - Thời lượng tính bằng giờ
- * @param priceConfig - Cấu hình giá từ ROOM_PRICES
+ * @param mode - Chế độ đặt (hourly, daily, overnight, combo3h, combo6h1h)
+ * @param duration - Thời lượng tính bằng giờ (bỏ qua với combo modes)
+ * @param priceConfig - Cấu hình giá từ ROOM_PRICES hoặc RoomDetail
+ * @param combo6h1hOption - Khi mode=combo6h1h: 'bonus_hour' (7h, full price) hoặc 'discount' (6h, trừ discount)
+ * @param times - Giờ nhận/trả phòng (HH:mm) — bắt buộc khi có discountSlots để áp đúng khung giờ
  * @returns Tổng giá phòng (chưa tính đồ ăn)
  */
 export const calculateBookingPrice = (
     mode: string,
     duration: number,
-    priceConfig: { hourlyRate: number; dailyRate: number; overnightRate: number; extraHourRate: number }
+    priceConfig: BookingPriceConfig,
+    combo6h1hOption: 'bonus_hour' | 'discount' = 'bonus_hour',
+    times?: { startTime: string; endTime: string },
 ): number => {
+    const hasDiscount = (priceConfig.discountSlots?.length ?? 0) > 0 && !!times;
+
     if (mode === "hourly") {
+        if (hasDiscount) {
+            const startMin = timeToMinutes(times!.startTime);
+            const billedMinutes = Math.max(1, Math.ceil(duration)) * 60;
+            return computeHourlyCostMinuteWalk(startMin, startMin + billedMinutes, priceConfig.hourlyRate, priceConfig.discountSlots);
+        }
         return Math.max(1, Math.ceil(duration)) * priceConfig.hourlyRate;
     }
 
@@ -91,11 +139,19 @@ export const calculateBookingPrice = (
         const fullDays = Math.max(1, Math.floor(duration / 24) || 1);
         const remainingHours = duration - fullDays * 24;
         const extraHours = Math.max(0, Math.ceil(remainingHours));
-        
+
         // Giá = (số ngày * dailyRate) + (giờ lẻ * extraRate), nhưng không vượt quá (số ngày + 1) * dailyRate
         const basePrice = fullDays * priceConfig.dailyRate;
+        const cap = (fullDays + 1) * priceConfig.dailyRate;
+        if (hasDiscount && extraHours > 0) {
+            const startMin = timeToMinutes(times!.startTime);
+            const overageStart = startMin + fullDays * 24 * 60;
+            const overageEnd = overageStart + extraHours * 60;
+            const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
+            return Math.min(basePrice + overageCost, cap);
+        }
         const extraPrice = extraHours * priceConfig.extraHourRate;
-        return Math.min(basePrice + extraPrice, (fullDays + 1) * priceConfig.dailyRate);
+        return Math.min(basePrice + extraPrice, cap);
     }
 
     if (mode === "overnight") {
@@ -104,11 +160,57 @@ export const calculateBookingPrice = (
             return priceConfig.overnightRate;
         }
         const extraHours = Math.ceil(duration - OVERNIGHT_BASE_HOURS);
+        if (hasDiscount) {
+            const startMin = timeToMinutes(times!.startTime);
+            const overageStart = startMin + OVERNIGHT_BASE_HOURS * 60;
+            const overageEnd = overageStart + extraHours * 60;
+            const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
+            return Math.min(priceConfig.overnightRate + overageCost, priceConfig.dailyRate);
+        }
         // Giới hạn giá qua đêm + giờ lẻ không vượt quá dailyRate (giá 1 ngày)
         return Math.min(
             priceConfig.overnightRate + extraHours * priceConfig.extraHourRate,
             priceConfig.dailyRate
         );
+    }
+
+    if (mode === "combo3h") {
+        if (hasDiscount) {
+            const startMin = timeToMinutes(times!.startTime);
+            const baseCost = computeHourlyCostMinuteWalk(startMin, startMin + 3 * 60, priceConfig.combo3hRate / 3, priceConfig.discountSlots);
+            const overage = Math.max(0, Math.ceil(duration) - 3);
+            const overageStart = startMin + 3 * 60;
+            const overageEnd = overageStart + overage * 60;
+            const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
+            return baseCost + overageCost;
+        }
+        return priceConfig.combo3hRate;
+    }
+
+    if (mode === "combo6h1h") {
+        if (combo6h1hOption === 'discount') {
+            const flatBase = Math.max(0, priceConfig.combo6h1hRate - priceConfig.combo6h1hDiscount);
+            if (hasDiscount) {
+                const startMin = timeToMinutes(times!.startTime);
+                const baseCost = computeHourlyCostMinuteWalk(startMin, startMin + 6 * 60, flatBase / 6, priceConfig.discountSlots);
+                const overage = Math.max(0, Math.ceil(duration) - 6);
+                const overageStart = startMin + 6 * 60;
+                const overageEnd = overageStart + overage * 60;
+                const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
+                return baseCost + overageCost;
+            }
+            return flatBase;
+        }
+        if (hasDiscount) {
+            const startMin = timeToMinutes(times!.startTime);
+            const baseCost = computeHourlyCostMinuteWalk(startMin, startMin + 7 * 60, priceConfig.combo6h1hRate / 7, priceConfig.discountSlots);
+            const overage = Math.max(0, Math.ceil(duration) - 7);
+            const overageStart = startMin + 7 * 60;
+            const overageEnd = overageStart + overage * 60;
+            const overageCost = computeHourlyCostMinuteWalk(overageStart, overageEnd, priceConfig.extraHourRate, priceConfig.discountSlots);
+            return baseCost + overageCost;
+        }
+        return priceConfig.combo6h1hRate;
     }
 
     return Math.ceil(duration) * priceConfig.hourlyRate;

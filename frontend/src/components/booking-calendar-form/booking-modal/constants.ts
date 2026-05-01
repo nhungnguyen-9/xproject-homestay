@@ -1,11 +1,12 @@
 import type { BookingMode, RoomType } from "@/types/schedule";
 
-/** Các hình thức đặt phòng: theo giờ, theo ngày, qua đêm */
+/** Các hình thức đặt phòng: theo giờ, theo ngày, qua đêm, combo 3H, combo 6H+1H */
 export const BOOKING_MODES: { value: BookingMode; label: string }[] = [
     { value: "hourly", label: "Theo giờ" },
     { value: "daily", label: "Theo ngày (14:00-12:00)" },
     { value: "overnight", label: "Qua đêm (22:00-09:00)" },
-    { value: "combo6h", label: "Combo 6H" },
+    { value: "combo3h", label: "Combo 3H" },
+    { value: "combo6h1h", label: "Combo 6H+1H" },
 ];
 
 /** Nhãn tiếng Việt cho từng hạng phòng */

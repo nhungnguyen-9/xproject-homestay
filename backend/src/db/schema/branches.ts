@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, jsonb, timestamp } from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
 
 /**
@@ -10,6 +10,7 @@ import { nanoid } from 'nanoid';
  * - address: địa chỉ chi tiết (bắt buộc)
  * - district: quận/huyện
  * - phone: số điện thoại liên hệ
+ * - images: ảnh chi nhánh (JSONB array, tối đa 5)
  */
 export const branches = pgTable('branches', {
   id: text('id').primaryKey().$defaultFn(() => nanoid()),
@@ -17,6 +18,7 @@ export const branches = pgTable('branches', {
   phone: text('phone'),
   address: text('address').notNull(),
   district: text('district'),
+  images: jsonb('images').$type<string[]>().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });

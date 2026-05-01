@@ -1,160 +1,154 @@
-import type { Booking } from '@/types/schedule';
-import { demoBookings } from '@/data/demo-schedule';
+import type { Booking, BookingStatus } from '@/types/schedule';
+import { apiFetch } from './apiClient';
 
-const STORAGE_KEY = 'nhacam_bookings';
-
-function save(bookings: Booking[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+/** Shape backend trả về cho GET /bookings (có pagination) */
+interface PaginatedBookings {
+  data: Booking[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
-function load(): Booking[] {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return [];
-  return JSON.parse(stored);
+/** Payload tạo booking — khớp createBookingSchema backend. Server sẽ tự tính totalPrice, kiểm tra overlap, và áp voucher */
+export type CreateBookingPayload = Omit<Booking, 'id'> & { mode?: 'hourly' | 'daily' | 'overnight' };
+
+/** Query params cho GET /bookings */
+export interface ListBookingsParams {
+  date?: string;
+  roomId?: string;
+  status?: BookingStatus;
+  customerId?: string;
+  page?: number;
+  limit?: number;
 }
 
-/**
- * Khởi tạo dữ liệu đặt phòng mẫu nếu localStorage chưa có
- */
-export function init(): void {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    save(demoBookings);
+function buildQuery(params: Record<string, string | number | undefined>): string {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== '') qs.set(k, String(v));
   }
+  const s = qs.toString();
+  return s ? `?${s}` : '';
 }
 
-/**
- * Lấy toàn bộ danh sách đặt phòng
- * @returns Mảng tất cả booking
- */
-export function getAll(): Booking[] {
-  return load();
+/** Dịch ngày lùi 1 ngày (YYYY-MM-DD) để catch overnight bookings */
+function previousDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const prev = new Date(y, m - 1, d);
+  prev.setDate(prev.getDate() - 1);
+  return `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}-${String(prev.getDate()).padStart(2, '0')}`;
 }
 
-/** Chuyển chuỗi ngày (YYYY-MM-DD) và giờ (HH:mm) thành timestamp tuyệt đối (local time) */
 function toTimestamp(date: string, time: string): number {
   const [y, M, d] = date.split('-').map(Number);
   const [h, m] = time.split(':').map(Number);
   return new Date(y, M - 1, d, h, m, 0, 0).getTime();
 }
 
-/** Trả về khoảng thời gian {start, end} tuyệt đối của một booking */
 function getBookingRange(booking: Booking): { start: number; end: number } {
   const start = toTimestamp(booking.date, booking.startTime);
   let end = toTimestamp(booking.date, booking.endTime);
-  // Nếu endTime <= startTime, coi như kết thúc vào ngày hôm sau (qua đêm)
   if (end <= start) end += 24 * 60 * 60 * 1000;
   return { start, end };
 }
 
 /**
- * Lấy danh sách đặt phòng theo ngày, bao gồm cả các booking qua đêm từ ngày hôm trước
- * @param dateStr - Ngày cần lọc (định dạng YYYY-MM-DD)
- * @returns Mảng booking có hiện diện trong ngày đó
+ * Lấy toàn bộ danh sách booking — auto-paginate đến khi hết trang.
+ * Dùng cho các view cần full dataset (ví dụ customer detail lọc theo SĐT)
  */
-export function getByDate(dateStr: string): Booking[] {
+export async function getAll(params: ListBookingsParams = {}): Promise<Booking[]> {
+  const limit = params.limit ?? 100;
+  let page = params.page ?? 1;
+  const all: Booking[] = [];
+  while (true) {
+    const res = await apiFetch<PaginatedBookings>(`/bookings${buildQuery({ ...params, page, limit })}`);
+    all.push(...res.data);
+    if (page >= res.totalPages || res.data.length === 0) break;
+    page += 1;
+  }
+  return all;
+}
+
+/**
+ * Lấy danh sách booking trong một ngày — bao gồm cả booking qua đêm từ ngày hôm trước.
+ * Query 2 ngày (hôm trước + hôm nay) rồi lọc theo overlap thời gian
+ */
+export async function getByDate(dateStr: string): Promise<Booking[]> {
+  const prev = previousDate(dateStr);
+  const [today, yesterday] = await Promise.all([
+    getAll({ date: dateStr }),
+    getAll({ date: prev }),
+  ]);
+
   const dayStart = toTimestamp(dateStr, '00:00');
   const dayEnd = dayStart + 24 * 60 * 60 * 1000;
 
-  return load().filter((b) => {
+  const merged = [...today, ...yesterday];
+  return merged.filter((b) => {
     const { start, end } = getBookingRange(b);
-    // Overlap: start < dayEnd && end > dayStart
     return start < dayEnd && end > dayStart;
   });
 }
 
-/**
- * Lấy danh sách đặt phòng theo phòng và ngày
- * @param roomId - Mã phòng
- * @param dateStr - Ngày cần lọc (định dạng YYYY-MM-DD)
- * @returns Mảng booking khớp phòng và có hiện diện trong ngày đó
- */
-export function getByRoom(roomId: string, dateStr: string): Booking[] {
-  return getByDate(dateStr).filter((b) => b.roomId === roomId);
+/** Lấy danh sách booking theo phòng và ngày */
+export async function getByRoom(roomId: string, dateStr: string): Promise<Booking[]> {
+  const all = await getByDate(dateStr);
+  return all.filter((b) => b.roomId === roomId);
+}
+
+/** Lấy một booking theo ID */
+export async function getById(id: string): Promise<Booking> {
+  return apiFetch<Booking>(`/bookings/${id}`);
 }
 
 /**
- * Tìm một booking theo ID
- * @param id - Mã booking
- * @returns Booking tìm thấy hoặc undefined
+ * Tạo booking mới. Server tự tính totalPrice, validate overlap (409), áp voucher và tăng usedCount atomic.
  */
-export function getById(id: string): Booking | undefined {
-  return load().find((b) => b.id === id);
+export async function create(booking: CreateBookingPayload): Promise<Booking> {
+  return apiFetch<Booking>('/bookings', {
+    method: 'POST',
+    body: booking,
+  });
+}
+
+/** Cập nhật thông tin booking (admin only) */
+export async function update(id: string, data: Partial<CreateBookingPayload>): Promise<Booking> {
+  return apiFetch<Booking>(`/bookings/${id}`, {
+    method: 'PUT',
+    body: data,
+  });
 }
 
 /**
- * Tạo booking mới với ID tự động tăng
- * @param booking - Dữ liệu booking (không bao gồm id)
- * @returns Booking đã tạo kèm ID
+ * Chuyển trạng thái booking — backend validate transition matrix.
+ * Khi chuyển sang 'cancelled', backend tự refund voucher usedCount.
  */
-export function create(booking: Omit<Booking, 'id'>): Booking {
-  const bookings = load();
-  const maxId = bookings.reduce((max, b) => {
-    const num = parseInt(b.id, 10);
-    return isNaN(num) ? max : Math.max(max, num);
-  }, 0);
-  const newBooking: Booking = {
-    ...booking,
-    id: String(maxId + 1),
-  };
-  bookings.push(newBooking);
-  save(bookings);
-  return newBooking;
+export async function updateStatus(id: string, status: BookingStatus): Promise<Booking> {
+  return apiFetch<Booking>(`/bookings/${id}/status`, {
+    method: 'POST',
+    body: { status },
+  });
+}
+
+/** Xoá booking — backend soft delete (chuyển status về cancelled). Admin only */
+export async function remove(id: string): Promise<void> {
+  await apiFetch<Booking>(`/bookings/${id}`, { method: 'DELETE' });
 }
 
 /**
- * Cập nhật thông tin booking theo ID
- * @param id - Mã booking cần cập nhật
- * @param data - Các trường cần thay đổi
- * @returns Booking sau khi cập nhật
+ * Kiểm tra xung đột thời gian đặt phòng qua endpoint /check-overlap.
+ * Lưu ý: POST /bookings cũng tự validate, dùng hàm này chỉ để UX preview.
  */
-export function update(id: string, data: Partial<Booking>): Booking {
-  const bookings = load();
-  const index = bookings.findIndex((b) => b.id === id);
-  if (index === -1) {
-    throw new Error(`Booking ${id} not found`);
-  }
-  bookings[index] = { ...bookings[index], ...data };
-  save(bookings);
-  return bookings[index];
-}
-
-/**
- * Xoá booking theo ID
- * @param id - Mã booking cần xoá
- */
-export function remove(id: string): void {
-  const bookings = load().filter((b) => b.id !== id);
-  save(bookings);
-}
-
-/**
- * Kiểm tra xung đột thời gian đặt phòng
- * @param roomId - Mã phòng
- * @param date - Ngày đặt (định dạng YYYY-MM-DD)
- * @param startTime - Giờ bắt đầu (HH:mm)
- * @param endTime - Giờ kết thúc (HH:mm)
- * @param excludeId - ID booking cần loại trừ (dùng khi chỉnh sửa)
- * @returns true nếu có xung đột thời gian
- */
-export function hasConflict(
+export async function hasConflict(
   roomId: string,
   date: string,
   startTime: string,
   endTime: string,
   excludeId?: string,
-): boolean {
-  const allBookings = load();
-  const roomBookings = allBookings.filter(
-    (b) => b.roomId === roomId && b.id !== excludeId && b.status !== 'cancelled',
+): Promise<boolean> {
+  const res = await apiFetch<{ hasConflict: boolean }>(
+    `/bookings/check-overlap${buildQuery({ roomId, date, startTime, endTime, excludeId })}`,
   );
-
-  const newStart = toTimestamp(date, startTime);
-  let newEnd = toTimestamp(date, endTime);
-  if (newEnd <= newStart) newEnd += 24 * 60 * 60 * 1000;
-
-  return roomBookings.some((b) => {
-    const { start: bStart, end: bEnd } = getBookingRange(b);
-    return newStart < bEnd && bStart < newEnd;
-  });
+  return res.hasConflict;
 }
